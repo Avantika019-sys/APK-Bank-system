@@ -7,5 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Bank main.cpp
         include/account.h
-        src/account.cpp
+        src/transaction.cpp
+        include/transaction.h
 )
