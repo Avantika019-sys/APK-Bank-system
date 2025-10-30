@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 4.0)
 project(Bank)
 
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(Bank main.cpp)
+add_executable(Bank main.cpp
+        include/account.h
+        src/account.cpp
+)
