@@ -7,9 +7,9 @@
 #include <chrono>
 
 
-class transaction {
+class moneyTransaction {
 public:
-    transaction(int amount);
+    moneyTransaction(int amount);
     std::chrono::system_clock::time_point getCreatedAt() const;
     int getAmount() const;
 private:
@@ -17,5 +17,9 @@ private:
     int32_t _amount;
 };
 
+
+class stockTransaction {
+
+};
 
 #endif //BANK_TRANSACTION_H
