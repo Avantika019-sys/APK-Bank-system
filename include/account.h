@@ -23,7 +23,7 @@ class Account {
     }
     void withdraw(u_int32_t amount) {
         int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
-            [](int currentTotal,const moneyTransaction& t) {
+            [](int currentTotal,const T& t) {
                 return currentTotal + t.getAmount();
             });
 
