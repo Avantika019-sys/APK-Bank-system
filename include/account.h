@@ -40,6 +40,13 @@ class Account {
             std::cout << t << std::endl;
         });
     }
+    void checkCurrentBalance() {
+        int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
+            [](int currentTotal,const transaction& t) {
+                return currentTotal + t.getAmount();
+            });
+        std::cout << "your current balance is: "<< currentBalance << std::endl;
+    }
 
 
 private:
