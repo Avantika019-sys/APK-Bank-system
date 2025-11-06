@@ -11,9 +11,10 @@ class transaction {
 public:
     transaction(int amount);
     std::chrono::system_clock::time_point getCreatedAt() const;
+    int getAmount() const;
 private:
     std::chrono::system_clock::time_point _createdAt;
-    int _amount;
+    int32_t _amount;
 };
 
 

@@ -4,6 +4,8 @@
 
 #ifndef BANK_ACCOUNT_H
 #define BANK_ACCOUNT_H
+#include <iostream>
+#include <numeric>
 #include <vector>
 
 #include "transaction.h"
@@ -13,8 +15,31 @@
 template <typename T>
 class Account {
     public:
-    bool deposit(int amount) {/*implement me*/}
-    bool withdraw(int amount) {/*implement me*/}
+    void deposit(u_int32_t amount) {
+        std::vector<transaction> tmp(_transactions);
+        transaction newTransaction(-amount);
+        tmp.push_back(newTransaction);
+        std::swap(_transactions,tmp);
+    }
+    void withdraw(u_int32_t amount) {
+        int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
+            [](int currentTotal,const transaction& t) {
+                return currentTotal + t.getAmount();
+            });
+
+        if (currentBalance < amount) {
+           throw std::invalid_argument("not enough money to withdraw that amount");
+        }
+        std::vector<transaction> tmp(_transactions);
+        transaction newTransaction(amount);
+        tmp.push_back(newTransaction);
+        std::swap(_transactions,tmp);
+    }
+    void viewTransactionHistory() {
+        std::for_each(_transactions.begin(),_transactions.end(),[](const transaction& t) {
+            std::cout << t << std::endl;
+        });
+    }
 
 
 private:
