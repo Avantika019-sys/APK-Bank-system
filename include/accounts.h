@@ -35,7 +35,9 @@ public:
     }
 };
 
+
 // CRTP Base for account statistics
+
 template<typename Derived>
 class AccountWithStatistics {
 private:
