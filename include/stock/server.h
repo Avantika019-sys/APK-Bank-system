@@ -16,12 +16,13 @@ namespace stock {
 class server {
     public:
     server();
+    static server& getInstance();
     boost::signals2::signal<void (std::string stockName, double UpdatedPrice)>sig;
     void startUpdateWorker();
     void startOrderWorker();
+    messageQueue<std::variant<order,stateReq>> msgQueue;
 private:
     std::vector<std::pair<std::string,double>> stocks;
-    messageQueue<std::variant<order,stateReq>> msgQueue;
     visitor orderVisitor;
 };
 

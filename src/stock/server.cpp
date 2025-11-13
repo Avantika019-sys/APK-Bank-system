@@ -18,6 +18,11 @@ server::server() : msgQueue(10) {
     };
 }
 
+server & server::getInstance() {
+    static server instance;
+    return instance;
+}
+
 void server::startUpdateWorker() {
     std::random_device rd;
     std::mt19937 gen(rd());
