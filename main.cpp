@@ -7,10 +7,10 @@
 int main() {
     auto& server = stock::server::getInstance();
     std::thread stockUpdaterThread([&]() {
-        server.startUpdateWorker();
+        server.startUpdateStocksWorker();
     });
     std::thread stockOrderThread([&]() {
-        server.startOrderWorker();
+        server.startStockWorker();
     });
 
     int input;

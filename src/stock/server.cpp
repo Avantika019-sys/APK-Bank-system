@@ -23,7 +23,7 @@ server & server::getInstance() {
     return instance;
 }
 
-void server::startUpdateWorker() {
+void server::startUpdateStocksWorker() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, stocks.size() - 1);
@@ -37,12 +37,12 @@ void server::startUpdateWorker() {
     }
 }
 
-void server::startOrderWorker() {
+void server::startStockWorker() {
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        std::variant<order,stateReq> variant;
-        msgQueue.pop(variant);
-        std::visit(this->orderVisitor,variant);
+       stockVariant st;
+        msgQueue.pop(st);
+        std::visit(this->orderVisitor,st);
     }
 }
 }

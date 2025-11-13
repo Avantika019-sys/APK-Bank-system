@@ -9,6 +9,8 @@
 #include "transaction.h"
 
 namespace stock {
+
+
     struct order {
         order();
         stockTransaction tx;
@@ -25,10 +27,12 @@ namespace stock {
         std::promise<state> prom;
     };
 
+    typedef std::variant<order,stateReq> stockVariant;
 
     struct visitor {
         void operator()( order& bo);
         void operator()( stateReq& so);
     };
+
 }
 #endif //BANK_VISITOR_H

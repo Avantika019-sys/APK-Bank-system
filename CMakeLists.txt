@@ -11,9 +11,10 @@ add_executable(Bank main.cpp
         include/transaction.h
         include/stock/server.h
         src/stock/server.cpp
-        include/messageQueue.h
+        include/stock/messageQueue.h
         include/stock/visitor.h
         src/stock/visitor.cpp
         include/utils.h
         src/utils.cpp
+        src/stock/messageQueue.cpp
 )

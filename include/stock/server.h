@@ -6,7 +6,7 @@
 #include <boost/signals2/signal.hpp>
 
 #include "visitor.h"
-#include "../messageQueue.h"
+#include "messageQueue.h"
 #include "../transaction.h"
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
@@ -18,9 +18,9 @@ class server {
     server();
     static server& getInstance();
     boost::signals2::signal<void (std::string stockName, double UpdatedPrice)>sig;
-    void startUpdateWorker();
-    void startOrderWorker();
-    messageQueue<std::variant<order,stateReq>> msgQueue;
+    void startUpdateStocksWorker();
+    void startStockWorker();
+    messageQueue msgQueue;
 private:
     std::vector<std::pair<std::string,double>> stocks;
     visitor orderVisitor;
