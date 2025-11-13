@@ -7,8 +7,8 @@
 #include <bits/this_thread_sleep.h>
 
 
-stockserver::stockserver() {
-    std::vector<std::pair<std::string, double>> stocks = {
+stockserver::stockserver() : msgQueue(10) {
+    std::vector<std::pair<std::string, double> > stocks = {
         {"AAPL", 189.45},
         {"MSFT", 332.64},
         {"GOOG", 130.17},
@@ -17,8 +17,7 @@ stockserver::stockserver() {
     };
 }
 
-void stockserver::startWorker() {
-
+void stockserver::startUpdateWorker() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, stocks.size() - 1);
@@ -31,3 +30,14 @@ void stockserver::startWorker() {
         sig(stockToUpdate.first,stockToUpdate.second);
     }
 }
+
+void stockserver::startOrderWorker() {
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(3));
+        orderVariant ov;
+        msgQueue.pop(ov);
+        std::visit(this->orderVisitor,ov);
+    }
+}
+
+
