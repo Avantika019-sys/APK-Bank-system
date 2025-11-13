@@ -6,6 +6,9 @@
 
 #include "stock/server.h"
 
+
+
+
 int main() {
     auto& server = stock::server::getInstance();
     std::thread stockUpdaterThread([&]() {
