@@ -14,8 +14,6 @@ int main() {
     std::thread stockOrderThread([&]() {
         server.startOrderWorker();
     });
-    stockUpdaterThread.join();
-    stockOrderThread.join();
 
     int input;
     std::cin >> input;
@@ -27,4 +25,6 @@ int main() {
 
         default: std::cout << "Unknown input" << std::endl;
     }
+    stockUpdaterThread.join();
+    stockOrderThread.join();
 }
