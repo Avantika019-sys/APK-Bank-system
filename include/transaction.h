@@ -17,9 +17,13 @@ private:
     int32_t _amount;
 };
 
-
 class stockTransaction {
-
+    stockTransaction(int amount, std::string stockName);
+    std::chrono::system_clock::time_point getCreatedAt() const;
+    int getAmount() const;
+private:
+    std::chrono::system_clock::time_point _createdAt;
+    int32_t _amount;
 };
 
 #endif //BANK_TRANSACTION_H
