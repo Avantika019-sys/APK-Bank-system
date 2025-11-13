@@ -9,4 +9,6 @@ add_executable(Bank main.cpp
         include/account.h
         src/transaction.cpp
         include/transaction.h
+        include/stockserver.h
+        src/stockserver.cpp
 )
