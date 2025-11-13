@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "transaction.h"
+#include "stock/server.h"
 
 #endif //BANK_ACCOUNT_H
 
@@ -40,12 +41,12 @@ class Account {
             std::cout << t << std::endl;
         });
     }
-    void checkCurrentBalance() {
+    int getCurrentBalance() {
         int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
             [](int currentTotal,const moneyTransaction& t) {
                 return currentTotal + t.getAmount();
             });
-        std::cout << "your current balance is: "<< currentBalance << std::endl;
+        return currentBalance;
     }
 
 
@@ -57,8 +58,21 @@ std::vector<T> _transactions;
 template<>
 class Account<stockTransaction> {
     public:
-    void buyStock(u_int32_t amount, std::string name) {
+    void buyStock(u_int32_t amount, std::string stockName) {
+        // implement validation: check if there is enough money on account before
 
+        stockTransaction tx(amount,stockName);
+
+        stock::order order;
+        order.tx = tx;
+
+        std::future<bool> f = order.prom.get_future();
+
+        stock::server::getInstance().msgQueue.push(order);
+        f.wait();
+        if (f.get()) {
+
+        }
     }
     void sellStock(u_int32_t amount, std::string name) {
 

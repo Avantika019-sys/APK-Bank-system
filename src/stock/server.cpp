@@ -2,12 +2,13 @@
 // Created by ali on 11/13/25.
 //
 
-#include "stockserver.h"
+#include "../../include/stock/server.h"
 #include <random>
 #include <bits/this_thread_sleep.h>
 
+namespace stock {
 
-stockserver::stockserver() : msgQueue(10) {
+server::server() : msgQueue(10) {
     std::vector<std::pair<std::string, double> > stocks = {
         {"AAPL", 189.45},
         {"MSFT", 332.64},
@@ -17,7 +18,12 @@ stockserver::stockserver() : msgQueue(10) {
     };
 }
 
-void stockserver::startUpdateWorker() {
+server & server::getInstance() {
+    static server instance;
+    return instance;
+}
+
+void server::startUpdateWorker() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, stocks.size() - 1);
@@ -31,13 +37,12 @@ void stockserver::startUpdateWorker() {
     }
 }
 
-void stockserver::startOrderWorker() {
+void server::startOrderWorker() {
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-        orderVariant ov;
-        msgQueue.pop(ov);
-        std::visit(this->orderVisitor,ov);
+        std::variant<order,stateReq> variant;
+        msgQueue.pop(variant);
+        std::visit(this->orderVisitor,variant);
     }
 }
-
-
+}
