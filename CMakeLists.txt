@@ -14,7 +14,6 @@ add_executable(Bank main.cpp
         include/messageQueue.h
         include/stock/visitor.h
         src/stock/visitor.cpp
-        src/main.cpp
         include/utils.h
         src/utils.cpp
 )

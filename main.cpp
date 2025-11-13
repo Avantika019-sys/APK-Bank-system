@@ -1,6 +1,28 @@
+
 #include <iostream>
 
+#include "stock/server.h"
+
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
+    auto& server = stock::server::getInstance();
+    std::thread stockUpdaterThread([&]() {
+        server.startUpdateWorker();
+    });
+    std::thread stockOrderThread([&]() {
+        server.startOrderWorker();
+    });
+
+    int input;
+    std::cin >> input;
+
+    switch (input) {
+
+
+
+
+        default: std::cout << "Unknown input" << std::endl;
+    }
+    stockUpdaterThread.join();
+    stockOrderThread.join();
 }
