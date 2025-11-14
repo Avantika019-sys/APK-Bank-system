@@ -82,10 +82,9 @@ class Account<stockTransaction> {
     }
 
     void onStockUpdate(std::string stockName, int updatedPrice){
-        if (!ownedStocks.contains(stockName)) {
-            return;
+        if (ownedStocks.contains(stockName)) {
+            ownedStocks[stockName] = updatedPrice;
         }
-        ownedStocks[stockName] = updatedPrice;
     }
 
 private:
