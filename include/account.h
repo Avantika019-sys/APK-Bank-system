@@ -73,8 +73,14 @@ class Account<stockTransaction> {
 
         stock::server::getInstance().msgQueue.push(order);
         f.wait();
+        std::lock_guard<std::mutex> lock(mtx);
         if (f.get()) {
+            if (ownedStocks.contains(stockName)) {
+                ownedStocks[stockName] += amount;
 
+            }else {
+               ownedStocks[stockName] = amount;
+            }
         }
     }
     void sellStock(u_int32_t amount, std::string name) {
@@ -82,6 +88,7 @@ class Account<stockTransaction> {
     }
 
     void onStockUpdate(std::string stockName, int updatedPrice){
+        std::lock_guard<std::mutex> lock(mtx);
         if (ownedStocks.contains(stockName)) {
             ownedStocks[stockName] = updatedPrice;
         }
@@ -90,5 +97,6 @@ class Account<stockTransaction> {
 private:
     std::vector<moneyTransaction> _moneyTransactions;
     std::map<std::string,int> ownedStocks;
+    std::mutex mtx;
 };
 
