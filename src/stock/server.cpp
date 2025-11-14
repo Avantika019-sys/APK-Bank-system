@@ -40,7 +40,7 @@ void server::startUpdateStocksWorker() {
 void server::startStockWorker() {
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(3));
-       stockVariant st;
+        stockVariant st;
         msgQueue.pop(st);
         std::visit(this->orderVisitor,st);
     }

@@ -58,6 +58,9 @@ std::vector<T> _transactions;
 template<>
 class Account<stockTransaction> {
     public:
+    Account() {
+        stock::server::sig.connect(onStockUpdate);
+    }
     void buyStock(u_int32_t amount, std::string stockName) {
         // implement validation: check if there is enough money on account before
 
@@ -78,7 +81,15 @@ class Account<stockTransaction> {
 
     }
 
+    void onStockUpdate(std::string stockName, int updatedPrice){
+        if (!ownedStocks.contains(stockName)) {
+            return;
+        }
+        ownedStocks[stockName] = updatedPrice;
+    }
+
 private:
     std::vector<moneyTransaction> _moneyTransactions;
+    std::map<std::string,int> ownedStocks;
 };
 
