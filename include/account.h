@@ -13,58 +13,61 @@
 
 #endif //BANK_ACCOUNT_H
 
-template <typename T>
+template<typename T>
 class Account {
-    public:
+public:
     void deposit(u_int32_t amount) {
         std::vector<moneyTransaction> tmp(_transactions);
         moneyTransaction newTransaction(-amount);
         tmp.push_back(newTransaction);
-        std::swap(_transactions,tmp);
+        std::swap(_transactions, tmp);
     }
+
     void withdraw(u_int32_t amount) {
-        int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
-            [](int currentTotal,const T& t) {
-                return currentTotal + t.getAmount();
-            });
+        int currentBalance = std::accumulate(_transactions.begin(), _transactions.end(), 0,
+                                             [](int currentTotal, const T &t) {
+                                                 return currentTotal + t.getAmount();
+                                             });
 
         if (currentBalance < amount) {
-           throw std::invalid_argument("not enough money to withdraw that amount");
+            throw std::invalid_argument("not enough money to withdraw that amount");
         }
         std::vector<moneyTransaction> tmp(_transactions);
         moneyTransaction newTransaction(amount);
         tmp.push_back(newTransaction);
-        std::swap(_transactions,tmp);
+        std::swap(_transactions, tmp);
     }
+
     void viewTransactionHistory() {
-        std::for_each(_transactions.begin(),_transactions.end(),[](const moneyTransaction& t) {
+        std::for_each(_transactions.begin(), _transactions.end(), [](const moneyTransaction &t) {
             std::cout << t << std::endl;
         });
     }
+
     int getCurrentBalance() {
-        int currentBalance = std::accumulate(_transactions.begin(),_transactions.end(),0,
-            [](int currentTotal,const moneyTransaction& t) {
-                return currentTotal + t.getAmount();
-            });
+        int currentBalance = std::accumulate(_transactions.begin(), _transactions.end(), 0,
+                                             [](int currentTotal, const moneyTransaction &t) {
+                                                 return currentTotal + t.getAmount();
+                                             });
         return currentBalance;
     }
 
-
 private:
-std::vector<T> _transactions;
+    std::vector<T> _transactions;
 };
 
 
 template<>
 class Account<stockTransaction> {
-    public:
+public:
     Account() {
         stock::server::sig.connect(onStockUpdate);
     }
+
     void buyStock(u_int32_t amount, std::string stockName) {
         // implement validation: check if there is enough money on account before
 
-        stockTransaction tx(amount,stockName);
+        stockTransaction tx(amount, stockName);
 
         stock::order order;
         order.tx = tx;
@@ -77,17 +80,16 @@ class Account<stockTransaction> {
         if (f.get()) {
             if (ownedStocks.contains(stockName)) {
                 ownedStocks[stockName] += amount;
-
-            }else {
-               ownedStocks[stockName] = amount;
+            } else {
+                ownedStocks[stockName] = amount;
             }
         }
     }
-    void sellStock(u_int32_t amount, std::string name) {
 
+    void sellStock(u_int32_t amount, std::string name) {
     }
 
-    void onStockUpdate(std::string stockName, int updatedPrice){
+    void onStockUpdate(std::string stockName, int updatedPrice) {
         std::lock_guard<std::mutex> lock(mtx);
         if (ownedStocks.contains(stockName)) {
             ownedStocks[stockName] = updatedPrice;
@@ -96,7 +98,7 @@ class Account<stockTransaction> {
 
 private:
     std::vector<moneyTransaction> _moneyTransactions;
-    std::map<std::string,int> ownedStocks;
+    std::map<std::string, int> ownedStocks;
     std::mutex mtx;
 };
 

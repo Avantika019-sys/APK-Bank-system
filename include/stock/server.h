@@ -12,20 +12,28 @@
 #define BANK_STOCKSERVER_H
 
 namespace stock {
-
-class server {
+    class server {
     public:
-    server();
-    static server& getInstance();
-    boost::signals2::signal<void (std::string stockName, double UpdatedPrice)>sig;
-    void startUpdateStocksWorker();
-    void startStockWorker();
-    messageQueue msgQueue;
-private:
-    std::vector<std::pair<std::string,double>> stocks;
-    visitor orderVisitor;
-};
+        server();
 
+        static server &getInstance();
+
+        boost::signals2::signal<void (std::string stockName, double UpdatedPrice)> sig;
+
+        void startUpdateStocksWorker();
+
+        void startStockWorker();
+
+        messageQueue msgQueue;
+
+        void stopWorkers();
+
+    private:
+        std::vector<std::pair<std::string, double> > stocks;
+        visitor orderVisitor;
+        std::mutex mtx;
+        bool run = true;
+    };
 }
 
 #endif //BANK_STOCKSERVER_H

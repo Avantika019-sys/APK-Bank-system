@@ -9,9 +9,9 @@ int main() {
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
 
-  int input;
-
-  while (true) {
+  bool run = true;
+  while (run) {
+    int input;
     std::cin >> input;
     std::cout << "1: withdraw money " << std::endl;
     std::cout << "2: deposit money " << std::endl;
@@ -22,6 +22,7 @@ int main() {
     std::cout << "7: " << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
+    std::cout << "e: exit program" << std::endl;
 
 
     switch (input) {
@@ -34,7 +35,10 @@ int main() {
       case '7': std::cout << "7" << std::endl;
       case '8': std::cout << "8" << std::endl;
       case '9': std::cout << "9" << std::endl;
-
+      case 'e': {
+        server.stopWorkers();
+        run = false;
+      }
       default:
         std::cout << "Unknown input" << std::endl;
     }
