@@ -4,17 +4,27 @@
 
 #include "../include/transaction.h"
 
-moneyTransaction::moneyTransaction(const int amount): _createdAt(std::chrono::system_clock::now()),_amount(amount) {
+moneyTransaction::moneyTransaction(const int amount, moneyTransactionType type) : createdAt_(
+        std::chrono::system_clock::now()), amount_(amount), type_(type) {
 }
 
 std::chrono::system_clock::time_point moneyTransaction::getCreatedAt() const {
-    return _createdAt;
+    return createdAt_;
 }
 
 int moneyTransaction::getAmount() const {
-    return _amount;
+    return amount_;
 }
 
-std::ostream& operator<<(std::ostream& os, const moneyTransaction& t) {
-    os << "Transaction created at: " << t.getCreatedAt() << "Amount: "<< t.getAmount() << std::endl;
+moneyTransactionType moneyTransaction::getTransactionType() const {
+    return type_;
+}
+
+std::ostream &operator<<(std::ostream &os, const moneyTransaction &t) {
+    std::string transactionTypeStr = "withdrawal";
+    if (t.getTransactionType() == moneyTransactionType::deposit) {
+        transactionTypeStr = "deposit";
+    }
+    os << "Transaction created at: " << t.getCreatedAt() << " Amount: " << t.getAmount() << " Type: " <<
+            transactionTypeStr << std::endl;
 }
