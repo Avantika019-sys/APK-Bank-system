@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "account.h"
 #include "stock/server.h"
 
@@ -10,6 +12,7 @@ public:
       std::placeholders::_1,
       std::placeholders::_2);
     stock::server::getInstance().sig.connect(handler);
+    monitorStocks = false;
   }
 
   bool buyStock(int amountOfStocks, std::string stockName) {
@@ -55,14 +58,22 @@ public:
   void sellStock(int amount, std::string name) {
   }
 
-  void onStockUpdate(std::string stockName, int updatedPrice) {
+  void setMonitorStocks(bool monitor) {
     std::lock_guard<std::mutex> lock(mtx_);
-    if (ownedStocks_.contains(stockName)) {
-      ownedStocks_[stockName] = updatedPrice;
-    }
+    monitorStocks = monitor;
   }
 
 private:
+  void onStockUpdate(std::string stockName, int updatedPrice) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (ownedStocks_.contains(stockName) && monitorStocks) {
+      std::cout << "The value of a stock you own has updated!" << std::endl;
+      std::cout << "Stock name:" << stockName << std::endl;
+      std::cout << "New price per stock:" << updatedPrice << std::endl;
+    }
+  }
+
+  bool monitorStocks;
   std::vector<stockTx> stockTxs_;
   std::map<std::string, int> ownedStocks_;
   std::mutex mtx_;
