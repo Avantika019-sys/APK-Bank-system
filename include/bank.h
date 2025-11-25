@@ -1,7 +1,3 @@
-//
-// Created by ali on 11/20/25.
-//
-
 #ifndef BANK_BANK_H
 #define BANK_BANK_H
 #include <vector>
@@ -10,9 +6,13 @@
 
 class Bank {
 public:
-    Bank();
+  Bank(std::string bankName);
+
+  void transferAccountTo(Bank &from, std::string accId);
 
 private:
-    std::vector<Account> accounts;
+  std::vector<Account> accounts;
 };
-#endif //BANK_BANK_H
+
+
+#endif // BANK_BANK_H

@@ -4,27 +4,31 @@
 
 #include "../include/transaction.h"
 
-moneyTransaction::moneyTransaction(const int amount, moneyTransactionType type) : createdAt_(
-        std::chrono::system_clock::now()), amount_(amount), type_(type) {
+moneyTx::moneyTx(const int amount, moneyTxType type)
+    : createdAt_(std::chrono::system_clock::now()), amount_(amount),
+      type_(type) {}
+
+std::chrono::system_clock::time_point moneyTx::getCreatedAt() const {
+  return createdAt_;
 }
 
-std::chrono::system_clock::time_point moneyTransaction::getCreatedAt() const {
-    return createdAt_;
+int moneyTx::getAmount() const { return amount_; }
+
+moneyTxType moneyTx::getTransactionType() const { return type_; }
+
+std::ostream &operator<<(std::ostream &os, const moneyTx &t) {
+  std::string transactionTypeStr = "withdrawal";
+  if (t.getTransactionType() == moneyTxType::deposit) {
+    transactionTypeStr = "deposit";
+  }
+  os << "Transaction created at: " << t.getCreatedAt()
+     << " Amount: " << t.getAmount() << " Type: " << transactionTypeStr
+     << std::endl;
+  return os;
 }
 
-int moneyTransaction::getAmount() const {
-    return amount_;
-}
-
-moneyTransactionType moneyTransaction::getTransactionType() const {
-    return type_;
-}
-
-std::ostream &operator<<(std::ostream &os, const moneyTransaction &t) {
-    std::string transactionTypeStr = "withdrawal";
-    if (t.getTransactionType() == moneyTransactionType::deposit) {
-        transactionTypeStr = "deposit";
-    }
-    os << "Transaction created at: " << t.getCreatedAt() << " Amount: " << t.getAmount() << " Type: " <<
-            transactionTypeStr << std::endl;
+std::ostream &operator<<(std::ostream &os, const stockTx &t) {
+  os << "Transaction created at: " << t.getCreatedAt()
+     << " Amount: " << t.getAmount() << std::endl;
+  return os;
 }
