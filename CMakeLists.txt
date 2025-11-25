@@ -4,6 +4,7 @@ project(Bank)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(Bank main.cpp
         include/account.h
@@ -17,4 +18,6 @@ add_executable(Bank main.cpp
         include/utils.h
         src/utils.cpp
         src/stock/messageQueue.cpp
+        include/bank.h
+        src/bank.cpp
 )
