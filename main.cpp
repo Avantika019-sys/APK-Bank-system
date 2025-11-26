@@ -31,7 +31,7 @@ int main() {
     std::cout << "3: buy stock" << std::endl;
     std::cout << "4: sell stock" << std::endl;
     std::cout << "5: switch bank" << std::endl;
-    std::cout << "6: " << std::endl;
+    std::cout << "6: monitor stocks" << std::endl;
     std::cout << "7: " << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
@@ -55,7 +55,7 @@ int main() {
       std::cin >> depositAmount;
       acc.withdraw(depositAmount);
       std::cout << "Successfull deposit!" << std::endl;
-			
+
     case '3':
       std::cout << "Enter number of bank to switch to" << std::endl;
       std::cout << "Available banks:" << std::endl;

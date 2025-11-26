@@ -9,7 +9,7 @@ class Bank {
 public:
   void switchToThisBank(Bank &fromBank, std::string accId);
   template <typename... Args> void addAccount(Args &&...args) {
-    accounts.emplace(std::forward<Args>(args)...);
+    accounts.emplace_back(std::forward<Args>(args)...);
   }
   Account &getAccountById(std::string id);
 
