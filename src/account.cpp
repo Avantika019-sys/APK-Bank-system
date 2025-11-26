@@ -1,4 +1,7 @@
 #include "account.h"
+#include "transaction.h"
+#include <iostream>
+#include <numeric>
 #include <string>
 
 Account::Account(std::string name, std::string id) {
@@ -37,8 +40,8 @@ Account::~Account() {
 }
 
 void Account::deposit(int amount) {
-  moneyTx tx(amount);
-  txs_.push_back(tx);
+  moneyTx  tx(amount,moneyTxType::deposit);
+  moneyTxs_.push_back(tx);
   char logMsg[50] = "deposited money into account\n";
   fputs(logMsg, fptrLogs_);
 }
@@ -54,12 +57,12 @@ void Account::withdraw(int amount) {
   moneyTxs_.push_back(tx);
 }
 
-void Account::printTransactionHistory() {
+void Account::printTransactionHistory() const{
   std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
                 [](const moneyTx &tx) { std::cout << tx << std::endl; });
 }
 
-int Account::getCurrentBalance() {
+int Account::getCurrentBalance() const {
   int res = std::accumulate(moneyTxs_.begin(), moneyTxs_.end(), 0,
                             [](int acc, const moneyTx &tx) {
                               switch (tx.getTransactionType()) {
@@ -74,4 +77,4 @@ int Account::getCurrentBalance() {
   return res;
 }
 
-std::string Account::getId() { return id_; }
+std::string Account::getId() const{ return id_; }
