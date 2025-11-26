@@ -64,13 +64,17 @@ int main() {
       std::cout << "3 : JyskeBank" << std::endl;
       int bankNo;
       std::cin >> bankNo;
-      switch (bankNo) {
-      case 1:
+      if (bankNo == 1 && currentBank != danskeBank) {
         danskeBank.switchToThisBank(currentBank, acc.getId());
-      case 2:
-        nordea.switchToThisBank(currentBank, acc.getId());
-      case 3:
-        jyskeBank.switchToThisBank(currentBank, acc.getId());
+        currentBank = danskeBank;
+      }
+      if (bankNo == 1 && currentBank != danskeBank) {
+        danskeBank.switchToThisBank(currentBank, acc.getId());
+        currentBank = danskeBank;
+      }
+      if (bankNo == 1 && currentBank != danskeBank) {
+        danskeBank.switchToThisBank(currentBank, acc.getId());
+        currentBank = danskeBank;
       }
     case '4':
       std::cout << "4" << std::endl;

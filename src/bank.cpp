@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+Bank::Bank(std::string name) : name_(name) {}
+
 void Bank::switchToThisBank(Bank &fromBank, std::string accId) {
   auto it =
       std::find_if(fromBank.accounts.begin(), fromBank.accounts.end(),
@@ -23,3 +25,5 @@ Account &Bank::getAccountById(std::string id) {
   }
   return *it;
 }
+  std::string Bank::getBankName(){return name_;}
+

@@ -7,13 +7,16 @@
 
 class Bank {
 public:
+  Bank(std::string name);
   void switchToThisBank(Bank &fromBank, std::string accId);
   template <typename... Args> void addAccount(Args &&...args) {
     accounts.emplace_back(std::forward<Args>(args)...);
   }
   Account &getAccountById(std::string id);
+  std::string getBankName();
 
 private:
   std::vector<Account> accounts;
+  std::string name_;
 };
 #endif // ANK_BANK_H
