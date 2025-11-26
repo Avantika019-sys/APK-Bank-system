@@ -7,7 +7,7 @@
 
 class Account {
 public:
-  Account();
+  Account(std::string name, std::string id);
 
   Account(Account &&other) noexcept;
 
@@ -33,7 +33,7 @@ private:
   Account(const Account &other);
 
   Account &operator=(const Account &other);
-
+  std::string name_;
   std::string id_;
 };
 

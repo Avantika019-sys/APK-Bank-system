@@ -1,6 +1,8 @@
 
 #include <iostream>
 #include <ostream>
+#include <stdexcept>
+#include <string>
 
 #include "account.h"
 #include "bank.h"
@@ -10,10 +12,15 @@ int main() {
   auto &server = stock::server::getInstance();
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
-  Account acc;
-  Bank danskeBank("Danske bank");
-  Bank nordea("Nordea");
-  Bank jyskeBank("Jyske Bank");
+
+  Bank danskeBank;
+  Bank nordea;
+  Bank jyskeBank;
+  auto &currentBank = danskeBank;
+
+  std::string accId = "12345";
+  currentBank.addAccount("Jens Nielsen", accId);
+  auto &acc = currentBank.getAccountById(accId);
   bool run = true;
 
   while (run) {
@@ -35,14 +42,20 @@ int main() {
       std::cout << "Enter amount to withdraw" << std::endl;
       int withdrawAmount;
       std::cin >> withdrawAmount;
-      acc.withdraw(withdrawAmount);
+      try {
+        acc.withdraw(withdrawAmount);
+      } catch (const std::invalid_argument e) {
+        std::cout << "Failed to withdraw because: " << e.what() << std::endl;
+      }
+      std::cout << "Successfull withdrawal!" << std::endl;
 
     case '2':
       std::cout << "Enter amount to deposit" << std::endl;
       int depositAmount;
       std::cin >> depositAmount;
       acc.withdraw(depositAmount);
-
+      std::cout << "Successfull deposit!" << std::endl;
+			
     case '3':
       std::cout << "Enter number of bank to switch to" << std::endl;
       std::cout << "Available banks:" << std::endl;
@@ -53,8 +66,11 @@ int main() {
       std::cin >> bankNo;
       switch (bankNo) {
       case 1:
+        danskeBank.switchToThisBank(currentBank, acc.getId());
       case 2:
+        nordea.switchToThisBank(currentBank, acc.getId());
       case 3:
+        jyskeBank.switchToThisBank(currentBank, acc.getId());
       }
     case '4':
       std::cout << "4" << std::endl;
