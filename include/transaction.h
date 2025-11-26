@@ -38,7 +38,10 @@ public:
 
 private:
   std::chrono::system_clock::time_point _createdAt;
-  int32_t _amount;
+  int amount_;
 };
+
+std::ostream &operator<<(std::ostream &os, const moneyTx &t);
+std::ostream &operator<<(std::ostream &os, const stockTx &t);
 
 #endif // BANK_TRANSACTION_H
