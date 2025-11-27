@@ -21,9 +21,8 @@ int main() {
   std::string accId = "12345";
   currentBank.addAccount("Jens Nielsen", accId);
   auto &acc = currentBank.getAccountById(accId);
-  bool run = true;
 
-  while (run) {
+  while (1) {
     int input;
     std::cin >> input;
     std::cout << "1: withdraw money " << std::endl;
@@ -59,9 +58,9 @@ int main() {
     case '3':
       std::cout << "Enter number of bank to switch to" << std::endl;
       std::cout << "Available banks:" << std::endl;
-      std::cout << "1 : Dansk Bank" << std::endl;
-      std::cout << "2 : Nordea" << std::endl;
-      std::cout << "3 : JyskeBank" << std::endl;
+      std::cout << "1: Dansk Bank" << std::endl;
+      std::cout << "2: Nordea" << std::endl;
+      std::cout << "3: JyskeBank" << std::endl;
       int bankNo;
       std::cin >> bankNo;
       if (bankNo == 1 &&
@@ -95,7 +94,7 @@ int main() {
       std::cout << "9" << std::endl;
     case 'e': {
       server.stopWorkers();
-      run = false;
+      break;
     }
     default:
       std::cout << "Unknown input" << std::endl;
