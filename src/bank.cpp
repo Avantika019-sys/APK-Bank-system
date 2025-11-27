@@ -20,7 +20,7 @@ void Bank::switchToThisBank(Bank &fromBank, std::string accId) {
 Account &Bank::getAccountById(std::string id) {
   auto it = std::find_if(accounts.begin(), accounts.end(),
                          [&](const Account &acc) { return acc.getId() == id; });
-  if (it != accounts.end()) {
+  if (it == accounts.end()) {
     throw std::invalid_argument("Account not found in bank");
   }
   return *it;

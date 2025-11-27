@@ -1,16 +1,11 @@
 #include "stock/visitor.h"
 
 namespace stock {
-  order::order(stockTx tx) : tx(tx) {
-  }
+order::order(stockTx tx) : tx(tx) {}
 
-  info::info(std::string name) : stockName(name) {
-  }
+info::info(std::string name) : stockName(name) {}
 
-  void visitor::operator()(order &stockOrder) { stockOrder.prom.set_value(true); }
+void visitor::operator()(order &stockOrder) { stockOrder.prom.set_value(true); }
 
-  void visitor::operator()(info &stateReq) {
-    state st;
-    stateReq.prom.set_value(st);
-  }
+void visitor::operator()(info &stateReq) { stateReq.prom.set_value(10); }
 } // namespace stock

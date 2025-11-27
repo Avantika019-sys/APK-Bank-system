@@ -16,15 +16,13 @@ int main() {
   Bank danskeBank("Danske Bank");
   Bank nordea("Nordea");
   Bank jyskeBank("Jyske Bank");
-  auto &currentBank = danskeBank;
+  Bank *currentBank = &danskeBank;
 
   std::string accId = "12345";
-  currentBank.addAccount("Jens Nielsen", accId);
-  auto &acc = currentBank.getAccountById(accId);
+  currentBank->addAccount("Jens Nielsen", accId);
+  auto &acc = currentBank->getAccountById(accId);
 
   while (1) {
-    int input;
-    std::cin >> input;
     std::cout << "1: withdraw money " << std::endl;
     std::cout << "2: deposit money " << std::endl;
     std::cout << "3: buy stock" << std::endl;
@@ -36,6 +34,8 @@ int main() {
     std::cout << "9: " << std::endl;
     std::cout << "e: exit program" << std::endl;
 
+    int input;
+    std::cin >> input;
     switch (input) {
     case '1':
       std::cout << "Enter amount to withdraw" << std::endl;
@@ -64,19 +64,20 @@ int main() {
       int bankNo;
       std::cin >> bankNo;
       if (bankNo == 1 &&
-          currentBank.getBankName() != danskeBank.getBankName()) {
-        danskeBank.switchToThisBank(currentBank, acc.getId());
-        currentBank = danskeBank;
+          currentBank->getBankName() != danskeBank.getBankName()) {
+        danskeBank.switchToThisBank(*currentBank, acc.getId());
+        currentBank = &danskeBank;
         std::cout << "Switched to Danske Bank" << std::endl;
       }
-      if (bankNo == 2 && currentBank.getBankName() != nordea.getBankName()) {
-        danskeBank.switchToThisBank(currentBank, acc.getId());
-        currentBank = nordea;
+      if (bankNo == 2 && currentBank->getBankName() != nordea.getBankName()) {
+        danskeBank.switchToThisBank(*currentBank, acc.getId());
+        currentBank = &nordea;
         std::cout << "Switched to Nordea" << std::endl;
       }
-      if (bankNo == 3 && currentBank.getBankName() != jyskeBank.getBankName()) {
-        danskeBank.switchToThisBank(currentBank, acc.getId());
-        currentBank = jyskeBank;
+      if (bankNo == 3 &&
+          currentBank->getBankName() != jyskeBank.getBankName()) {
+        danskeBank.switchToThisBank(*currentBank, acc.getId());
+        currentBank = &jyskeBank;
         std::cout << "Switched to Jyske Bank" << std::endl;
       }
     case '4':

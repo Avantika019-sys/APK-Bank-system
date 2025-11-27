@@ -9,26 +9,28 @@
 #include "transaction.h"
 
 namespace stock {
-  struct order {
-    order(stockTx tx);
+struct order {
+  order(stockTx tx);
 
-    stockTx tx;
-    std::promise<bool> prom; // result of the order
-  };
+  stockTx tx;
+  std::promise<bool> prom; // result of the order
+};
 
-  struct info {
-    explicit info(std::string name);
+struct info {
+  explicit info(std::string name);
 
-    std::string stockName;
-    std::promise<int> prom; // price per stock
-  };
+  std::string stockName;
+  std::promise<int> prom; // price per stock
+};
 
-  typedef std::variant<order, info> variant;
+typedef std::variant<order, info> variant;
+struct message {
+  variant data;
+};
+struct visitor {
+  void operator()(order &bo);
 
-  struct visitor {
-    void operator()(order &bo);
-
-    void operator()(info &so);
-  };
+  void operator()(info &so);
+};
 } // namespace stock
 #endif // BANK_VISITOR_H

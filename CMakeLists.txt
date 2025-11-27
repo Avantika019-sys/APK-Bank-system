@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(Bank main.cpp
         include/account.h
+        src/account.cpp
         src/transaction.cpp
         include/transaction.h
         include/stock/server.h
@@ -20,4 +21,6 @@ add_executable(Bank main.cpp
         src/stock/messageQueue.cpp
         include/bank.h
         src/bank.cpp
+        main.cpp
+        main.cpp
 )

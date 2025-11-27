@@ -24,15 +24,14 @@ public:
   int getCurrentBalance() const;
 
   std::string getId() const;
+  Account(const Account &other) = delete;
+  Account &operator=(const Account &other) = delete;
 
 protected:
   std::vector<moneyTx> moneyTxs_;
   FILE *fptrLogs_;
 
 private:
-  Account(const Account &other);
-
-  Account &operator=(const Account &other);
   std::string name_;
   std::string id_;
 };
