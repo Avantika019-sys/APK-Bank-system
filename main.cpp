@@ -32,7 +32,7 @@ int main() {
     std::cout << "4: sell stock" << std::endl;
     std::cout << "5: switch bank" << std::endl;
     std::cout << "6: monitor stocks" << std::endl;
-    std::cout << "7: get transaction history and current balanace" << std::endl;
+    std::cout << "7: get transaction history and current balance" << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
     std::cout << "e: exit program" << std::endl;
