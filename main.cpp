@@ -13,9 +13,9 @@ int main() {
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
 
-  Bank danskeBank;
-  Bank nordea;
-  Bank jyskeBank;
+  Bank danskeBank("Danske Bank");
+  Bank nordea("Nordea");
+  Bank jyskeBank("Jyske Bank");
   auto &currentBank = danskeBank;
 
   std::string accId = "12345";
@@ -32,7 +32,7 @@ int main() {
     std::cout << "4: sell stock" << std::endl;
     std::cout << "5: switch bank" << std::endl;
     std::cout << "6: monitor stocks" << std::endl;
-    std::cout << "7: " << std::endl;
+    std::cout << "7: get transaction history and current balanace" << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
     std::cout << "e: exit program" << std::endl;
@@ -64,17 +64,21 @@ int main() {
       std::cout << "3 : JyskeBank" << std::endl;
       int bankNo;
       std::cin >> bankNo;
-      if (bankNo == 1 && currentBank != danskeBank) {
+      if (bankNo == 1 &&
+          currentBank.getBankName() != danskeBank.getBankName()) {
         danskeBank.switchToThisBank(currentBank, acc.getId());
         currentBank = danskeBank;
+        std::cout << "Switched to Danske Bank" << std::endl;
       }
-      if (bankNo == 1 && currentBank != danskeBank) {
+      if (bankNo == 2 && currentBank.getBankName() != nordea.getBankName()) {
         danskeBank.switchToThisBank(currentBank, acc.getId());
-        currentBank = danskeBank;
+        currentBank = nordea;
+        std::cout << "Switched to Nordea" << std::endl;
       }
-      if (bankNo == 1 && currentBank != danskeBank) {
+      if (bankNo == 3 && currentBank.getBankName() != jyskeBank.getBankName()) {
         danskeBank.switchToThisBank(currentBank, acc.getId());
-        currentBank = danskeBank;
+        currentBank = jyskeBank;
+        std::cout << "Switched to Jyske Bank" << std::endl;
       }
     case '4':
       std::cout << "4" << std::endl;
@@ -83,7 +87,8 @@ int main() {
     case '6':
       std::cout << "6" << std::endl;
     case '7':
-      std::cout << "7" << std::endl;
+      acc.printTransactionHistory();
+      std::cout << "Current balance: " << acc.getCurrentBalance() << std::endl;
     case '8':
       std::cout << "8" << std::endl;
     case '9':
