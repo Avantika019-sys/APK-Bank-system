@@ -1,5 +1,9 @@
 {
     "files.associations": {
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b744aeb (commit)
         "xstring": "cpp",
         "cmath": "cpp",
         "atomic": "cpp",
@@ -59,5 +63,11 @@
         "xmemory": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp"
+<<<<<<< HEAD
+=======
+        "xstring": "cpp"
+>>>>>>> 6f456ca (create account)
+=======
+>>>>>>> b744aeb (commit)
     }
 }

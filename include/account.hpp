@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 #include <string>
 #include <vector>
 #include <memory>
@@ -12,7 +14,7 @@ class Account {
         static int accountCount;
         static const int maxAccounts = 5;
         static vector<unique_ptr<Account>> accounts;
-        Log log;
+        log log;
 
     public: 
         Account(string holderName, string type, double initialBalance)
@@ -35,3 +37,10 @@ class Account {
 
 int Account::accountCount = 0;
 vector<unique_ptr<Account>> Account::accounts;
+
+//concepts used:    
+// - Static members to track account count and store accounts
+// - Pure virtual functions to enforce derived class implementations
+// - Use of unique_ptr for memory management
+// - vector container to hold multiple accounts
+>>>>>>> b744aeb (commit)

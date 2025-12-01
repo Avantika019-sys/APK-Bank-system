@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 
 #include "../include/transaction.h"
@@ -45,3 +46,6 @@ transaction::transaction(int amt, const std::string& t)
     : amount(amt), type(t), timestamp(std::chrono::system_clock::now()),
       details(std::pmr::polymorphic_allocator<string>(memRes)) {
 }
+=======
+#include "transaction.hpp"
+>>>>>>> b744aeb (commit)
