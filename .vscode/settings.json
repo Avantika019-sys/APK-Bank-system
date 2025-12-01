@@ -1,9 +1,5 @@
 {
     "files.associations": {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> b744aeb (commit)
         "xstring": "cpp",
         "cmath": "cpp",
         "atomic": "cpp",
