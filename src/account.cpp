@@ -25,12 +25,15 @@ Account &Account::operator=(Account &&other) noexcept {
     if (fptrLogs_ != nullptr) {
       std::fclose(fptrLogs_);
     }
+
     moneyTxs_ = std::move(other.moneyTxs_);
     fptrLogs_ = other.fptrLogs_;
     name_ = std::move(other.name_);
     other.fptrLogs_ = nullptr;
   }
+  log.addEntry("Account created for " + holderName + " with initial balance " + to_string(initialBalance));
   return *this;
+
 }
 
 Account::~Account() {
@@ -57,6 +60,7 @@ void Account::withdraw(int amount) {
   moneyTxs_.push_back(tx);
 }
 
+<<<<<<< HEAD
 void Account::printTransactionHistory() const{
   std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
                 [](const moneyTx &tx) { std::cout << tx << std::endl; });
