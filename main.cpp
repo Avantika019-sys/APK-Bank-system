@@ -1,5 +1,13 @@
 
 #include <iostream>
+#include <memory>
+#include "account.hpp"
+#include "savingsAccount.hpp"
+#include "currencyExchange.hpp"
+#include "log.hpp"
+#include "transaction.hpp"
+
+using namespace std;
 
 #include <ostream>
 #include <stdexcept>
@@ -10,6 +18,7 @@
 #include "stock/server.h"
 
 int main() {
+<<<<<<< HEAD
   auto &server = stock::server::getInstance();
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
