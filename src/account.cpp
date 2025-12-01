@@ -81,4 +81,41 @@ int Account::getCurrentBalance() const {
   return res;
 }
 
+<<<<<<< HEAD
 std::string Account::getId() const{ return id_; }
+=======
+void Account::addAccount(unique_ptr<Account> account) {
+    if (canCreateAccount()) {
+        accounts.push_back(std::move(account));
+    } else {
+        throw std::runtime_error("Cannot create more accounts. Maximum limit reached.");
+    }
+}
+
+vector<Account*> Account::getAllAccounts() {
+    vector<Account*> accountPointers;
+    for (const auto& acc : accounts) {
+        accountPointers.push_back(acc.get());
+    }
+    return accountPointers;
+}
+
+void Account::deposit(double amount) {
+    if (amount > 0) {
+        balance += amount;
+    } else {
+        throw std::runtime_error("Deposit amount must be positive.");
+    }
+}
+
+void Account::withdraw(double amount) {
+    if (amount > 0 && amount <= balance) {
+        balance -= amount;
+    } else {
+        throw std::runtime_error("Invalid withdrawal amount.");
+    }
+}
+
+
+//concepts used
+>>>>>>> 54e6c07 (commit)

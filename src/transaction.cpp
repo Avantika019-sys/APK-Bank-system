@@ -1,7 +1,4 @@
 
-//
-// Created by ali on 10/30/25.
-//
 
 #include "../include/transaction.h"
 
@@ -41,4 +38,10 @@ std::ostream &operator<<(std::ostream &os, const stockTx &t) {
   os << "Transaction created at: " << t.getCreatedAt()
       << " Amount: " << t.getAmount() << std::endl;
   return os;
+}
+
+
+transaction::transaction(int amt, const std::string& t)
+    : amount(amt), type(t), timestamp(std::chrono::system_clock::now()),
+      details(std::pmr::polymorphic_allocator<string>(memRes)) {
 }
