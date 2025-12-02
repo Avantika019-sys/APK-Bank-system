@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include "account.h"
 #include "transaction.h"
 #include <iostream>
@@ -61,7 +60,6 @@ void Account::withdraw(int amount) {
   moneyTxs_.push_back(tx);
 }
 
-<<<<<<< HEAD
 void Account::printTransactionHistory() const{
   std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
                 [](const moneyTx &tx) { std::cout << tx << std::endl; });
@@ -82,115 +80,3 @@ int Account::getCurrentBalance() const {
   return res;
 }
 
-<<<<<<< HEAD
-std::string Account::getId() const{ return id_; }
-=======
-void Account::addAccount(unique_ptr<Account> account) {
-    if (canCreateAccount()) {
-        accounts.push_back(std::move(account));
-    } else {
-        throw std::runtime_error("Cannot create more accounts. Maximum limit reached.");
-    }
-}
-
-vector<Account*> Account::getAllAccounts() {
-    vector<Account*> accountPointers;
-    for (const auto& acc : accounts) {
-        accountPointers.push_back(acc.get());
-    }
-    return accountPointers;
-}
-
-void Account::deposit(double amount) {
-    if (amount > 0) {
-        balance += amount;
-    } else {
-        throw std::runtime_error("Deposit amount must be positive.");
-    }
-}
-
-void Account::withdraw(double amount) {
-    if (amount > 0 && amount <= balance) {
-        balance -= amount;
-    } else {
-        throw std::runtime_error("Invalid withdrawal amount.");
-    }
-}
-
-
-
-=======
-#include "account.hpp"
-#include <string>
-#include <stdexcept>
-using namespace std;
-
-Account::Account(string holderName, string type, double initialBalance)
-    : accountHolderName(holderName), accountType(type), balance(initialBalance) {
-    if (accountCount <= maxAccounts) {
-        accountCount++;
-    } else {
-        throw std::runtime_error("Maximum number of accounts reached.");
-    }
-    log.addEntry("Account created for " + holderName + " with initial balance " + to_string(initialBalance));
-}
-
-Account::~Account() {
-    accountCount--;
-}
-
-int Account::getAccountCount() {
-    return accountCount;
-}
-
-double Account::getBalance() const {
-    return balance;
-}
-
-string Account::getAccountType() const {
-    return accountType;
-}
-
-string Account::getAccountHolderName() const {
-    return accountHolderName;
-}
-<<<<<<< HEAD
->>>>>>> 6f456ca (create account)
-=======
-
-void Account::addAccount(unique_ptr<Account> account) {
-    if (canCreateAccount()) {
-        accounts.push_back(std::move(account));
-    } else {
-        throw std::runtime_error("Cannot create more accounts. Maximum limit reached.");
-    }
-}
-
-vector<Account*> Account::getAllAccounts() {
-    vector<Account*> accountPointers;
-    for (const auto& acc : accounts) {
-        accountPointers.push_back(acc.get());
-    }
-    return accountPointers;
-}
-
-void Account::deposit(double amount) {
-    if (amount > 0) {
-        balance += amount;
-    } else {
-        throw std::runtime_error("Deposit amount must be positive.");
-    }
-}
-
-void Account::withdraw(double amount) {
-    if (amount > 0 && amount <= balance) {
-        balance -= amount;
-    } else {
-        throw std::runtime_error("Invalid withdrawal amount.");
-    }
-}
-
-//concopts used:
-// - runtime_error for exception handling
-// - basic garuntees for constructor
->>>>>>> b744aeb (commit)
