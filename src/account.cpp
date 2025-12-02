@@ -117,5 +117,4 @@ void Account::withdraw(double amount) {
 }
 
 
-//concepts used
->>>>>>> 54e6c07 (commit)
+
