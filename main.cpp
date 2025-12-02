@@ -1,5 +1,14 @@
 
 #include <iostream>
+#include <memory>
+#include "account.hpp"
+#include "savingsAccount.hpp"
+#include "currencyExchange.hpp"
+#include "log.hpp"
+#include "transaction.hpp"
+
+using namespace std;
+
 #include <ostream>
 #include <stdexcept>
 #include <string>
