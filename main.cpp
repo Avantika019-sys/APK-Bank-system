@@ -18,7 +18,6 @@ using namespace std;
 #include "stock/server.h"
 
 int main() {
-<<<<<<< HEAD
   auto &server = stock::server::getInstance();
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });

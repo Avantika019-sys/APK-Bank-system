@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 #include <string>
 #include <vector>
 #include <memory>

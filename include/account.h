@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <log.hpp>
 
 class Account {
 public:
@@ -34,6 +35,7 @@ protected:
 private:
   std::string name_;
   std::string id_;
+  Log log;
 };
 
 #endif // BANK_ACCOUNT_H

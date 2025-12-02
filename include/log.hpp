@@ -4,7 +4,6 @@
 #include <memory_resource>
 using namespace std;
 
-
 class Log{
     private:
         std::pmr::vector<string> entries;
