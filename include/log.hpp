@@ -21,8 +21,4 @@ class Log{
                 cout << entry << endl;
             }
         }
-
 };
-
-
-// log class where it can show and add entries from the account class

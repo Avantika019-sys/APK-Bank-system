@@ -65,6 +65,5 @@ void Account::withdraw(double amount) {
     }
 }
 
-//concopts used:
-// - runtime_error for exception handling
-// - basic garuntees for constructor
+
+//concepts used
