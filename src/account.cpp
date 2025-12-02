@@ -1,69 +1,82 @@
-#include "account.hpp"
+#include "account.h"
+#include "transaction.h"
+#include <iostream>
+#include <numeric>
+#include <algorithm>
+#include <log.hpp>
 #include <string>
-#include <stdexcept>
-using namespace std;
 
-Account::Account(string holderName, string type, double initialBalance)
-    : accountHolderName(holderName), accountType(type), balance(initialBalance) {
-    if (accountCount <= maxAccounts) {
-        accountCount++;
-    } else {
-        throw std::runtime_error("Maximum number of accounts reached.");
-    }
-    log.addEntry("Account created for " + holderName + " with initial balance " + to_string(initialBalance));
+Account::Account(std::string name, std::string id) {
+  name_ = name;
+  id_ = id;
+//   const std::string fileName = id_ + ".csv";
+//   fptrLogs_ = std::fopen(fileName.c_str(), "w");
+//   if (fptrLogs_ == NULL) {
+//     throw std::invalid_argument("Could not open log file");
+//   }
+  log.addEntry("Account created for " + name);
+}
+
+Account::Account(Account &&other) noexcept
+  : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)){}
+
+
+Account &Account::operator=(Account &&other) noexcept {
+  if (this != &other) {
+    // if (fptrLogs_ != nullptr) {
+    //   std::fclose(fptrLogs_);
+    // }
+    moneyTxs_ = std::move(other.moneyTxs_);
+    // fptrLogs_ = other.fptrLogs_;
+    // name_ = std::move(other.name_);
+    // other.fptrLogs_ = nullptr;
+  }
+  return *this;
 }
 
 Account::~Account() {
-    accountCount--;
+//   if (fptrLogs_ != nullptr) {
+//     fclose(fptrLogs_);
+//   }
 }
 
-int Account::getAccountCount() {
-    return accountCount;
+void Account::deposit(int amount) {
+  moneyTx  tx(amount,moneyTxType::deposit);
+  moneyTxs_.push_back(tx);
+//   char logMsg[50] = "deposited money into account\n";
+//   fputs(logMsg, fptrLogs_);
+
 }
 
-double Account::getBalance() const {
-    return balance;
+void Account::withdraw(int amount) {
+  int curBalance = getCurrentBalance();
+  if (curBalance < amount) {
+    // char logMsg[50] = "withdraw attempt failed due to low balance\n";
+    // fputs(logMsg, fptrLogs_);
+    throw std::invalid_argument("Not enough money on account");
+  }
+  moneyTx tx(amount, moneyTxType::withdraw);
+  moneyTxs_.push_back(tx);
 }
 
-string Account::getAccountType() const {
-    return accountType;
+void Account::printTransactionHistory() const{
+  std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
+                [](const moneyTx &tx) { std::cout << tx << std::endl; });
 }
 
-string Account::getAccountHolderName() const {
-    return accountHolderName;
+int Account::getCurrentBalance() const {
+  int res = std::accumulate(moneyTxs_.begin(), moneyTxs_.end(), 0,
+                            [](int acc, const moneyTx &tx) {
+                              switch (tx.getTransactionType()) {
+                                case moneyTxType::deposit:
+                                  return acc + tx.getAmount();
+                                case moneyTxType::withdraw:
+                                  return acc - tx.getAmount();
+                                case moneyTxType::stockPurchase:
+                                  return acc - tx.getAmount();
+                              };
+                            });
+  return res;
 }
 
-void Account::addAccount(unique_ptr<Account> account) {
-    if (canCreateAccount()) {
-        accounts.push_back(std::move(account));
-    } else {
-        throw std::runtime_error("Cannot create more accounts. Maximum limit reached.");
-    }
-}
-
-vector<Account*> Account::getAllAccounts() {
-    vector<Account*> accountPointers;
-    for (const auto& acc : accounts) {
-        accountPointers.push_back(acc.get());
-    }
-    return accountPointers;
-}
-
-void Account::deposit(double amount) {
-    if (amount > 0) {
-        balance += amount;
-    } else {
-        throw std::runtime_error("Deposit amount must be positive.");
-    }
-}
-
-void Account::withdraw(double amount) {
-    if (amount > 0 && amount <= balance) {
-        balance -= amount;
-    } else {
-        throw std::runtime_error("Invalid withdrawal amount.");
-    }
-}
-
-
-//concepts used
+std::string Account::getId() const{ return id_; }
