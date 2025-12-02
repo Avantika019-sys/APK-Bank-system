@@ -4,8 +4,8 @@
 #include <vector>
 #include <chrono>
 #include <memory_resource>
-//#include "../concepts.h"
-//#include "../exceptions.h"
+#include "concepts.h"
+#include "exceptions.h"
 
 namespace banking {
     
@@ -26,6 +26,7 @@ public:
             if (to_account.deposit(amount)) {
                 return true;
             } else {
+                // Rollback - strong exception guarantee
                 deposit(amount);
                 throw exceptions::InvalidTransactionException("Transfer failed");
             }
@@ -34,7 +35,7 @@ public:
     }
 };
 
-
+// CRTP Base for account statistics
 template<typename Derived>
 class AccountWithStatistics {
 private:
