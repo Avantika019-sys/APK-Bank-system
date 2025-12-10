@@ -2,6 +2,7 @@
 #ifndef BANK_VISITOR_H
 #define BANK_VISITOR_H
 #include <future>
+#include <variant>
 
 #include "transaction.h"
 
@@ -24,7 +25,7 @@ typedef std::variant<order, info> variant;
 struct message {
   variant data;
 };
-struct visitor {  
+struct visitor {
   void operator()(order &bo);
 
   void operator()(info &so);
@@ -32,19 +33,15 @@ struct visitor {
 } // namespace stock
 
 struct Stock {
-    std::string symbol;
-    std::string name;
-    double current_price;
-    double day_high;
-    double day_low;
-    
-    Stock(std::string sym, std::string n, double price)
-        : symbol(std::move(sym))
-        , name(std::move(n))
-        , current_price(price)
-        , day_high(price)
-        , day_low(price) {}
-};
+  std::string symbol;
+  std::string name;
+  double current_price;
+  double day_high;
+  double day_low;
 
+  Stock(std::string sym, std::string n, double price)
+      : symbol(std::move(sym)), name(std::move(n)), current_price(price),
+        day_high(price), day_low(price) {}
+};
 
 #endif // BANK_VISITOR_H

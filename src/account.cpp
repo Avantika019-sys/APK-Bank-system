@@ -1,111 +1,74 @@
 #include "account.h"
 #include "transaction.h"
+#include <algorithm>
 #include <iostream>
 #include <numeric>
-#include "exceptions.h" 
-#include <algorithm>
-#include <log.hpp>
 #include <string>
+#include <sys/types.h>
 
-Account::Account(std::string name, std::string id) {
-  name_ = name;
-  id_ = id;
-//   const std::string fileName = id_ + ".csv";
-//   fptrLogs_ = std::fopen(fileName.c_str(), "w");
-//   if (fptrLogs_ == NULL) {
-//     throw std::invalid_argument("Could not open log file");
-//   }
-  log.addEntry("Account created for " + name);
-}
+Account::Account(std::string name, std::string id)
+    : logger_(id), name_(name), id_(id) {}
 
 Account::Account(Account &&other) noexcept
-  : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)){}
-
+    : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)),
+      logger_(std::move(other.logger_)) {}
 
 Account &Account::operator=(Account &&other) noexcept {
   if (this != &other) {
 
-    // if (fptrLogs_ != nullptr) {
-    //   std::fclose(fptrLogs_);
-    // }
     moneyTxs_ = std::move(other.moneyTxs_);
-    // fptrLogs_ = other.fptrLogs_;
     // name_ = std::move(other.name_);
-    // other.fptrLogs_ = nullptr;
   }
   return *this;
-
 }
 
-Account::~Account() {
-//   if (fptrLogs_ != nullptr) {
-//     fclose(fptrLogs_);
-//   }
-}
-
-void Account::deposit(int amount) {
-  if(amount < 1){
-    throw std::invalid_argument("invaild");
-  }
-  //add some logs/statistics
-  moneyTx  tx(amount,moneyTxType::deposit);
+void Account::deposit(uint amount) {
+  // add some logs/statistics
+  moneyTx tx(amount, moneyTxType::deposit);
   moneyTxs_.push_back(tx);
-//   char logMsg[50] = "deposited money into account\n";
-//   fputs(logMsg, fptrLogs_);
-
 }
 
-void Account::withdraw(int amount) {
-    if(amount < 1){
-    throw std::invalid_argument("invaild");
-  }
-  int curBalance = getCurrentBalance();
+void Account::withdraw(uint amount) {
+  int curBalance = getBalance();
   if (curBalance < amount) {
-    // char logMsg[50] = "withdraw attempt failed due to low balance\n";
-    // fputs(logMsg, fptrLogs_);
     throw std::invalid_argument("Not enough money on account");
   }
   moneyTx tx(amount, moneyTxType::withdraw);
   moneyTxs_.push_back(tx);
-  //add some logs/statistics
+  // add some logs/statistics
 }
 
-
-
-void Account::printTransactionHistory() const{
+void Account::printTransactionHistory() const {
   std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
                 [](const moneyTx &tx) { std::cout << tx << std::endl; });
 }
 
-int Account::getCurrentBalance() const {
+int Account::getBalance() const {
   int res = std::accumulate(moneyTxs_.begin(), moneyTxs_.end(), 0,
                             [](int acc, const moneyTx &tx) {
                               switch (tx.getTransactionType()) {
-                                case moneyTxType::deposit:
-                                  return acc + tx.getAmount();
-                                case moneyTxType::withdraw:
-                                  return acc - tx.getAmount();
-                                case moneyTxType::stockPurchase:
-                                  return acc - tx.getAmount();
+                              case moneyTxType::deposit:
+                                return acc + tx.getAmount();
+                              case moneyTxType::withdraw:
+                                return acc - tx.getAmount();
+                              case moneyTxType::stockPurchase:
+                                return acc - tx.getAmount();
                               };
                             });
   return res;
 }
 
-std::string Account::getAccountType() const
-{
-    return type_;
-}
+std::string Account::getAccountType() const { return type_; }
 
-  bool transfer(double amount, Account& to_account) {
-        if (withdraw(amount)) {
-            if (to_account.deposit(amount)) {
-                return true;
-            } else {
-                // Rollback - strong exception guarantee
-                deposit(amount);
-                throw exceptions::InvalidTransactionException("Transfer failed");
-            }
-        }
-        return false;
+bool transfer(double amount, Account &to_account) {
+  if (withdraw(amount)) {
+    if (to_account.deposit(amount)) {
+      return true;
+    } else {
+      // Rollback - strong exception guarantee
+      deposit(amount);
+      throw exceptions::InvalidTransactionException("Transfer failed");
     }
+  }
+  return false;
+}

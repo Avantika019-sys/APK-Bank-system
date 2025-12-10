@@ -1,10 +1,10 @@
 #ifndef BANK_ACCOUNT_H
 #define BANK_ACCOUNT_H
+#include "logger.h"
 #include "transaction.h"
-#include <stdio.h>
 #include <string>
+#include <sys/types.h>
 #include <vector>
-#include <log.hpp>
 
 class Account {
 public:
@@ -14,15 +14,13 @@ public:
 
   Account &operator=(Account &&other) noexcept;
 
-  ~Account();
+  void deposit(uint amount);
 
-  void deposit(int amount);
-
-  void withdraw(int amount);
+  void withdraw(uint amount);
 
   void printTransactionHistory() const;
 
-  int getCurrentBalance() const;
+  int getBalance() const;
 
   std::string getAccountType() const;
 
@@ -32,28 +30,27 @@ public:
 
 protected:
   std::vector<moneyTx> moneyTxs_;
-  FILE *fptrLogs_;
 
 private:
   std::string name_;
   std::string id_;
   std::string type_;
-  Log log;     
+  logger logger_;
   // max 5 accounts
 };
 
 class AccountFactory {
 public:
-    template<typename AccountType, typename... Args>
-    static std::unique_ptr<AccountType> create_account(Args&&... args) {
-        return std::make_unique<AccountType>(std::forward<Args>(args)...);
-    }
-    
-    // Type-safe account creation using concepts
-    template<concepts::AccountLike AccountType, typename... Args>
-    static auto create(Args&&... args) {
-        return std::make_unique<AccountType>(std::forward<Args>(args)...);
-    }
+  template <typename AccountType, typename... Args>
+  static std::unique_ptr<AccountType> create_account(Args &&...args) {
+    return std::make_unique<AccountType>(std::forward<Args>(args)...);
+  }
+
+  // Type-safe account creation using concepts
+  template <concepts::AccountLike AccountType, typename... Args>
+  static auto create(Args &&...args) {
+    return std::make_unique<AccountType>(std::forward<Args>(args)...);
+  }
 };
 
 #endif // BANK_ACCOUNT_H

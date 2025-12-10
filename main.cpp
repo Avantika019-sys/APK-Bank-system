@@ -1,11 +1,9 @@
 
+#include "account.h"
+#include "logger.h"
+#include "transaction.h"
 #include <iostream>
 #include <memory>
-#include "account.hpp"
-#include "savingsAccount.hpp"
-#include "currencyExchange.hpp"
-#include "log.hpp"
-#include "transaction.hpp"
 
 using namespace std;
 
@@ -21,12 +19,14 @@ int main() {
   auto &server = stock::server::getInstance();
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
+  logger l;
 
   Bank danskeBank("Danske Bank");
   Bank nordea("Nordea");
   Bank jyskeBank("Jyske Bank");
   Bank *currentBank = &danskeBank;
 
+  l.info("hello", danskeBank);
   std::string accId = "12345";
   currentBank->addAccount("Jens Nielsen", accId);
   auto &acc = currentBank->getAccountById(accId);
