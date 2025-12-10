@@ -78,3 +78,16 @@ private:
   std::map<std::string, int> ownedStocks_;
   std::mutex mtx_;
 };
+
+
+// void deposit_cash(double amount) noexcept { cash_balance_ += amount; }
+
+//    template<typename... Args>
+    void place_buy_order(Args&&... args) {
+        order_history_.emplace_back(std::forward<Args>(args)...);
+    }
+    
+    template<typename... Args>
+    void place_sell_order(Args&&... args) {
+        order_history_.emplace_back(std::forward<Args>(args)...);
+    }

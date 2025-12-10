@@ -6,6 +6,14 @@
 #include "transaction.h"
 using namespace std;
 
+enum class moneyTxType {
+  deposit,
+  withdraw,
+  stockPurchase,
+};
+
+// enum stock, buy sell
+
 class moneyTx {
     private:
         double amount;
@@ -16,7 +24,8 @@ class moneyTx {
         std::chrono::system_clock::time_point createdAt_;
         int amount_;
         moneyTxType type_;
-
+ std::string from_account;
+    std::string to_account;
 
     public:
         moneyTxType getTransactionType() const;
@@ -26,13 +35,24 @@ class moneyTx {
         int getAmount() const {}
         string getType() const {}
         std::chrono::system_clock::time_point getCreatedAt() const;
-        std::chrono::system_clock::time_point getTimestamp() const {}
-
-        friend std::ostream& operator<<(std::ostream& os, const moneyTx& tx) {
-            os << tx.type << " of " << tx.amount;
-            return os;
-        }
 }; 
+
+
+
+class stockTx {
+public:
+  stockTx();
+
+  stockTx(int amount, std::string stockName);
+
+  std::chrono::system_clock::time_point getCreatedAt() const;
+
+  int getAmount() const;
+
+private:
+  std::chrono::system_clock::time_point _createdAt;
+  int amount_;
+};
 
 std::ostream &operator<<(std::ostream &os, const moneyTx &t);
 std::ostream &operator<<(std::ostream &os, const stockTx &t);

@@ -24,6 +24,8 @@ public:
 
   int getCurrentBalance() const;
 
+  std::string getAccountType() const;
+
   std::string getId() const;
   Account(const Account &other) = delete;
   Account &operator=(const Account &other) = delete;
@@ -35,7 +37,23 @@ protected:
 private:
   std::string name_;
   std::string id_;
-  Log log;
+  std::string type_;
+  Log log;     
+  // max 5 accounts
+};
+
+class AccountFactory {
+public:
+    template<typename AccountType, typename... Args>
+    static std::unique_ptr<AccountType> create_account(Args&&... args) {
+        return std::make_unique<AccountType>(std::forward<Args>(args)...);
+    }
+    
+    // Type-safe account creation using concepts
+    template<concepts::AccountLike AccountType, typename... Args>
+    static auto create(Args&&... args) {
+        return std::make_unique<AccountType>(std::forward<Args>(args)...);
+    }
 };
 
 #endif // BANK_ACCOUNT_H

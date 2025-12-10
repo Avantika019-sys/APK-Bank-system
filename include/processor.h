@@ -11,36 +11,10 @@
 #include "exceptions.h"
 
 namespace banking {
-    
-// Transaction types
-struct DepositTransaction {
-    double amount;
-    std::string description;
-};
 
-struct WithdrawalTransaction {
-    double amount;
-    std::string description;
-};
 
-struct TransferTransaction {
-    double amount;
-    std::string from_account;
-    std::string to_account;
-    std::string description;
-};
 
-struct StockBuyTransaction {
-    std::string symbol;
-    int quantity;
-    double price_per_share;
-};
 
-struct StockSellTransaction {
-    std::string symbol;
-    int quantity;
-    double price_per_share;
-};
 
 using TransactionData = std::variant<
     DepositTransaction,
@@ -124,35 +98,13 @@ public:
     }
     
 private:
-    bool process_impl(const DepositTransaction& deposit) {
-        std::cout << "Processing deposit: $" << deposit.amount << " - " 
-                  << deposit.description << "\n";
-        return true;
-    }
-    
-    bool process_impl(const WithdrawalTransaction& withdrawal) {
-        std::cout << "Processing withdrawal: $" << withdrawal.amount << " - " 
-                  << withdrawal.description << "\n";
-        return true;
-    }
-    
     bool process_impl(const TransferTransaction& transfer) {
         std::cout << "Processing transfer: $" << transfer.amount << " from " 
                   << transfer.from_account << " to " << transfer.to_account << "\n";
         return true;
     }
     
-    bool process_impl(const StockBuyTransaction& buy) {
-        std::cout << "Processing stock buy: " << buy.quantity << " shares of " 
-                  << buy.symbol << " at $" << buy.price_per_share << "\n";
-        return true;
-    }
-    
-    bool process_impl(const StockSellTransaction& sell) {
-        std::cout << "Processing stock sell: " << sell.quantity << " shares of " 
-                  << sell.symbol << " at $" << sell.price_per_share << "\n";
-        return true;
-    }
+
 };
 
 } // namespace banking

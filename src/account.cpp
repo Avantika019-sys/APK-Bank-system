@@ -2,6 +2,7 @@
 #include "transaction.h"
 #include <iostream>
 #include <numeric>
+#include "exceptions.h" 
 #include <algorithm>
 #include <log.hpp>
 #include <string>
@@ -43,6 +44,10 @@ Account::~Account() {
 }
 
 void Account::deposit(int amount) {
+  if(amount < 1){
+    throw std::invalid_argument("invaild");
+  }
+  //add some logs/statistics
   moneyTx  tx(amount,moneyTxType::deposit);
   moneyTxs_.push_back(tx);
 //   char logMsg[50] = "deposited money into account\n";
@@ -51,6 +56,9 @@ void Account::deposit(int amount) {
 }
 
 void Account::withdraw(int amount) {
+    if(amount < 1){
+    throw std::invalid_argument("invaild");
+  }
   int curBalance = getCurrentBalance();
   if (curBalance < amount) {
     // char logMsg[50] = "withdraw attempt failed due to low balance\n";
@@ -59,7 +67,10 @@ void Account::withdraw(int amount) {
   }
   moneyTx tx(amount, moneyTxType::withdraw);
   moneyTxs_.push_back(tx);
+  //add some logs/statistics
 }
+
+
 
 void Account::printTransactionHistory() const{
   std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
@@ -80,3 +91,21 @@ int Account::getCurrentBalance() const {
                             });
   return res;
 }
+
+std::string Account::getAccountType() const
+{
+    return type_;
+}
+
+  bool transfer(double amount, Account& to_account) {
+        if (withdraw(amount)) {
+            if (to_account.deposit(amount)) {
+                return true;
+            } else {
+                // Rollback - strong exception guarantee
+                deposit(amount);
+                throw exceptions::InvalidTransactionException("Transfer failed");
+            }
+        }
+        return false;
+    }

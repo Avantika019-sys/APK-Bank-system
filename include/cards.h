@@ -16,19 +16,9 @@ struct PrepaidCard {};
 
 using CardType = std::variant<DebitCard, CreditCard, PrepaidCard>;
 
-// Card interface
-class Card {
-public:
-    virtual ~Card() = default;
-    
-    virtual bool authorize_payment(double amount, const std::string& merchant) = 0;
-    virtual std::string get_card_number() const = 0;
-    virtual std::string get_card_type() const = 0;
-    virtual double get_available_balance() const = 0;
-};
 
 // Concrete card implementations
-class DebitCardImpl : public Card {
+class DebitCardImpl {
 private:
     std::string card_number_;
     std::string linked_account_;
@@ -37,6 +27,10 @@ private:
     std::chrono::year_month_day last_reset_;
     
 public:
+ virtual bool authorize_payment(double amount, const std::string& merchant) = 0;
+    virtual std::string get_card_number() const = 0;
+    virtual std::string get_card_type() const = 0;
+    virtual double get_available_balance() const = 0;
     DebitCardImpl(std::string card_number, std::string linked_account, 
                   double daily_limit = 1000.0)
         : card_number_(std::move(card_number))
