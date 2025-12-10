@@ -1,4 +1,6 @@
 
+#ifndef BANK_LOGGER_H
+#define BANK_LOGGER_H
 #include <concepts>
 #include <stdio.h>
 #include <string>
@@ -26,5 +28,6 @@ private:
   FILE *fptrLogs_;
 };
 
+#endif // BANK_LOGGER_H
 // std::pmr::vector<string> entries;
 // std::pmr::memory_resource* memRes = std::pmr::get_default_resource();

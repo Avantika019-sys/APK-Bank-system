@@ -46,7 +46,7 @@ void Account::printTransactionHistory() const {
 int Account::getBalance() const {
   int res = std::accumulate(moneyTxs_.begin(), moneyTxs_.end(), 0,
                             [](int acc, const moneyTx &tx) {
-                              switch (tx.getTransactionType()) {
+                              switch (tx.getType()) {
                               case moneyTxType::deposit:
                                 return acc + tx.getAmount();
                               case moneyTxType::withdraw:
@@ -59,16 +59,16 @@ int Account::getBalance() const {
 }
 
 std::string Account::getAccountType() const { return type_; }
-
-bool transfer(double amount, Account &to_account) {
-  if (withdraw(amount)) {
-    if (to_account.deposit(amount)) {
-      return true;
-    } else {
-      // Rollback - strong exception guarantee
-      deposit(amount);
-      throw exceptions::InvalidTransactionException("Transfer failed");
-    }
-  }
-  return false;
-}
+//
+// bool transfer(double amount, Account &to_account) {
+//   if (withdraw(amount)) {
+//     if (to_account.deposit(amount)) {
+//       return true;
+//     } else {
+//       // Rollback - strong exception guarantee
+//       deposit(amount);
+//       throw exceptions::InvalidTransactionException("Transfer failed");
+//     }
+//   }
+//   return false;
+// }

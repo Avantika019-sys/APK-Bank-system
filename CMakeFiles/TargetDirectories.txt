@@ -1,3 +1,0 @@
-/home/ali/APK-Bank-system/CMakeFiles/Bank.dir
-/home/ali/APK-Bank-system/CMakeFiles/edit_cache.dir
-/home/ali/APK-Bank-system/CMakeFiles/rebuild_cache.dir

@@ -2,8 +2,8 @@
 #include "transaction.h"
 #include <iostream>
 
-moneyTx::moneyTx(double amt, const string &t)
-    : amount(amt), type(t), timestamp(std::chrono::system_clock::now()),
+moneyTx::moneyTx(uint amt, moneyTxType type)
+    : amount_(amt), type_(type), createdAt_(std::chrono::system_clock::now()),
       details(std::pmr::polymorphic_allocator<string>(memRes)) {}
 
 std::chrono::system_clock::time_point moneyTx::getCreatedAt() const {

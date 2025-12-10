@@ -38,19 +38,19 @@ private:
   logger logger_;
   // max 5 accounts
 };
-
-class AccountFactory {
-public:
-  template <typename AccountType, typename... Args>
-  static std::unique_ptr<AccountType> create_account(Args &&...args) {
-    return std::make_unique<AccountType>(std::forward<Args>(args)...);
-  }
-
-  // Type-safe account creation using concepts
-  template <concepts::AccountLike AccountType, typename... Args>
-  static auto create(Args &&...args) {
-    return std::make_unique<AccountType>(std::forward<Args>(args)...);
-  }
-};
-
+//
+// class AccountFactory {
+// public:
+//   template <typename AccountType, typename... Args>
+//   static std::unique_ptr<AccountType> create_account(Args &&...args) {
+//     return std::make_unique<AccountType>(std::forward<Args>(args)...);
+//   }
+//
+//   // Type-safe account creation using concepts
+//   template <concepts::AccountLike AccountType, typename... Args>
+//   static auto create(Args &&...args) {
+//     return std::make_unique<AccountType>(std::forward<Args>(args)...);
+//   }
+// };
+//
 #endif // BANK_ACCOUNT_H

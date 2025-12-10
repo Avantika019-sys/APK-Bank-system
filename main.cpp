@@ -1,32 +1,23 @@
 
 #include "account.h"
+#include "bank.h"
 #include "logger.h"
-#include "transaction.h"
+#include "stock/server.h"
 #include <iostream>
-#include <memory>
-
-using namespace std;
-
 #include <ostream>
 #include <stdexcept>
 #include <string>
-
-#include "account.h"
-#include "bank.h"
-#include "stock/server.h"
 
 int main() {
   auto &server = stock::server::getInstance();
   std::thread stockUpdaterThread([&]() { server.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { server.startStockWorker(); });
-  logger l;
 
   Bank danskeBank("Danske Bank");
   Bank nordea("Nordea");
   Bank jyskeBank("Jyske Bank");
   Bank *currentBank = &danskeBank;
 
-  l.info("hello", danskeBank);
   std::string accId = "12345";
   currentBank->addAccount("Jens Nielsen", accId);
   auto &acc = currentBank->getAccountById(accId);
@@ -97,7 +88,7 @@ int main() {
       std::cout << "6" << std::endl;
     case '7':
       acc.printTransactionHistory();
-      std::cout << "Current balance: " << acc.getCurrentBalance() << std::endl;
+      std::cout << "Current balance: " << acc.getBalance() << std::endl;
     case '8':
       std::cout << "8" << std::endl;
     case '9':

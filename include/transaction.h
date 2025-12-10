@@ -1,3 +1,6 @@
+
+#ifndef BANK_TRANSACTION_H
+#define BANK_TRANSACTION_H
 #include <chrono>
 #include <iostream>
 #include <memory_resource>
@@ -16,9 +19,7 @@ enum class moneyTxType {
 class moneyTx {
 
 public:
-  moneyTx(uint amt, moneyTxType type)
-      : amount_(amt), type_(type),
-        details(std::pmr::polymorphic_allocator<string>(memRes)) {}
+  moneyTx(uint amt, moneyTxType type);
   uint getAmount() const;
   moneyTxType getType() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
@@ -50,3 +51,4 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const moneyTx &t);
 std::ostream &operator<<(std::ostream &os, const stockTx &t);
+#endif // BANK_TRANSACTION_H
