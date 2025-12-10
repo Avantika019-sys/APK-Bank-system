@@ -58,6 +58,7 @@ int Account::getBalance() const {
   return res;
 }
 
+std::string Account::getId() const { return id_; }
 std::string Account::getAccountType() const { return type_; }
 //
 // bool transfer(double amount, Account &to_account) {

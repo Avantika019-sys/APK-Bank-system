@@ -22,5 +22,5 @@ add_executable(Bank main.cpp
         include/bank.h
         src/bank.cpp
         main.cpp
-        main.cpp
+        src/logger.cpp
 )

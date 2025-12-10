@@ -45,7 +45,7 @@ public:
   int getAmount() const;
 
 private:
-  std::chrono::system_clock::time_point _createdAt;
+  std::chrono::system_clock::time_point createdAt_;
   int amount_;
 };
 

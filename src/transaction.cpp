@@ -29,5 +29,8 @@ std::ostream &operator<<(std::ostream &os, const stockTx &t) {
   return os;
 }
 
+std::chrono::system_clock::time_point stockTx::getCreatedAt() const {
+  return createdAt_;
+}
 int stockTx::getAmount() const { return amount_; }
 moneyTxType moneyTx::getType() const { return type_; }
