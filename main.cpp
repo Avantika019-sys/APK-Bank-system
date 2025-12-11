@@ -3,6 +3,7 @@
 #include "bank.h"
 #include "logger.h"
 #include "stock/server.h"
+#include <format>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>

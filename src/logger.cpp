@@ -12,15 +12,6 @@ logger::logger(std::string id) {
   }
 }
 
-void logger::log(std::string msg, Stringable auto arg, level l) {
-  std::string levelStr = levelToString(l);
-  auto timeNow = std::time(nullptr);
-  auto timeNowStr = std::string(std::ctime(&timeNow));
-  std::string logMsg = std::format("[{}][{}] msg: {} obj: {}", levelStr,
-                                   timeNowStr, msg, arg.toString());
-  const char *buffer = logMsg.c_str();
-  fputs(buffer, fptrLogs_);
-}
 logger::~logger() {
   if (fptrLogs_ != nullptr) {
     std::fclose(fptrLogs_);
