@@ -1,5 +1,4 @@
 #include "../../include/stock/server.h"
-#include "stock/visitor.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
 #include <variant>
@@ -11,7 +10,6 @@ server::server() : msgQueue(10) {
       {"MSFT", 332.64},
       {"GOOG", 130.17},
       {"TSLA", 240.01},
-
   };
 }
 

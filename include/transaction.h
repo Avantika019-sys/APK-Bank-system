@@ -24,7 +24,7 @@ public:
   uint getAmount() const;
   TxType getType() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
-  std::string toString();
+  // std::string toString();
 
 private:
   std::pmr::memory_resource *memRes = std::pmr::get_default_resource();

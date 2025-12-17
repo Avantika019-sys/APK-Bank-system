@@ -3,12 +3,14 @@
 #define BANK_LOGGER_H
 #include <ctime>
 #include <format>
+#include <sstream>
 #include <stdio.h>
 #include <string>
 #include <type_traits>
-template <typename T, typename = void> struct toStringable : std::false_type {};
+template <typename T, typename = void> struct streamable : std::false_type {};
 template <typename T>
-struct toStringable<T, std::void_t<decltype(std::declval<T>().toString())>>
+struct streamable<T, std::void_t<decltype(std::declval<std::ostream &>()
+                                          << std::declval<T>())>>
     : std::true_type {};
 
 enum class level {
@@ -20,21 +22,22 @@ class logger {
 public:
   logger(std::string id);
   template <typename T>
-  std::enable_if<toStringable<T>::value>::type log(std::string msg, level l,
-                                                   std::string key, T val) {
+  std::enable_if<streamable<T>::value>::type log(std::string msg, level l,
+                                                 std::string key, T val) {
+    std::stringstream ss;
+    ss << val;
     std::string levelStr = levelToString(l);
     auto timeNow = std::time(nullptr);
     auto timeNowStr = std::string(std::ctime(&timeNow));
-    std::string logMsg =
-        std::format("[{}][{}] msg: {} key: {} val: {}", levelStr, timeNowStr,
-                    msg, key, val.toString());
+    std::string logMsg = std::format("[{}][{}] msg: {} key: {} val: {}",
+                                     levelStr, timeNowStr, msg, key, ss.str());
     const char *buffer = logMsg.c_str();
     fputs(buffer, fptrLogs_);
   }
 
   template <typename T>
   void log(std::string msg, level l, std::string key, T val)
-    requires(!toStringable<T>::value && std::formattable<T, char>)
+    requires(!streamable<T>::value && std::formattable<T, char>)
   {
 
     std::string levelStr = levelToString(l);

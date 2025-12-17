@@ -8,7 +8,6 @@
 
 namespace stock {
 struct order {
-  order();
   std::string stockName;
   int amountOfStocks;
   // stockTx tx;

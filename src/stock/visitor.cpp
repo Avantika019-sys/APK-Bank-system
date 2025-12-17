@@ -1,7 +1,6 @@
 #include "stock/visitor.h"
 
 namespace stock {
-order::order() {}
 
 info::info(std::string name) : stockName(name) {}
 

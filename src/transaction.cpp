@@ -27,7 +27,7 @@ std::ostream &operator<<(std::ostream &os, const Tx &t) {
 }
 
 TxType Tx::getType() const { return type_; }
-std::string Tx::toString() { return ""; }
+// std::string Tx::toString() { return ""; }
 // std::ostream &operator<<(std::ostream &os, const stockTx &t) {
 //   os << "Transaction created at: " << t.getCreatedAt()
 //      << " Amount: " << t.getAmount() << std::endl;
