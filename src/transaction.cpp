@@ -35,3 +35,7 @@ std::chrono::system_clock::time_point stockTx::getCreatedAt() const {
 }
 int stockTx::getAmount() const { return amount_; }
 moneyTxType moneyTx::getType() const { return type_; }
+stockTx::stockTx() {}
+
+stockTx::stockTx(int amount, std::string stockName)
+    : amount_(amount), stockName_(stockName) {}

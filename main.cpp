@@ -1,9 +1,7 @@
 
 #include "account.h"
 #include "bank.h"
-#include "logger.h"
 #include "stock/server.h"
-#include <format>
 #include <iostream>
 #include <ostream>
 #include <stdexcept>
@@ -20,25 +18,28 @@ int main() {
   Bank *currentBank = &danskeBank;
 
   std::string accId = "12345";
-  currentBank->addAccount("Jens Nielsen", accId);
+  currentBank->addStockAccount("Jens Nielsen", accId);
   auto &acc = currentBank->getAccountById(accId);
 
-  while (1) {
-    std::cout << "1: withdraw money " << std::endl;
-    std::cout << "2: deposit money " << std::endl;
-    std::cout << "3: buy stock" << std::endl;
-    std::cout << "4: sell stock" << std::endl;
-    std::cout << "5: switch bank" << std::endl;
-    std::cout << "6: monitor stocks" << std::endl;
-    std::cout << "7: get transaction history and current balance" << std::endl;
+  bool run = true;
+  while (run) {
+    std::cout << std::endl;
+    std::cout << "1: Withdraw money " << std::endl;
+    std::cout << "2: Deposit money " << std::endl;
+    std::cout << "3: Buy stock" << std::endl;
+    std::cout << "4: Sell stock" << std::endl;
+    std::cout << "5: Switch bank" << std::endl;
+    std::cout << "6: Monitor stocks" << std::endl;
+    std::cout << "7: Get transaction history and current balance" << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
-    std::cout << "e: exit program" << std::endl;
+    std::cout << "-1: Exit program" << std::endl;
+    std::cout << std::endl;
 
     int input;
     std::cin >> input;
     switch (input) {
-    case '1':
+    case 1:
       std::cout << "Enter amount to withdraw" << std::endl;
       int withdrawAmount;
       std::cin >> withdrawAmount;
@@ -46,17 +47,32 @@ int main() {
         acc.withdraw(withdrawAmount);
       } catch (const std::invalid_argument e) {
         std::cout << "Failed to withdraw because: " << e.what() << std::endl;
+        continue;
       }
       std::cout << "Successfull withdrawal!" << std::endl;
-
-    case '2':
-      std::cout << "Enter amount to deposit" << std::endl;
+      break;
+    case 2:
+      std::cout << "Enter amount to deposit: ";
       int depositAmount;
       std::cin >> depositAmount;
-      acc.withdraw(depositAmount);
+      acc.deposit(depositAmount);
       std::cout << "Successfull deposit!" << std::endl;
-
-    case '3':
+      break;
+    case 3: {
+      std::cout << "Enter stock name to buy: ";
+      std::string stockName;
+      std::cin >> stockName;
+      std::cout << std::endl;
+      std::cout << "Enter amount of the stock to buy: ";
+      int amount;
+      std::cin >> amount;
+      acc.buyStock(amount, stockName);
+      break;
+    }
+    case 4:
+      std::cout << "4" << std::endl;
+      break;
+    case 5:
       std::cout << "Enter number of bank to switch to" << std::endl;
       std::cout << "Available banks:" << std::endl;
       std::cout << "1: Dansk Bank" << std::endl;
@@ -81,21 +97,23 @@ int main() {
         currentBank = &jyskeBank;
         std::cout << "Switched to Jyske Bank" << std::endl;
       }
-    case '4':
-      std::cout << "4" << std::endl;
-    case '5':
-      std::cout << "5" << std::endl;
-    case '6':
+      break;
+    case 6:
       std::cout << "6" << std::endl;
-    case '7':
+      break;
+    case 7:
       acc.printTransactionHistory();
       std::cout << "Current balance: " << acc.getBalance() << std::endl;
-    case '8':
+      break;
+    case 8:
       std::cout << "8" << std::endl;
-    case '9':
+      break;
+    case 9:
       std::cout << "9" << std::endl;
-    case 'e': {
+      break;
+    case -1: {
       server.stopWorkers();
+      run = false;
       break;
     }
     default:

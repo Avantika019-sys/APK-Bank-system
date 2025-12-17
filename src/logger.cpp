@@ -38,8 +38,5 @@ std::string logger::levelToString(level l) {
   if (l == level::DEBUG) {
     return "DEBUG";
   }
-  if (l == level::ERROR) {
-    return "ERROR";
-  }
-  return "";
+  return "ERROR";
 }

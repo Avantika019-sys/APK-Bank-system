@@ -8,22 +8,21 @@
 Bank::Bank(std::string name) : name_(name) {}
 
 void Bank::switchToThisBank(Bank &fromBank, std::string accId) {
-  auto it =
-      std::find_if(fromBank.accounts.begin(), fromBank.accounts.end(),
-                   [&](const Account &acc) { return acc.getId() == accId; });
-  if (it != fromBank.accounts.end()) {
-    accounts.push_back(std::move(*it));
-    fromBank.accounts.erase(it);
+  auto it = std::find_if(
+      fromBank.stockAccounts.begin(), fromBank.stockAccounts.end(),
+      [&](const StockAccount &acc) { return acc.getId() == accId; });
+  if (it != fromBank.stockAccounts.end()) {
+    stockAccounts.push_back(std::move(*it));
+    fromBank.stockAccounts.erase(it);
   }
 }
 
-Account &Bank::getAccountById(std::string id) {
-  auto it = std::find_if(accounts.begin(), accounts.end(),
+StockAccount &Bank::getAccountById(std::string id) {
+  auto it = std::find_if(stockAccounts.begin(), stockAccounts.end(),
                          [&](const Account &acc) { return acc.getId() == id; });
-  if (it == accounts.end()) {
+  if (it == stockAccounts.end()) {
     throw std::invalid_argument("Account not found in bank");
   }
   return *it;
 }
-  std::string Bank::getBankName(){return name_;}
-
+std::string Bank::getBankName() { return name_; }

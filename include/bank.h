@@ -1,6 +1,6 @@
 #ifndef BANK_BANK_H
 #define BANK_BANK_H
-#include "account.h"
+#include "stockaccount.h"
 #include <string>
 #include <utility>
 #include <vector>
@@ -11,14 +11,14 @@ public:
   Bank(const Bank &other) = delete;
   Bank &operator=(const Bank &other) = delete;
   void switchToThisBank(Bank &fromBank, std::string accId);
-  template <typename... Args> void addAccount(Args &&...args) {
-    accounts.emplace_back(std::forward<Args>(args)...);
+  template <typename... Args> void addStockAccount(Args &&...args) {
+    stockAccounts.emplace_back(std::forward<Args>(args)...);
   }
-  Account &getAccountById(std::string id);
+  StockAccount &getAccountById(std::string id);
   std::string getBankName();
 
 private:
-  std::vector<Account> accounts;
+  std::vector<StockAccount> stockAccounts;
   std::string name_;
 };
 #endif // ANK_BANK_H

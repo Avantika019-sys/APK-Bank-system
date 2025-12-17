@@ -9,18 +9,18 @@
 Account::Account(std::string name, std::string id)
     : logger_(id), name_(name), id_(id) {}
 
-Account::Account(Account &&other) noexcept
-    : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)),
-      logger_(std::move(other.logger_)) {}
-
-Account &Account::operator=(Account &&other) noexcept {
-  if (this != &other) {
-
-    moneyTxs_ = std::move(other.moneyTxs_);
-    // name_ = std::move(other.name_);
-  }
-  return *this;
-}
+// Account::Account(Account &&other) noexcept
+//     : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)),
+//       logger_(std::move(other.logger_)) {}
+//
+// Account &Account::operator=(Account &&other) noexcept {
+//   if (this != &other) {
+//
+//     moneyTxs_ = std::move(other.moneyTxs_);
+//     // name_ = std::move(other.name_);
+//   }
+//   return *this;
+// }
 
 void Account::deposit(uint amount) {
   // add some logs/statistics

@@ -48,6 +48,7 @@ public:
 private:
   std::chrono::system_clock::time_point createdAt_;
   int amount_;
+  std::string stockName_;
 };
 
 std::ostream &operator<<(std::ostream &os, const moneyTx &t);
