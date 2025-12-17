@@ -1,6 +1,7 @@
 
 #ifndef BANK_LOGGER_H
 #define BANK_LOGGER_H
+#include <chrono>
 #include <ctime>
 #include <format>
 #include <sstream>
@@ -27,12 +28,13 @@ public:
     std::stringstream ss;
     ss << val;
     std::string levelStr = levelToString(l);
-    auto timeNow = std::time(nullptr);
-    auto timeNowStr = std::string(std::ctime(&timeNow));
-    std::string logMsg = std::format("[{}][{}] msg: {} key: {} val: {}",
-                                     levelStr, timeNowStr, msg, key, ss.str());
+    auto now = std::chrono::system_clock::now();
+    std::string logMsg =
+        std::format("[{}][{:%Y-%m-%d %H:%M:%S}] msg: {} key: {} val: {}",
+                    levelStr, now, msg, key, ss.str());
     const char *buffer = logMsg.c_str();
     fputs(buffer, fptrLogs_);
+    fflush(fptrLogs_);
   }
 
   template <typename T>
@@ -47,6 +49,7 @@ public:
                                      levelStr, timeNowStr, msg, key, val);
     const char *buffer = logMsg.c_str();
     fputs(buffer, fptrLogs_);
+    fflush(fptrLogs_);
   }
   void log(std::string msg, level l) {
 
@@ -57,6 +60,7 @@ public:
         std::format("[{}][{}] msg: {}", levelStr, timeNowStr, msg);
     const char *buffer = logMsg.c_str();
     fputs(buffer, fptrLogs_);
+    fflush(fptrLogs_);
   }
   ~logger();
   logger(logger &&other) noexcept;
