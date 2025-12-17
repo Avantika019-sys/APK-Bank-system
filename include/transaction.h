@@ -8,20 +8,21 @@
 #include <vector>
 using namespace std;
 
-enum class moneyTxType {
+enum class TxType {
   deposit,
   withdraw,
   stockPurchase,
+  stockSell,
 };
 
 // enum stock, buy sell
 
-class moneyTx {
+class Tx {
 
 public:
-  moneyTx(uint amt, moneyTxType type);
+  Tx(uint amt, TxType type);
   uint getAmount() const;
-  moneyTxType getType() const;
+  TxType getType() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
   std::string toString();
 
@@ -30,27 +31,27 @@ private:
   std::pmr::vector<string> details;
   std::chrono::system_clock::time_point createdAt_;
   uint amount_;
-  moneyTxType type_;
+  TxType type_;
   std::string from_account;
   std::string to_account;
 };
 
-class stockTx {
-public:
-  stockTx();
+// class stockTx {
+// public:
+//   stockTx();
+//
+//   stockTx(int amount, std::string stockName);
+//
+//   std::chrono::system_clock::time_point getCreatedAt() const;
+//
+//   int getAmount() const;
+//
+// private:
+//   std::chrono::system_clock::time_point createdAt_;
+//   int amount_;
+//   std::string stockName_;
+// };
 
-  stockTx(int amount, std::string stockName);
-
-  std::chrono::system_clock::time_point getCreatedAt() const;
-
-  int getAmount() const;
-
-private:
-  std::chrono::system_clock::time_point createdAt_;
-  int amount_;
-  std::string stockName_;
-};
-
-std::ostream &operator<<(std::ostream &os, const moneyTx &t);
-std::ostream &operator<<(std::ostream &os, const stockTx &t);
+std::ostream &operator<<(std::ostream &os, const Tx &t);
+// std::ostream &operator<<(std::ostream &os, const stockTx &t);
 #endif // BANK_TRANSACTION_H

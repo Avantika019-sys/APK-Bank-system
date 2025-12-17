@@ -6,7 +6,7 @@
 class StockAccount : public Account {
 public:
   StockAccount(std::string name, std::string id);
-  bool buyStock(int amountOfStocks, std::string stockName);
+  void buyStock(int amountOfStocks, std::string stockName);
   void sellStock(int amount, std::string name);
   void setMonitorStocks(bool monitor);
   StockAccount(StockAccount &&other);
@@ -19,7 +19,7 @@ private:
   void onStockUpdate(std::string stockName, int updatedPrice);
 
   bool monitorStocks;
-  std::vector<stockTx> stockTxs_;
+  // std::vector<stockTx> stockTxs_;
   std::map<std::string, int> ownedStocks_;
   std::mutex mtx_;
 };

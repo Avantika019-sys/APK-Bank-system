@@ -29,7 +29,7 @@ public:
   // Account &operator=(const Account &other) = delete;
 
 protected:
-  std::vector<moneyTx> moneyTxs_;
+  std::vector<Tx> txs_;
   logger logger_;
 
 private:

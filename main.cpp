@@ -23,8 +23,7 @@ int main() {
 
   bool run = true;
   while (run) {
-    std::cout << std::endl;
-    std::cout << "1: Withdraw money " << std::endl;
+    std::cout << "\n1: Withdraw money " << std::endl;
     std::cout << "2: Deposit money " << std::endl;
     std::cout << "3: Buy stock" << std::endl;
     std::cout << "4: Sell stock" << std::endl;
@@ -33,8 +32,7 @@ int main() {
     std::cout << "7: Get transaction history and current balance" << std::endl;
     std::cout << "8: " << std::endl;
     std::cout << "9: " << std::endl;
-    std::cout << "-1: Exit program" << std::endl;
-    std::cout << std::endl;
+    std::cout << "-1: Exit program\n" << std::endl;
 
     int input;
     std::cin >> input;
@@ -47,7 +45,7 @@ int main() {
         acc.withdraw(withdrawAmount);
       } catch (const std::invalid_argument e) {
         std::cout << "Failed to withdraw because: " << e.what() << std::endl;
-        continue;
+        break;
       }
       std::cout << "Successfull withdrawal!" << std::endl;
       break;
@@ -59,14 +57,20 @@ int main() {
       std::cout << "Successfull deposit!" << std::endl;
       break;
     case 3: {
+      std::cout << "AAPL\nMSFT\nGOOG\nTSLA\n";
       std::cout << "Enter stock name to buy: ";
       std::string stockName;
       std::cin >> stockName;
-      std::cout << std::endl;
       std::cout << "Enter amount of the stock to buy: ";
       int amount;
       std::cin >> amount;
-      acc.buyStock(amount, stockName);
+      try {
+        acc.buyStock(amount, stockName);
+      } catch (const std::invalid_argument e) {
+        std::cout << "failed to purchase stock: " << e.what() << std::endl;
+        break;
+      }
+      std::cout << "succesfull stock purchase!" << std::endl;
       break;
     }
     case 4:
@@ -99,7 +103,7 @@ int main() {
       }
       break;
     case 6:
-      std::cout << "6" << std::endl;
+      acc.setMonitorStocks(true);
       break;
     case 7:
       acc.printTransactionHistory();

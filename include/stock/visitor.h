@@ -8,9 +8,10 @@
 
 namespace stock {
 struct order {
-  order(stockTx tx);
-
-  stockTx tx;
+  order();
+  std::string stockName;
+  int amountOfStocks;
+  // stockTx tx;
   std::promise<bool> prom; // result of the order
 };
 

@@ -1,7 +1,7 @@
 #include "stock/visitor.h"
 
 namespace stock {
-order::order(stockTx tx) : tx(tx) {}
+order::order() {}
 
 info::info(std::string name) : stockName(name) {}
 

@@ -3,6 +3,8 @@
 #include "transaction.h"
 
 #include "stock/server.h"
+#include <iostream>
+#include <stdexcept>
 StockAccount::StockAccount(std::string name, std::string id)
     : Account(name, id) {
   auto handler = std::bind(&StockAccount::onStockUpdate, this,
@@ -11,7 +13,7 @@ StockAccount::StockAccount(std::string name, std::string id)
   monitorStocks = false;
 }
 
-bool StockAccount::buyStock(int amountOfStocks, std::string stockName) {
+void StockAccount::buyStock(int amountOfStocks, std::string stockName) {
   auto &serv = stock::server::getInstance();
 
   stock::info i(stockName);
@@ -23,11 +25,19 @@ bool StockAccount::buyStock(int amountOfStocks, std::string stockName) {
   int stockPrice = stockInfoFut.get();
   int totalPrice = stockPrice * amountOfStocks;
   if (getBalance() < totalPrice) {
-    return false;
+    throw std::invalid_argument("you dont have enough money to buy stock");
+  }
+  std::cout << "Total price: " << totalPrice
+            << "\nPlease confirm purchase by pressing y: ";
+  char inp;
+  std::cin >> inp;
+  if (inp != 'y') {
+    std::cout << "stock purchase cancelled";
+    return;
   }
 
-  stockTx stockTx(amountOfStocks, stockName);
-  stock::order o(stockTx);
+  // stockTx stockTx(amountOfStocks, stockName);
+  stock::order o;
   auto orderFut = o.prom.get_future();
   stock::variant orderVariant(std::move(o));
   serv.msgQueue.push(std::move(orderVariant));
@@ -35,16 +45,17 @@ bool StockAccount::buyStock(int amountOfStocks, std::string stockName) {
   orderFut.wait();
   std::lock_guard<std::mutex> lock(mtx_);
   if (orderFut.get()) {
-    moneyTx moneyTx(totalPrice, moneyTxType::stockPurchase);
-    moneyTxs_.push_back(moneyTx);
+    Tx tx(totalPrice, TxType::stockPurchase);
+    txs_.push_back(tx);
     if (ownedStocks_.contains(stockName)) {
       ownedStocks_[stockName] += amountOfStocks;
     } else {
       ownedStocks_[stockName] = amountOfStocks;
     }
-    return true;
+    return;
   }
-  return false;
+  throw std::invalid_argument(
+      "server failed to process purchase please try later");
 }
 void StockAccount::setMonitorStocks(bool monitor) {
   std::lock_guard<std::mutex> lock(mtx_);
@@ -59,13 +70,25 @@ void StockAccount::onStockUpdate(std::string stockName, int updatedPrice) {
   }
 }
 StockAccount::StockAccount(StockAccount &&other)
-    : Account(std::move(other)), stockTxs_(std::move(other.stockTxs_)),
-      ownedStocks_(std::move(other.ownedStocks_)) {}
+    : Account(std::move(other)), ownedStocks_(std::move(other.ownedStocks_)) {}
 StockAccount &StockAccount::operator=(StockAccount &&other) {
   if (this != &other) {
     Account::operator=(std::move(other));
-    stockTxs_ = std::move(other.stockTxs_);
     ownedStocks_ = std::move(other.ownedStocks_);
   }
   return *this;
+}
+
+void StockAccount::sellStock(int amount, std::string name) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  auto it = ownedStocks_.find("name");
+  if (it == ownedStocks_.end()) {
+    throw std::invalid_argument("you do not own this stock");
+  }
+  if (it->second < amount) {
+    throw std::invalid_argument(
+        "you do not own enough of this stock too sell that amount");
+  }
+  Tx tx(amount, TxType::stockSell);
+  txs_.push_back(tx);
 }

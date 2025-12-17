@@ -24,8 +24,8 @@ Account::Account(std::string name, std::string id)
 
 void Account::deposit(uint amount) {
   // add some logs/statistics
-  moneyTx tx(amount, moneyTxType::deposit);
-  moneyTxs_.push_back(tx);
+  Tx tx(amount, TxType::deposit);
+  txs_.push_back(tx);
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
 
@@ -36,28 +36,30 @@ void Account::withdraw(uint amount) {
                 "withdraw_amount", amount);
     throw std::invalid_argument("Not enough money on account");
   }
-  moneyTx tx(amount, moneyTxType::withdraw);
-  moneyTxs_.push_back(tx);
+  Tx tx(amount, TxType::withdraw);
+  txs_.push_back(tx);
   // add some logs/statistics
 }
 
 void Account::printTransactionHistory() const {
-  std::for_each(moneyTxs_.begin(), moneyTxs_.end(),
-                [](const moneyTx &tx) { std::cout << tx << std::endl; });
+  std::for_each(txs_.begin(), txs_.end(),
+                [](const Tx &tx) { std::cout << tx << std::endl; });
 }
 
 int Account::getBalance() const {
-  int res = std::accumulate(moneyTxs_.begin(), moneyTxs_.end(), 0,
-                            [](int acc, const moneyTx &tx) {
-                              switch (tx.getType()) {
-                              case moneyTxType::deposit:
-                                return acc + tx.getAmount();
-                              case moneyTxType::withdraw:
-                                return acc - tx.getAmount();
-                              case moneyTxType::stockPurchase:
-                                return acc - tx.getAmount();
-                              };
-                            });
+  int res =
+      std::accumulate(txs_.begin(), txs_.end(), 0, [](int acc, const Tx &tx) {
+        switch (tx.getType()) {
+        case TxType::deposit:
+          return acc + tx.getAmount();
+        case TxType::withdraw:
+          return acc - tx.getAmount();
+        case TxType::stockPurchase:
+          return acc - tx.getAmount();
+        case TxType::stockSell:
+          return acc - tx.getAmount();
+        };
+      });
   return res;
 }
 
