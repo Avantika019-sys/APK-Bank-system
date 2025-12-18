@@ -2,9 +2,10 @@
 #include "transaction.h"
 #include <iostream>
 
-Tx::Tx(uint amt, TxType type)
-    : amount_(amt), type_(type), createdAt_(std::chrono::system_clock::now()),
-      details(std::pmr::polymorphic_allocator<string>(memRes)) {}
+
+
+Tx::Tx(uint amt, TxType type, std::pmr::memory_resource* memRes)
+    : memRes_(memRes), details_(memRes), amount_(amt), type_(type), createdAt_(std::chrono::system_clock::now()){}
 
 std::chrono::system_clock::time_point Tx::getCreatedAt() const {
   return createdAt_;

@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <vector>
 
+
 class Account {
 public:
   Account(std::string name, std::string id);
@@ -23,7 +24,8 @@ public:
   std::string getId() const;
 
 protected:
-  std::vector<Tx> txs_;
+  std::pmr::vector<Tx> txs_{&pool_};
+  std::pmr::monotonic_buffer_resource pool_;
   logger logger_;
 
 private:

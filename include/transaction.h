@@ -1,4 +1,3 @@
-
 #ifndef BANK_TRANSACTION_H
 #define BANK_TRANSACTION_H
 #include <chrono>
@@ -6,6 +5,7 @@
 #include <memory_resource>
 #include <string>
 #include <vector>
+
 using namespace std;
 
 enum class TxType {
@@ -20,15 +20,15 @@ enum class TxType {
 class Tx {
 
 public:
-  Tx(uint amt, TxType type);
+  Tx(uint amt, TxType type, std::pmr::memory_resource* memRes);
   uint getAmount() const;
   TxType getType() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
   // std::string toString();
 
 private:
-  std::pmr::memory_resource *memRes = std::pmr::get_default_resource();
-  std::pmr::vector<string> details;
+  std::pmr::memory_resource *memRes_;
+  std::pmr::vector<std::pmr::string> details_;
   std::chrono::system_clock::time_point createdAt_;
   uint amount_;
   TxType type_;
