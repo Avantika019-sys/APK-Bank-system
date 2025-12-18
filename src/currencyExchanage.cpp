@@ -1,34 +1,45 @@
 #include "currencyExchange.hpp"
+#include <stdexcept>
+#include <iostream>
 
-currencyExchange::currencyExchange(std::string from, std::string to, double rate)
-    : fromCurrency(from), toCurrency(to), exchangeRate(rate) {
-    log.addEntry("Currency exchange created from " + from + " to " + to + " with rate " + std::to_string(rate));
+currencyExchange::currencyExchange(CurrencyCode auto from,
+                                   CurrencyCode auto to,
+                                   int rate)
+    : fromCurrency(std::string{from}),
+      toCurrency(std::string{to}),
+      exchangeRate(rate)
+{
+    if (rate <= 0) {
+        throw std::invalid_argument("Exchange rate must be positive");
+    }
+
+    
+    rates[toCurrency] = rate;
+
+    // could maybe have log here 
 }
 
-void currencyExchange::setExchangeRate(double rate) {
+void currencyExchange::setExchangeRate(int rate) {
+    if (rate <= 0) {
+        throw std::invalid_argument("Exchange rate must be positive");
+    }
+
     exchangeRate = rate;
-    log.addEntry("Exchange rate updated to " + std::to_string(rate));
+    rates[toCurrency] = rate;
+
+    // could maybe have log here 
 }
 
-double currencyExchange::convert(double amount) {
-    double convertedAmount = amount * exchangeRate;
-    log.addEntry("Converted " + std::to_string(amount) + " " + fromCurrency + " to " + std::to_string(convertedAmount) + " " + toCurrency);
-    return convertedAmount;
-}
 
-void currencyExchange::showLog() {
-    log.showEntries();
-}
+int currencyExchange::convert(int amount) {
+    if (amount < 0) {
+        throw std::invalid_argument("Amount cannot be negative");
+    }
 
-std::string currencyExchange::getFromCurrency() const {
-    return fromCurrency;
-}
+    int result = amount * exchangeRate;
 
-std::string currencyExchange::getToCurrency() const {
-    return toCurrency;
-}
+    // could maybe have log here 
 
-double currencyExchange::getExchangeRate() const {
-    return exchangeRate;
+    return result;
 }
 

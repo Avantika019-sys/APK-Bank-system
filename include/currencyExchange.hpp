@@ -2,20 +2,27 @@
 #include <unordered_map>
 #include "log.hpp"
 
+
+template<typename T>
+concept CurrencyCode = requires(T s) {
+    { std::string{s} };
+};
+
 class currencyExchange {
 private:
     std::string fromCurrency;
     std::string toCurrency;
-    std::unordered_map<std::string, double> rates;
-    double exchangeRate;
+    std::unordered_map<std::string, int> rates;
+    int exchangeRate;
     Log log;
 
 public:
-    currencyExchange(std::string from, std::string to, double rate);
-    void setExchangeRate(double rate);
-    void showLog();
-    double convert(double amount);
-    std::string getFromCurrency() const;
-    std::string getToCurrency() const;
-    double getExchangeRate() const;
+    currencyExchange(CurrencyCode auto from, CurrencyCode auto to, int rate);
+
+    currencyExchange(const currencyExchange&) = delete;
+    currencyExchange& operator=(const currencyExchange&) = delete;
+    ~currencyExchange() = default;
+
+    void setExchangeRate(int rate);
+    int convert(int amount);
 };
