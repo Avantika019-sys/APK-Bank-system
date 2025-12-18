@@ -10,10 +10,6 @@ class Account {
 public:
   Account(std::string name, std::string id);
 
-  // Account(Account &&other) noexcept;
-  //
-  // Account &operator=(Account &&other) noexcept;
-
   void deposit(uint amount);
 
   void withdraw(uint amount);
@@ -25,8 +21,6 @@ public:
   std::string getAccountType() const;
 
   std::string getId() const;
-  // Account(const Account &other) = delete;
-  // Account &operator=(const Account &other) = delete;
 
 protected:
   std::vector<Tx> txs_;

@@ -7,12 +7,29 @@
 #include "transaction.h"
 
 namespace stock {
+enum class orderType {
+  BUY,
+  SELL,
+};
 struct order {
+  order(string stockName, int amountOfStocks, orderType type);
   std::string stockName;
   int amountOfStocks;
+  orderType type;
   // stockTx tx;
   std::promise<bool> prom; // result of the order
 };
+// class StockOrder {
+// public:
+
+// private:
+//     std::string order_id_;
+//     std::string symbol_;
+//     Type type_;
+//     int quantity_;
+//     double limit_price_;
+//     Status status_;
+//     std::chrono::system_clock::time_point timestamp_;
 
 struct info {
   explicit info(std::string name);
@@ -26,9 +43,8 @@ struct message {
   variant data;
 };
 struct visitor {
-  void operator()(order &bo);
-
-  void operator()(info &so);
+  void operator()(order &o);
+  void operator()(info &i);
 };
 } // namespace stock
 

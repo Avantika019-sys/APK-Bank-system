@@ -10,25 +10,9 @@
 // #include "exceptions.h"
 
 // namespace banking {
-    
 
-
-// class StockOrder {
 // public:
-//     enum class Type { BUY, SELL };
-//     enum class Status { PENDING, EXECUTED, CANCELLED, FAILED };
-    
-// private:
-//     std::string order_id_;
-//     std::string symbol_;
-//     Type type_;
-//     int quantity_;
-//     double limit_price_;
-//     Status status_;
-//     std::chrono::system_clock::time_point timestamp_;
-    
-// public:
-//     StockOrder(std::string order_id, std::string symbol, Type type, 
+//     StockOrder(std::string order_id, std::string symbol, Type type,
 //                int quantity, double limit_price)
 //         : order_id_(std::move(order_id))
 //         , symbol_(std::move(symbol))
@@ -37,11 +21,11 @@
 //         , limit_price_(limit_price)
 //         , status_(Status::PENDING)
 //         , timestamp_(std::chrono::system_clock::now()) {}
-    
+
 //     // Move semantics
 //     StockOrder(StockOrder&&) = default;
 //     StockOrder& operator=(StockOrder&&) = default;
-    
+
 //     // Getters
 //     const std::string& get_order_id() const noexcept { return order_id_; }
 //     const std::string& get_symbol() const noexcept { return symbol_; }
@@ -49,7 +33,7 @@
 //     int get_quantity() const noexcept { return quantity_; }
 //     double get_limit_price() const noexcept { return limit_price_; }
 //     Status get_status() const noexcept { return status_; }
-    
+
 //     void execute() noexcept { status_ = Status::EXECUTED; }
 //     void cancel() noexcept { status_ = Status::CANCELLED; }
 //     void fail() noexcept { status_ = Status::FAILED; }
@@ -61,17 +45,14 @@
 //     std::pmr::unordered_map<std::string, int> holdings_;
 //     std::pmr::vector<StockOrder> order_history_;
 //     double cash_balance_;
-    
+
 // public:
-//     explicit StockPortfolio(std::string portfolio_id, 
-//                            std::pmr::memory_resource* pool = std::pmr::get_default_resource())
+//     explicit StockPortfolio(std::string portfolio_id,
+//                            std::pmr::memory_resource* pool =
+//                            std::pmr::get_default_resource())
 //         : portfolio_id_(std::move(portfolio_id))
 //         , holdings_(pool)
 //         , order_history_(pool)
 //         , cash_balance_(0.0) {}
-    
-   
-    
-  
-    
+
 // };

@@ -89,6 +89,30 @@ void StockAccount::sellStock(int amount, std::string name) {
     throw std::invalid_argument(
         "you do not own enough of this stock too sell that amount");
   }
+  stock::info i(name);
+  auto stockInfoFut = i.prom.get_future();
+  stock::variant infoVariant(std::move(i));
+  auto &serv = stock::server::getInstance();
+  serv.msgQueue.push(std::move(infoVariant));
+
+  stockInfoFut.wait();
+  int stockPrice = stockInfoFut.get();
+  int totalSellValue = stockPrice * amount;
+
+  std::cout << "Confirm you would like to sell stock, you will get: "
+            << totalSellValue << "\nPlease confirm purchase by pressing y: ";
+  char inp;
+  std::cin >> inp;
+  if (inp != 'y') {
+    std::cout << "stock sell cancelled";
+    return;
+  }
+  stock::order o;
+  auto orderFut = o.prom.get_future();
+  stock::variant orderVariant(std::move(o));
+  serv.msgQueue.push(std::move(orderVariant));
+
+  orderFut.wait();
   Tx tx(amount, TxType::stockSell);
   txs_.push_back(tx);
 }
