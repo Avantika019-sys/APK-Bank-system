@@ -24,7 +24,7 @@ Account::Account(std::string name, std::string id)
 
 void Account::deposit(uint amount) {
   // add some logs/statistics
-  Tx tx(amount, TxType::deposit);
+  Tx tx(depositDetails{amount});
   txs_.push_back(tx);
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
@@ -36,8 +36,7 @@ void Account::withdraw(uint amount) {
                 "withdraw_amount", amount);
     throw std::invalid_argument("Not enough money on account");
   }
-  Tx tx(amount, TxType::withdraw);
-  txs_.push_back(tx);
+  txs_.emplace_back(withdrawDetails{amount});
   // add some logs/statistics
 }
 
@@ -49,16 +48,7 @@ void Account::printTransactionHistory() const {
 int Account::getBalance() const {
   int res =
       std::accumulate(txs_.begin(), txs_.end(), 0, [](int acc, const Tx &tx) {
-        switch (tx.getType()) {
-        case TxType::deposit:
-          return acc + tx.getAmount();
-        case TxType::withdraw:
-          return acc - tx.getAmount();
-        case TxType::stockPurchase:
-          return acc - tx.getAmount();
-        case TxType::stockSell:
-          return acc - tx.getAmount();
-        };
+        return std::visit(getTransactionAmount{}, tx.getDetails());
       });
   return res;
 }

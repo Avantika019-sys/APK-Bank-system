@@ -13,7 +13,7 @@ StockAccount::StockAccount(std::string name, std::string id)
   monitorStocks = false;
 }
 
-void StockAccount::buyStock(int amountOfStocks, std::string stockName) {
+void StockAccount::buyStock(uint amountOfStocks, std::string stockName) {
   auto &serv = stock::server::getInstance();
 
   stock::info i(stockName);
@@ -22,8 +22,8 @@ void StockAccount::buyStock(int amountOfStocks, std::string stockName) {
   serv.msgQueue.push(std::move(infoVariant));
 
   stockInfoFut.wait();
-  int stockPrice = stockInfoFut.get();
-  int totalPrice = stockPrice * amountOfStocks;
+  uint stockPrice = stockInfoFut.get();
+  uint totalPrice = stockPrice * amountOfStocks;
   if (getBalance() < totalPrice) {
     throw std::invalid_argument("you dont have enough money to buy stock");
   }
@@ -36,8 +36,7 @@ void StockAccount::buyStock(int amountOfStocks, std::string stockName) {
     return;
   }
 
-  // stockTx stockTx(amountOfStocks, stockName);
-  stock::order o;
+  stock::order o(stockName, amountOfStocks, stock::orderType::BUY);
   auto orderFut = o.prom.get_future();
   stock::variant orderVariant(std::move(o));
   serv.msgQueue.push(std::move(orderVariant));
@@ -45,8 +44,8 @@ void StockAccount::buyStock(int amountOfStocks, std::string stockName) {
   orderFut.wait();
   std::lock_guard<std::mutex> lock(mtx_);
   if (orderFut.get()) {
-    Tx tx(totalPrice, TxType::stockPurchase);
-    txs_.push_back(tx);
+    txs_.emplace_back(
+        stockPurchaseDetails{stockName, amountOfStocks, stockPrice});
     if (ownedStocks_.contains(stockName)) {
       ownedStocks_[stockName] += amountOfStocks;
     } else {
@@ -79,7 +78,7 @@ StockAccount &StockAccount::operator=(StockAccount &&other) {
   return *this;
 }
 
-void StockAccount::sellStock(int amount, std::string name) {
+void StockAccount::sellStock(uint amount, std::string name) {
   std::lock_guard<std::mutex> lock(mtx_);
   auto it = ownedStocks_.find("name");
   if (it == ownedStocks_.end()) {
@@ -96,8 +95,8 @@ void StockAccount::sellStock(int amount, std::string name) {
   serv.msgQueue.push(std::move(infoVariant));
 
   stockInfoFut.wait();
-  int stockPrice = stockInfoFut.get();
-  int totalSellValue = stockPrice * amount;
+  uint stockPrice = stockInfoFut.get();
+  uint totalSellValue = stockPrice * amount;
 
   std::cout << "Confirm you would like to sell stock, you will get: "
             << totalSellValue << "\nPlease confirm purchase by pressing y: ";
@@ -107,12 +106,13 @@ void StockAccount::sellStock(int amount, std::string name) {
     std::cout << "stock sell cancelled";
     return;
   }
-  stock::order o;
+  stock::order o(name, amount, stock::orderType::SELL);
   auto orderFut = o.prom.get_future();
   stock::variant orderVariant(std::move(o));
   serv.msgQueue.push(std::move(orderVariant));
 
   orderFut.wait();
-  Tx tx(amount, TxType::stockSell);
-  txs_.push_back(tx);
+  if (orderFut.get()) {
+    txs_.emplace_back(stockSellDetails{name, amount, stockPrice});
+  }
 }

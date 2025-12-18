@@ -2,31 +2,21 @@
 #include "transaction.h"
 #include <iostream>
 
-Tx::Tx(uint amt, TxType type)
-    : amount_(amt), type_(type), createdAt_(std::chrono::system_clock::now()),
-      details(std::pmr::polymorphic_allocator<string>(memRes)) {}
+Tx::Tx(details d) : details_(d), createdAt_(std::chrono::system_clock::now()) {}
 
 std::chrono::system_clock::time_point Tx::getCreatedAt() const {
   return createdAt_;
 }
 
-uint Tx::getAmount() const { return amount_; }
+const details &Tx::getDetails() const { return details_; }
 
 std::ostream &operator<<(std::ostream &os, const Tx &t) {
-  std::string transactionTypeStr = "withdrawal";
-  if (t.getType() == TxType::deposit) {
-    transactionTypeStr = "deposit";
-  }
-  if (t.getType() == TxType::stockPurchase) {
-    transactionTypeStr = "stock purchase";
-  }
-  os << "Transaction created at: " << t.getCreatedAt()
-     << " Amount: " << t.getAmount() << " Type: " << transactionTypeStr
+  std::string detailsStr = std::visit(ToString{}, t.getDetails());
+  os << "Transaction created at: " << t.getCreatedAt() << detailsStr
      << std::endl;
   return os;
 }
 
-TxType Tx::getType() const { return type_; }
 // std::string Tx::toString() { return ""; }
 // std::ostream &operator<<(std::ostream &os, const stockTx &t) {
 //   os << "Transaction created at: " << t.getCreatedAt()
