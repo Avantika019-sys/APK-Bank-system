@@ -6,8 +6,8 @@
 class StockAccount : public Account {
 public:
   StockAccount(std::string name, std::string id);
-  void buyStock(int amountOfStocks, std::string stockName);
-  void sellStock(int amount, std::string name);
+  void buyStock(uint amountOfStocks, std::string stockName);
+  void sellStock(uint amount, std::string name);
   void setMonitorStocks(bool monitor);
   StockAccount(StockAccount &&other);
   StockAccount &operator=(StockAccount &&other);
