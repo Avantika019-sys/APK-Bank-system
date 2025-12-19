@@ -1,5 +1,6 @@
 #include "account.h"
-#include "transaction.h"
+#include "Tx.h"
+#include "TxDetails.h"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -46,9 +47,19 @@ void Account::printTransactionHistory() const {
 }
 
 int Account::getBalance() const {
+  struct getAmount {
+    int operator()(const stockSellDetails &arg) {
+      return arg.pricePerStock_ * arg.stocksSold_;
+    }
+    int operator()(const stockPurchaseDetails &arg) {
+      return -(arg.pricePerStock_ * arg.stocksBought_);
+    }
+    int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }
+    int operator()(const depositDetails &arg) { return arg.amountDepositted_; }
+  };
   int res =
       std::accumulate(txs_.begin(), txs_.end(), 0, [](int acc, const Tx &tx) {
-        return std::visit(getTransactionAmount{}, tx.getDetails());
+        return std::visit(getAmount{}, tx.getDetails());
       });
   return res;
 }

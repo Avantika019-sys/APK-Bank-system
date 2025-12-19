@@ -1,10 +1,11 @@
 #include "../../include/stock/server.h"
+#include "stock/msgQueue.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
 #include <variant>
 
 namespace stock {
-server::server() : msgQueue(10) {
+server::server() : msgQueue_(10) {
   stocks = {
       {"AAPL", 189.45},
       {"MSFT", 332.64},
@@ -34,15 +35,22 @@ void server::startUpdateStocksWorker() {
 }
 
 void server::startStockWorker() {
+  struct visitor {
+    server &serv;
+    void operator()(order &o) { o.prom.set_value(true); }
+    void operator()(info &i) { i.prom.set_value(10); }
+    void operator()(stop &s) {}
+  };
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    auto msg = msgQueue.pop();
-    std::visit(this->visitor_, msg);
+    auto msg = msgQueue_.pop();
+    std::visit(visitor{*this}, msg);
   }
 }
 
+void server::pushMsg(variant &&msg) { msgQueue_.push(std::move(msg)); }
 void server::stopWorkers() {
   run = false;
-  msgQueue.push(stop{});
+  msgQueue_.push(stop{});
 }
 } // namespace stock

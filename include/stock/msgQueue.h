@@ -1,17 +1,17 @@
-#ifndef BANK_MESSAGEQUEUE_H
-#define BANK_MESSAGEQUEUE_H
+#ifndef BANK_MSGQUEUE_H
+#define BANK_MSGQUEUE_H
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 
-#include "visitor.h"
+#include "variant.h"
 
 namespace stock {
-class messageQueue {
+class msgQueue {
 public:
-  messageQueue(unsigned long maxSize) : maxSize(maxSize) {}
+  msgQueue(unsigned long maxSize) : maxSize(maxSize) {}
 
-  void push(variant msg);
+  void push(variant &&msg);
 
   variant pop();
 
@@ -23,4 +23,4 @@ private:
   std::condition_variable cv_not_full;
 };
 } // namespace stock
-#endif // BANK_MESSAGEQUEUE_H
+#endif // BANK_MSGQUEUE_H

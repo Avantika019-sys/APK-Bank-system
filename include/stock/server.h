@@ -1,5 +1,4 @@
-#include "messageQueue.h"
-#include "visitor.h"
+#include "msgQueue.h"
 #include <boost/signals2/signal.hpp>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
@@ -16,14 +15,12 @@ public:
   void startUpdateStocksWorker();
 
   void startStockWorker();
-
-  messageQueue msgQueue;
-
+  void pushMsg(variant &&msg);
   void stopWorkers();
 
 private:
+  msgQueue msgQueue_;
   std::vector<std::pair<std::string, int>> stocks;
-  visitor visitor_;
   std::mutex mtx;
   std::atomic<bool> run{true};
 };

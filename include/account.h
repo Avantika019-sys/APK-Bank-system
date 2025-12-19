@@ -1,11 +1,10 @@
 #ifndef BANK_ACCOUNT_H
 #define BANK_ACCOUNT_H
+#include "Tx.h"
 #include "logger.h"
-#include "transaction.h"
 #include <string>
 #include <sys/types.h>
 #include <vector>
-
 
 class Account {
 public:
@@ -33,16 +32,6 @@ private:
   std::string id_;
   std::string type_;
   // max 5 accounts
-};
-struct getTransactionAmount {
-  int operator()(const stockSellDetails &arg) {
-    return arg.pricePerStock_ * arg.stocksSold_;
-  }
-  int operator()(const stockPurchaseDetails &arg) {
-    return -(arg.pricePerStock_ * arg.stocksBought_);
-  }
-  int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }
-  int operator()(const depositDetails &arg) { return arg.amountDepositted_; }
 };
 //
 // class AccountFactory {

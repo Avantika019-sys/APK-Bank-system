@@ -1,5 +1,5 @@
-#ifndef BANK_TX_DETAILS_H
-#define BANK_TX_DETAILS_H
+#ifndef BANK_TXDETAILS_H
+#define BANK_TXDETAILS_H
 #include <string>
 #include <variant>
 struct stockPurchaseDetails {
@@ -23,11 +23,5 @@ typedef std::variant<stockPurchaseDetails, stockSellDetails, withdrawDetails,
                      depositDetails>
     details;
 ;
-struct ToString {
-  std::string operator()(const stockSellDetails &arg);
-  std::string operator()(stockPurchaseDetails arg);
-  std::string operator()(withdrawDetails arg);
-  std::string operator()(depositDetails arg);
-};
 
-#endif // BANK_TX_DETAILS_H
+#endif // BANK_TXDETAILS_H

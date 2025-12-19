@@ -1,6 +1,6 @@
-#include "stockaccount.h"
+#include "StockAccount.h"
 
-#include "transaction.h"
+#include "Tx.h"
 
 #include "stock/server.h"
 #include <iostream>
@@ -19,7 +19,7 @@ void StockAccount::buyStock(uint amountOfStocks, std::string stockName) {
   stock::info i(stockName);
   auto stockInfoFut = i.prom.get_future();
   stock::variant infoVariant(std::move(i));
-  serv.msgQueue.push(std::move(infoVariant));
+  serv.pushMsg(std::move(infoVariant));
 
   stockInfoFut.wait();
   uint stockPrice = stockInfoFut.get();
@@ -39,7 +39,7 @@ void StockAccount::buyStock(uint amountOfStocks, std::string stockName) {
   stock::order o(stockName, amountOfStocks, stock::orderType::BUY);
   auto orderFut = o.prom.get_future();
   stock::variant orderVariant(std::move(o));
-  serv.msgQueue.push(std::move(orderVariant));
+  serv.pushMsg(std::move(orderVariant));
 
   orderFut.wait();
   std::lock_guard<std::mutex> lock(mtx_);
@@ -92,7 +92,7 @@ void StockAccount::sellStock(uint amount, std::string name) {
   auto stockInfoFut = i.prom.get_future();
   stock::variant infoVariant(std::move(i));
   auto &serv = stock::server::getInstance();
-  serv.msgQueue.push(std::move(infoVariant));
+  serv.pushMsg(std::move(infoVariant));
 
   stockInfoFut.wait();
   uint stockPrice = stockInfoFut.get();
@@ -109,7 +109,7 @@ void StockAccount::sellStock(uint amount, std::string name) {
   stock::order o(name, amount, stock::orderType::SELL);
   auto orderFut = o.prom.get_future();
   stock::variant orderVariant(std::move(o));
-  serv.msgQueue.push(std::move(orderVariant));
+  serv.pushMsg(std::move(orderVariant));
 
   orderFut.wait();
   if (orderFut.get()) {

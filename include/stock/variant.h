@@ -4,7 +4,7 @@
 #include <future>
 #include <variant>
 
-#include "transaction.h"
+#include "Tx.h"
 
 namespace stock {
 enum class orderType {
@@ -12,7 +12,8 @@ enum class orderType {
   SELL,
 };
 struct order {
-  order(string stockName, int amountOfStocks, orderType type);
+  order(string stockName, int amountOfStocks, orderType type)
+      : stockName(stockName), amountOfStocks(amountOfStocks), type(type) {}
   std::string stockName;
   int amountOfStocks;
   orderType type;
@@ -20,7 +21,7 @@ struct order {
 };
 
 struct info {
-  explicit info(std::string name);
+  explicit info(std::string name) : stockName(name) {}
 
   std::string stockName;
   std::promise<int> prom; // price per stock
@@ -28,11 +29,6 @@ struct info {
 struct stop {};
 typedef std::variant<order, info, stop> variant;
 
-struct visitor {
-  void operator()(order &o);
-  void operator()(info &i);
-  void operator()(stop &s);
-};
 } // namespace stock
 
 #endif // BANK_VISITOR_H

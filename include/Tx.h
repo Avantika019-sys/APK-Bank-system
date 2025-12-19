@@ -1,6 +1,6 @@
 #ifndef BANK_TRANSACTION_H
 #define BANK_TRANSACTION_H
-#include "tx_details.h"
+#include "TxDetails.h"
 #include <chrono>
 #include <iostream>
 #include <memory_resource>
@@ -12,7 +12,7 @@ using namespace std;
 class Tx {
 
 public:
-  Tx(details d, std::pmr::memory_resource* memRes);
+  Tx(details d, std::pmr::memory_resource *memRes);
   const details &getDetails() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
 
