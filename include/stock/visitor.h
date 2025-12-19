@@ -16,20 +16,8 @@ struct order {
   std::string stockName;
   int amountOfStocks;
   orderType type;
-  // stockTx tx;
   std::promise<bool> prom; // result of the order
 };
-// class StockOrder {
-// public:
-
-// private:
-//     std::string order_id_;
-//     std::string symbol_;
-//     Type type_;
-//     int quantity_;
-//     double limit_price_;
-//     Status status_;
-//     std::chrono::system_clock::time_point timestamp_;
 
 struct info {
   explicit info(std::string name);
@@ -46,17 +34,5 @@ struct visitor {
   void operator()(stop &s);
 };
 } // namespace stock
-
-struct Stock {
-  std::string symbol;
-  std::string name;
-  double current_price;
-  double day_high;
-  double day_low;
-
-  Stock(std::string sym, std::string n, double price)
-      : symbol(std::move(sym)), name(std::move(n)), current_price(price),
-        day_high(price), day_low(price) {}
-};
 
 #endif // BANK_VISITOR_H

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "account.h"
 #include "stock/server.h"
 
@@ -19,12 +17,9 @@ private:
   void onStockUpdate(std::string stockName, int updatedPrice);
 
   bool monitorStocks;
-  // std::vector<stockTx> stockTxs_;
   std::map<std::string, int> ownedStocks_;
   std::mutex mtx_;
 };
-
-// void deposit_cash(double amount) noexcept { cash_balance_ += amount; }
 
 //    template<typename... Args>
 // void place_buy_order(Args &&...args) {

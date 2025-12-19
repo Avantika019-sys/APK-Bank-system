@@ -1,7 +1,3 @@
-//
-// Created by ali on 11/13/25.
-//
-
 #ifndef BANK_MESSAGEQUEUE_H
 #define BANK_MESSAGEQUEUE_H
 #include <condition_variable>
