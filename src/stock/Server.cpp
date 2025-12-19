@@ -1,11 +1,10 @@
-#include "../../include/stock/server.h"
-#include "stock/msgQueue.h"
+#include "../../include/stock/Server.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
 #include <variant>
 
 namespace stock {
-server::server() : msgQueue_(10) {
+Server::Server() : msgQueue_(10) {
   stocks = {
       {"AAPL", 189.45},
       {"MSFT", 332.64},
@@ -14,12 +13,12 @@ server::server() : msgQueue_(10) {
   };
 }
 
-server &server::getInstance() {
-  static server instance;
+Server &Server::getInstance() {
+  static Server instance;
   return instance;
 }
 
-void server::startUpdateStocksWorker() {
+void Server::startUpdateStocksWorker() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<int> indexDistrib(0, 3);
@@ -34,9 +33,9 @@ void server::startUpdateStocksWorker() {
   }
 }
 
-void server::startStockWorker() {
+void Server::startStockWorker() {
   struct visitor {
-    server &serv;
+    Server &serv;
     void operator()(order &o) { o.prom.set_value(true); }
     void operator()(info &i) { i.prom.set_value(10); }
     void operator()(stop &s) {}
@@ -48,8 +47,8 @@ void server::startStockWorker() {
   }
 }
 
-void server::pushMsg(variant &&msg) { msgQueue_.push(std::move(msg)); }
-void server::stopWorkers() {
+void Server::pushMsg(variant &&msg) { msgQueue_.push(std::move(msg)); }
+void Server::stopWorkers() {
   run = false;
   msgQueue_.push(stop{});
 }

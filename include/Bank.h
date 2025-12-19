@@ -15,7 +15,7 @@ public:
     stockAccounts.emplace_back(std::forward<Args>(args)...);
   }
   StockAccount &getAccountById(std::string id);
-  std::string getBankName();
+  std::string getBankName() const;
 
 private:
   std::vector<StockAccount> stockAccounts;

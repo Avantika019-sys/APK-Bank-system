@@ -1,14 +1,14 @@
-#include "msgQueue.h"
+#include "MsgQueue.h"
 #include <boost/signals2/signal.hpp>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
 
 namespace stock {
-class server {
+class Server {
 public:
-  server();
+  Server();
 
-  static server &getInstance();
+  static Server &getInstance();
 
   boost::signals2::signal<void(std::string stockName, double UpdatedPrice)> sig;
 
@@ -19,7 +19,7 @@ public:
   void stopWorkers();
 
 private:
-  msgQueue msgQueue_;
+  MsgQueue msgQueue_;
   std::vector<std::pair<std::string, int>> stocks;
   std::mutex mtx;
   std::atomic<bool> run{true};

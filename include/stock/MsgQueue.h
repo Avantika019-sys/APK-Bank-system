@@ -7,9 +7,9 @@
 #include "variant.h"
 
 namespace stock {
-class msgQueue {
+class MsgQueue {
 public:
-  msgQueue(unsigned long maxSize) : maxSize(maxSize) {}
+  MsgQueue(unsigned long maxSize) : maxSize(maxSize) {}
 
   void push(variant &&msg);
 

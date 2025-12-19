@@ -18,7 +18,6 @@ struct withdrawDetails {
 struct depositDetails {
   uint amountDepositted_;
 };
-// enum stock, buy sell
 typedef std::variant<stockPurchaseDetails, stockSellDetails, withdrawDetails,
                      depositDetails>
     details;

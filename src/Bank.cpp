@@ -25,4 +25,4 @@ StockAccount &Bank::getAccountById(std::string id) {
   }
   return *it;
 }
-std::string Bank::getBankName() { return name_; }
+std::string Bank::getBankName() const { return name_; }
