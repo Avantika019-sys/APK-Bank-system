@@ -27,9 +27,9 @@ public:
   // delete copy and assignment ctor
 private:
   std::vector<std::pair<std::string, int>> stocks;
-  visitor orderVisitor;
+  visitor visitor_;
   std::mutex mtx;
-  bool run = true;
+  std::atomic<bool> run{true};
 };
 } // namespace stock
 

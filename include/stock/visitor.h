@@ -37,14 +37,13 @@ struct info {
   std::string stockName;
   std::promise<int> prom; // price per stock
 };
+struct stop {};
+typedef std::variant<order, info, stop> variant;
 
-typedef std::variant<order, info> variant;
-struct message {
-  variant data;
-};
 struct visitor {
   void operator()(order &o);
   void operator()(info &i);
+  void operator()(stop &s);
 };
 } // namespace stock
 

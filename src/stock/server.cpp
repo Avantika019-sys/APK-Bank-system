@@ -37,12 +37,12 @@ void server::startStockWorker() {
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
     auto msg = msgQueue.pop();
-    std::visit(this->orderVisitor, msg);
+    std::visit(this->visitor_, msg);
   }
 }
 
 void server::stopWorkers() {
-  std::unique_lock<std::mutex> lock(mtx);
   run = false;
+  msgQueue.push(stop{});
 }
 } // namespace stock
