@@ -1,9 +1,10 @@
 #include "MsgQueue.h"
 #include <boost/signals2/signal.hpp>
+#include <vector>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
 
-namespace stock {
+namespace bank::stock {
 class Server {
 public:
   Server();
@@ -19,11 +20,12 @@ public:
   void stopWorkers();
 
 private:
+  double calculateStockTrend(std::string stockName);
   MsgQueue msgQueue_;
-  std::vector<std::pair<std::string, int>> stocks;
+  std::map<std::string, std::vector<uint>> stocks_;
   std::mutex mtx;
   std::atomic<bool> run{true};
 };
-} // namespace stock
+} // namespace bank::stock
 
 #endif // BANK_STOCKSERVER_H

@@ -1,6 +1,8 @@
 
 
-#include "bank.h"
+#include "Bank.h"
+#include <string>
+
 class Cli {
 public:
   Cli();
@@ -12,8 +14,10 @@ private:
   void handleBuyStock();
   void handleSellStock();
   void handleSwitchBank();
+  void handleAddStopLossRule();
+  void handleRemoveStopLossRule();
   bool run = true;
   const Bank *currentBank;
-  StockAccount *acc;
+  bank::stock::StockAccount *acc;
   std::string accId = "12345";
 };

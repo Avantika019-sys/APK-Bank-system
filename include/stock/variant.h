@@ -1,12 +1,15 @@
 
 #ifndef BANK_VISITOR_H
 #define BANK_VISITOR_H
+#include "StockAccount.h"
 #include <future>
+#include <map>
+#include <set>
 #include <variant>
 
 #include "Tx.h"
 
-namespace stock {
+namespace bank::stock {
 enum class orderType {
   BUY,
   SELL,
@@ -20,15 +23,21 @@ struct order {
   std::promise<bool> prom; // result of the order
 };
 
-struct info {
-  explicit info(std::string name) : stockName(name) {}
+struct Info {
+  explicit Info(std::string name) : stockName(name) {}
 
   std::string stockName;
-  std::promise<int> prom; // price per stock
+  std::promise<std::pair<uint, double>> prom; // price per stock & trend
+};
+struct PortfolioTrend {
+  PortfolioTrend(std::set<std::string> ownedStocks)
+      : ownedStocks(ownedStocks) {}
+  std::set<string> ownedStocks;
+  std::promise<double> prom;
 };
 struct stop {};
-typedef std::variant<order, info, stop> variant;
+typedef std::variant<order, Info, stop> variant;
 
-} // namespace stock
+} // namespace bank::stock
 
 #endif // BANK_VISITOR_H

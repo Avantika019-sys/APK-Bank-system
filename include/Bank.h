@@ -1,6 +1,6 @@
 #ifndef BANK_BANK_H
 #define BANK_BANK_H
-#include "StockAccount.h"
+#include "stock/StockAccount.h"
 #include <string>
 #include <utility>
 #include <vector>
@@ -14,11 +14,11 @@ public:
   template <typename... Args> void addStockAccount(Args &&...args) {
     stockAccounts.emplace_back(std::forward<Args>(args)...);
   }
-  StockAccount &getAccountById(std::string id);
+  bank::stock::StockAccount &getAccountById(std::string id);
   std::string getBankName() const;
 
 private:
-  std::vector<StockAccount> stockAccounts;
+  std::vector<bank::stock::StockAccount> stockAccounts;
   std::string name_;
 };
 #endif // ANK_BANK_H

@@ -6,7 +6,7 @@
 
 #include "variant.h"
 
-namespace stock {
+namespace bank::stock {
 class MsgQueue {
 public:
   MsgQueue(unsigned long maxSize) : maxSize(maxSize) {}
@@ -22,5 +22,5 @@ private:
   std::condition_variable cv_not_empty;
   std::condition_variable cv_not_full;
 };
-} // namespace stock
+} // namespace bank::stock
 #endif // BANK_MSGQUEUE_H

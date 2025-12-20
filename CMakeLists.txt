@@ -19,9 +19,10 @@ add_executable(Bank main.cpp
         include/utils.h
         src/utils.cpp
         src/stock/msgQueue.cpp
-        include/bank.h
+        include/Bank.h
         src/bank.cpp
         main.cpp
         src/logger.cpp
-        src/StockAccount.cpp
+        src/stock/StockAccount.cpp
+        include/stock/StockAccount.h
 )

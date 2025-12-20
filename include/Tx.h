@@ -22,7 +22,7 @@ private:
   std::chrono::system_clock::time_point createdAt_;
   std::string from_account;
   std::string to_account;
-  details details_;
+  details d_;
   // std::string transaction_id_;
 };
 std::ostream &operator<<(std::ostream &os, const Tx &t);

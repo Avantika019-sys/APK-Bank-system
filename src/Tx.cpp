@@ -2,15 +2,15 @@
 #include "Tx.h"
 #include <iostream>
 
-Tx::Tx(uint amt, TxType type, std::pmr::memory_resource *memRes)
-    : memRes_(memRes), details_(memRes), amount_(amt), type_(type),
+Tx::Tx(details d, std::pmr::memory_resource *memRes)
+    : memRes_(memRes), details_(memRes),
       createdAt_(std::chrono::system_clock::now()) {}
 
 std::chrono::system_clock::time_point Tx::getCreatedAt() const {
   return createdAt_;
 }
 
-const details &Tx::getDetails() const { return details_; }
+const details &Tx::getDetails() const { return d_; }
 
 std::ostream &operator<<(std::ostream &os, const Tx &t) {
   struct ToString {

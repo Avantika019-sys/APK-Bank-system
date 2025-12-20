@@ -4,7 +4,7 @@
 #include "stock/Server.h"
 
 int main() {
-  auto &serv = stock::Server::getInstance();
+  auto &serv = bank::stock::Server::getInstance();
   std::thread stockUpdaterThread([&]() { serv.startUpdateStocksWorker(); });
   std::thread stockOrderThread([&]() { serv.startStockWorker(); });
   Cli cli;

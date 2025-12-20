@@ -1,6 +1,6 @@
 #include "stock/msgQueue.h"
 #include "stock/variant.h"
-namespace stock {
+namespace bank::stock {
 void MsgQueue::push(variant &&msg) {
 
   std::unique_lock<std::mutex> lock(mtx);
@@ -21,4 +21,4 @@ variant MsgQueue::pop() {
   cv_not_full.notify_one();
   return msg;
 }
-} // namespace stock
+} // namespace bank::stock

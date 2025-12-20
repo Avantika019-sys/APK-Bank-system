@@ -1,5 +1,9 @@
 #include "Cli.h"
-#include "bank.h"
+#include "Bank.h"
+#include "utils.h"
+#include <chrono>
+#include <future>
+#include <iostream>
 
 Cli::Cli() {
   Bank danskeBank("Danske Bank");
@@ -19,7 +23,9 @@ void Cli::loop() {
     std::cout << "6: Monitor stocks" << std::endl;
     std::cout << "7: Get transaction history" << std::endl;
     std::cout << "8: Get current balance" << std::endl;
-    std::cout << "9: " << std::endl;
+    std::cout << "9: Get current portfolio value" << std::endl;
+    std::cout << "10: Add stop loss rule to portfolio" << std::endl;
+    std::cout << "11: Remove stop loss rule from portfolio" << std::endl;
     std::cout << "-1: Exit program\n" << std::endl;
     int input;
     std::cin >> input;
@@ -49,7 +55,16 @@ void Cli::loop() {
       std::cout << "Current balance: " << acc->getBalance() << std::endl;
       break;
     case 9:
-      stock::Server::getInstance().stopWorkers();
+      acc->printPortfolio();
+      break;
+    case 10:
+      handleAddStopLossRule();
+      break;
+    case 11:
+      handleRemoveStopLossRule();
+      break;
+    case -1:
+      bank::stock::Server::getInstance().stopWorkers();
       run = false;
       break;
     }
@@ -79,11 +94,14 @@ void Cli::handleBuyStock() {
   std::cout << "Enter stock name to buy: ";
   std::string stockName;
   std::cin >> stockName;
-  std::cout << "Enter amount of the stock to buy: ";
-  int amount;
-  std::cin >> amount;
+  std::cout << "Enter quantity of the stock to buy: ";
+  int qty;
+  std::cin >> qty;
+  auto fut =
+      std::async(std::launch::async, [&]() { acc->buyStock(stockName, qty); });
+  spin(fut, "wait for server to proccesing order");
   try {
-    acc->buyStock(amount, stockName);
+    fut.get();
   } catch (const std::invalid_argument e) {
     std::cout << "failed to purchase stock: " << e.what() << std::endl;
     return;
@@ -114,3 +132,4 @@ void Cli::handleSwitchBank() {
     std::cout << "Switched to Jyske Bank" << std::endl;
   }
 }
+void Cli::handleAddStopLossRule() {}
