@@ -10,7 +10,9 @@
 #include <variant>
 
 namespace bank::stock {
-typedef std::variant<Order, Info, PortfolioTrend, Stop> Message;
+typedef std::variant<messages::Order, messages::Info, messages::PortfolioTrend,
+                     messages::Stop>
+    Message;
 class MessageQueue {
 public:
   MessageQueue(unsigned long maxSize) : maxSize(maxSize) {}
