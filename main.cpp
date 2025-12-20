@@ -1,6 +1,6 @@
 
+#include "Bank.h"
 #include "Cli.h"
-#include "bank.h"
 #include "stock/Server.h"
 
 int main() {

@@ -1,25 +1,23 @@
 #include "../../include/stock/Server.h"
-#include "stock/variant.h"
 #include <bits/this_thread_sleep.h>
-#include <functional>
 #include <random>
 #include <utility>
 #include <variant>
 
 namespace bank::stock {
 Server::Server() : msgQueue_(10) {
-  stocks_ = {
-      {"AAPL", 189.45},
-      {"MSFT", 332.64},
-      {"GOOG", 130.17},
-      {"TSLA", 240.01},
-  };
-  stocks_["AAPL"].push_back(189)
+  stocks_["AAPL"].first.push_back(189);
+  stocks_["MSFT"].first.push_back(129);
+  stocks_["GOOG"].first.push_back(889);
+  stocks_["TSLA"].first.push_back(589);
 }
 
 Server &Server::getInstance() {
   static Server instance;
   return instance;
+}
+StockUpdateSignal &Server::getSignal(std::string stockName) {
+  return stocks_[stockName].second;
 }
 
 void Server::startUpdateStocksWorker() {
@@ -31,7 +29,7 @@ void Server::startUpdateStocksWorker() {
     std::this_thread::sleep_for(std::chrono::seconds(3));
     for (auto &stock : stocks_) {
       uint newPrice = distrib(gen);
-      stock.second.push_back(newPrice);
+      stock.second.first.push_back(newPrice);
       sig(stock.first, newPrice);
     }
   }
@@ -40,12 +38,13 @@ void Server::startUpdateStocksWorker() {
 void Server::startStockWorker() {
   struct visitor {
     Server &serv;
-    void operator()(order &o) { o.prom.set_value(true); }
-    void operator()(Info &i) {
+    void operator()(messages::Order &o) { o.prom.set_value(true); }
+    void operator()(messages::Info &i) {
       double trend = serv.calculateStockTrend(i.stockName);
-      i.prom.set_value(std::make_pair(serv.stocks_[i.stockName].back(), trend));
+      i.prom.set_value(
+          std::make_pair(serv.stocks_[i.stockName].first.back(), trend));
     }
-    void operator()(PortfolioTrend &p) {
+    void operator()(messages::PortfolioTrend &p) {
       std::vector<std::future<double>> futures;
       for (auto stock : p.ownedStocks) {
         futures.push_back(std::async(std::launch::async, [this, stock]() {
@@ -58,7 +57,7 @@ void Server::startStockWorker() {
       }
       p.prom.set_value(total / futures.size());
     }
-    void operator()(stop &s) {}
+    void operator()(messages::Stop &s) {}
   };
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -67,13 +66,13 @@ void Server::startStockWorker() {
   }
 }
 
-void Server::pushMsg(variant &&msg) { msgQueue_.push(std::move(msg)); }
+void Server::pushMsg(Message &&msg) { msgQueue_.push(std::move(msg)); }
 void Server::stopWorkers() {
   run = false;
-  msgQueue_.push(stop{});
+  msgQueue_.push(messages::Stop{});
 }
 double Server::calculateStockTrend(std::string stockName) {
-  auto &vec = stocks_[stockName];
+  auto &vec = stocks_[stockName].first;
   uint sumX = 0;
   uint sumY = 0;
   uint sumXY = 0;

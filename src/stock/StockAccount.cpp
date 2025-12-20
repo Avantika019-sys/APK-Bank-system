@@ -1,24 +1,21 @@
 #include "stock/StockAccount.h"
 
+#include "../../include/stock/messages/Info.h"
 #include "logger.h"
+#include "stock/MessageQueue.h"
 #include "stock/Server.h"
-#include "stock/variant.h"
 #include <iostream>
 #include <stdexcept>
 namespace bank::stock {
 StockAccount::StockAccount(std::string name, std::string id)
-    : Account(name, id) {
-  auto handler = std::bind(&StockAccount::onStockUpdate, this,
-                           std::placeholders::_1, std::placeholders::_2);
-  stock::Server::getInstance().sig.connect(handler);
-}
+    : Account(name, id) {}
 
 void StockAccount::buyStock(std::string stockName, uint qty) {
   auto &serv = stock::Server::getInstance();
 
-  stock::Info i(stockName);
+  stock::messages::Info i(stockName);
   auto infoF = i.prom.get_future();
-  serv.pushMsg(stock::variant(std::move(i)));
+  serv.pushMsg(stock::Message(std::move(i)));
 
   infoF.wait();
   uint pricePerStock = infoF.get();
@@ -35,9 +32,9 @@ void StockAccount::buyStock(std::string stockName, uint qty) {
     return;
   }
 
-  stock::order o(stockName, qty, stock::orderType::BUY);
+  stock::messages::Order o(stockName, qty, stock::messages::OrderType::BUY);
   auto orderF = o.prom.get_future();
-  serv.pushMsg(stock::variant(std::move(o)));
+  serv.pushMsg(stock::Message(std::move(o)));
 
   orderF.wait();
   bool success = orderF.get();
@@ -65,9 +62,10 @@ void StockAccount::onStockUpdate(std::string stockName, uint updatedPrice) {
     return;
   }
   if (updatedPrice <= it->second.second.value()) {
-    stock::order o(stockName, it->second.first, stock::orderType::SELL);
+    stock::messages::Order o(stockName, it->second.first,
+                             stock::messages::OrderType::SELL);
     auto orderFut = o.prom.get_future();
-    serv.pushMsg(stock::variant(std::move(o)));
+    serv.pushMsg(stock::Message(std::move(o)));
 
     orderFut.wait();
     if (!orderFut.get()) {
@@ -102,9 +100,9 @@ void StockAccount::sellStock(std::string stockName, uint qty) {
     throw std::invalid_argument(
         "you do not own enough of this stock too sell that amount");
   }
-  stock::Info i(stockName);
+  stock::messages::Info i(stockName);
   auto f = i.prom.get_future();
-  serv.pushMsg(stock::variant(std::move(i)));
+  serv.pushMsg(stock::Message(std::move(i)));
 
   f.wait();
   uint stockPrice = f.get();
@@ -118,9 +116,9 @@ void StockAccount::sellStock(std::string stockName, uint qty) {
     std::cout << "stock sell cancelled";
     return;
   }
-  stock::order o(stockName, qty, stock::orderType::SELL);
+  stock::messages::Order o(stockName, qty, stock::messages::OrderType::SELL);
   auto orderFut = o.prom.get_future();
-  serv.pushMsg(stock::variant(std::move(o)));
+  serv.pushMsg(stock::Message(std::move(o)));
 
   orderFut.wait();
   if (orderFut.get()) {
@@ -130,9 +128,9 @@ void StockAccount::sellStock(std::string stockName, uint qty) {
 void StockAccount::printPortfolio() {
   uint sum = 0;
   for (auto stock : portfolio_) {
-    Info i(stock.first);
+    stock::messages::Info i(stock.first);
     auto f = i.prom.get_future();
-    stock::Server::getInstance().pushMsg(stock::variant(std::move(i)));
+    stock::Server::getInstance().pushMsg(stock::Message(std::move(i)));
     f.wait();
     uint pricePerStock = f.get();
     uint totalValue = pricePerStock * stock.second.first;
@@ -144,6 +142,10 @@ void StockAccount::printPortfolio() {
   }
   std::cout << "Total value of portfolio: " << sum << std::endl;
 }
-void StockAccount::addStopLossRule(std::string name, uint limit) {}
+void StockAccount::addStopLossRule(std::string name, uint limit) {
+  auto handler = std::bind(&StockAccount::onStockUpdate, this,
+                           std::placeholders::_1, std::placeholders::_2);
+  stock::Server::getInstance().getSignal(name).connect(handler);
+}
 void StockAccount::removeStopLossRule(std::string name, uint limit) {}
 } // namespace bank::stock
