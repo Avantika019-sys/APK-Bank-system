@@ -30,7 +30,7 @@ void Server::startUpdateStocksWorker() {
     for (auto &stock : stocks_) {
       uint newPrice = distrib(gen);
       stock.second.first.push_back(newPrice);
-      sig(stock.first, newPrice);
+      stock.second.second(stock.first, newPrice);
     }
   }
 }
@@ -57,7 +57,7 @@ void Server::startStockWorker() {
       }
       p.prom.set_value(total / futures.size());
     }
-    void operator()(messages::Stop &s) {}
+    void operator()(messages::Stop &s) { serv.run = false; }
   };
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -67,10 +67,6 @@ void Server::startStockWorker() {
 }
 
 void Server::pushMsg(Message &&msg) { msgQueue_.push(std::move(msg)); }
-void Server::stopWorkers() {
-  run = false;
-  msgQueue_.push(messages::Stop{});
-}
 double Server::calculateStockTrend(std::string stockName) {
   auto &vec = stocks_[stockName].first;
   uint sumX = 0;

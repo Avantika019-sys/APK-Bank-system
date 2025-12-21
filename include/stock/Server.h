@@ -21,7 +21,6 @@ public:
 
   void startStockWorker();
   void pushMsg(Message &&msg);
-  void stopWorkers();
 
 private:
   double calculateStockTrend(std::string stockName);

@@ -1,5 +1,7 @@
 #include "Cli.h"
 #include "Bank.h"
+#include "stock/MessageQueue.h"
+#include "stock/messages/Stop.h"
 #include "utils.h"
 #include <future>
 #include <iostream>
@@ -64,7 +66,7 @@ void Cli::loop() {
       handleRemoveStopLossRule();
       break;
     case -1:
-      bank::stock::Server::getInstance().stopWorkers();
+      bank::stock::Server::getInstance().pushMsg(bank::stock::messages::Stop());
       run = false;
       break;
     }
