@@ -39,7 +39,7 @@ void Server::startMessageProccesor() {
   struct visitor {
     Server &serv;
     void operator()(messages::Order &o) { o.prom.set_value(true); }
-    void operator()(messages::Info &i) {
+    void operator()(messages::InfoRequest &i) {
       double trend = serv.calculateStockTrend(i.stockName);
       i.prom.set_value(
           std::make_pair(serv.stocks_[i.stockName].prices.back(), trend));

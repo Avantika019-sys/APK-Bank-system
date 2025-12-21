@@ -1,7 +1,13 @@
 #include "account.h"
 #include "stock/Server.h"
+#include <boost/signals2/connection.hpp>
 
 namespace bank::stock {
+struct ownedStock {
+  int NoOfStocksOwned;
+  std::optional<int> stopLossRule;
+  boost::signals2::connection conn;
+};
 class StockAccount : public Account {
 public:
   StockAccount(std::string name, std::string id);
@@ -19,7 +25,7 @@ public:
 
 private:
   void onStockUpdate(std::string stockName, int updatedPrice);
-  std::map<std::string, std::pair<int, std::optional<int>>> portfolio_;
+  std::map<std::string, ownedStock> portfolio_;
   std::mutex mtx_;
 };
 

@@ -10,8 +10,8 @@
 #include <variant>
 
 namespace bank::stock {
-typedef std::variant<messages::Order, messages::Info, messages::PortfolioTrend,
-                     messages::Stop>
+typedef std::variant<messages::Order, messages::InfoRequest,
+                     messages::PortfolioTrend, messages::Stop>
     Message;
 class MessageQueue {
 public:
