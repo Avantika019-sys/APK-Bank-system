@@ -1,17 +1,17 @@
 #include "Cli.h"
 #include "Bank.h"
 #include "utils.h"
-#include <chrono>
 #include <future>
 #include <iostream>
 
 Cli::Cli() {
-  Bank danskeBank("Danske Bank");
-  Bank nordea("Nordea");
-  Bank jyskeBank("Jyske Bank");
-  danskeBank.addStockAccount("Jens Nielsen", accId);
-  currentBank = &danskeBank;
-  auto &acc = currentBank->getAccountById(accId);
+  banks_ = {
+      {"Danske Bank", Bank("Danske Bank")},
+      {"Nordea", Bank("Danske Bank")},
+      {"Jyske Bank", Bank("Jyske Bank")},
+  };
+  currentBank = "Dankse Bank";
+  acc = banks_[currentBank].addStockAccount("Jens Nielsen", accId);
 }
 void Cli::loop() {
   while (run) {
@@ -109,27 +109,23 @@ void Cli::handleBuyStock() {
   std::cout << "succesfull stock purchase!" << std::endl;
 }
 void Cli::handleSwitchBank() {
-  std::cout << "Enter number of bank to switch to" << std::endl;
+  std::cout << "Enter name of bank to switch to" << std::endl;
   std::cout << "Available banks:" << std::endl;
   std::cout << "1: Dansk Bank" << std::endl;
   std::cout << "2: Nordea" << std::endl;
   std::cout << "3: JyskeBank" << std::endl;
-  int bankNo;
-  std::cin >> bankNo;
-  if (bankNo == 1 && currentBank->getBankName() != danskeBank.getBankName()) {
-    danskeBank.switchToThisBank(*currentBank, acc.getId());
-    currentBank = &danskeBank;
-    std::cout << "Switched to Danske Bank" << std::endl;
+  std::string bankName;
+  std::cin >> bankName;
+  if (!banks_.contains(bankName)) {
+    std::cout << "Bank with that name does not exist" << std::endl;
+    return;
   }
-  if (bankNo == 2 && currentBank->getBankName() != nordea.getBankName()) {
-    danskeBank.switchToThisBank(*currentBank, acc.getId());
-    currentBank = &nordea;
-    std::cout << "Switched to Nordea" << std::endl;
+  try {
+    banks_[bankName].switchToThisBank(&banks_[currentBank], accId);
+  } catch (const std::invalid_argument e) {
+    std::cout << " error: already on this bank " << e.what() << std::endl;
+    return;
   }
-  if (bankNo == 3 && currentBank->getBankName() != jyskeBank.getBankName()) {
-    danskeBank.switchToThisBank(*currentBank, acc.getId());
-    currentBank = &jyskeBank;
-    std::cout << "Switched to Jyske Bank" << std::endl;
-  }
+  std::cout << "Switched bank!" << std::endl;
 }
 void Cli::handleAddStopLossRule() {}

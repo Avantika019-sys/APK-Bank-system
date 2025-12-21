@@ -18,8 +18,6 @@ public:
 
   int getBalance() const;
 
-  std::string getAccountType() const;
-
   std::string getId() const;
 
 protected:
@@ -30,7 +28,6 @@ protected:
 private:
   std::string name_;
   std::string id_;
-  std::string type_;
   // max 5 accounts
 };
 //

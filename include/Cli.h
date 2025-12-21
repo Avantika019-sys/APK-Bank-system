@@ -17,7 +17,8 @@ private:
   void handleAddStopLossRule();
   void handleRemoveStopLossRule();
   bool run = true;
-  const Bank *currentBank;
+  std::string currentBank;
   bank::stock::StockAccount *acc;
   std::string accId = "12345";
+  std::map<std::string, Bank> banks_;
 };

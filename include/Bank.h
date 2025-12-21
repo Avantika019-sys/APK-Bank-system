@@ -8,11 +8,13 @@
 class Bank {
 public:
   Bank(std::string name);
-  Bank(const Bank &other) = delete;
-  Bank &operator=(const Bank &other) = delete;
-  void switchToThisBank(Bank &fromBank, std::string accId);
-  template <typename... Args> void addStockAccount(Args &&...args) {
+  // Bank(const Bank &other) = delete;
+  // Bank &operator=(const Bank &other) = delete;
+  void switchToThisBank(Bank *fromBank, std::string accId);
+  template <typename... Args>
+  bank::stock::StockAccount *addStockAccount(Args &&...args) {
     stockAccounts.emplace_back(std::forward<Args>(args)...);
+    return &stockAccounts.back();
   }
   bank::stock::StockAccount &getAccountById(std::string id);
   std::string getBankName() const;
