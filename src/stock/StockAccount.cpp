@@ -10,7 +10,7 @@ namespace bank::stock {
 StockAccount::StockAccount(std::string name, std::string id)
     : Account(name, id) {}
 
-void StockAccount::buyStock(std::string stockName, uint qty) {
+void StockAccount::buyStock(std::string stockName, int qty) {
   auto &serv = stock::Server::getInstance();
 
   stock::messages::Info i(stockName);
@@ -18,8 +18,8 @@ void StockAccount::buyStock(std::string stockName, uint qty) {
   serv.pushMsg(stock::Message(std::move(i)));
 
   infoF.wait();
-  uint pricePerStock = infoF.get();
-  uint totalPrice = pricePerStock * qty;
+  int pricePerStock = infoF.get();
+  int totalPrice = pricePerStock * qty;
   if (getBalance() < totalPrice) {
     throw std::invalid_argument("you dont have enough money to buy stock");
   }
@@ -51,7 +51,7 @@ void StockAccount::buyStock(std::string stockName, uint qty) {
   }
 }
 
-void StockAccount::onStockUpdate(std::string stockName, uint updatedPrice) {
+void StockAccount::onStockUpdate(std::string stockName, int updatedPrice) {
   auto &serv = stock::Server::getInstance();
   std::lock_guard<std::mutex> lock(mtx_);
   auto it = portfolio_.find(stockName);
@@ -88,7 +88,7 @@ StockAccount &StockAccount::operator=(StockAccount &&other) noexcept {
   return *this;
 }
 
-void StockAccount::sellStock(std::string stockName, uint qty) {
+void StockAccount::sellStock(std::string stockName, int qty) {
   auto &serv = stock::Server::getInstance();
 
   std::lock_guard<std::mutex> lock(mtx_);
@@ -105,8 +105,8 @@ void StockAccount::sellStock(std::string stockName, uint qty) {
   serv.pushMsg(stock::Message(std::move(i)));
 
   f.wait();
-  uint stockPrice = f.get();
-  uint totalSellValue = stockPrice * qty;
+  int stockPrice = f.get();
+  int totalSellValue = stockPrice * qty;
 
   std::cout << "Confirm you would like to sell stock, you will get: "
             << totalSellValue << "\nPlease confirm purchase by pressing y: ";
@@ -126,14 +126,14 @@ void StockAccount::sellStock(std::string stockName, uint qty) {
   }
 }
 void StockAccount::printPortfolio() {
-  uint sum = 0;
+  int sum = 0;
   for (auto stock : portfolio_) {
     stock::messages::Info i(stock.first);
     auto f = i.prom.get_future();
     stock::Server::getInstance().pushMsg(stock::Message(std::move(i)));
     f.wait();
-    uint pricePerStock = f.get();
-    uint totalValue = pricePerStock * stock.second.first;
+    int pricePerStock = f.get();
+    int totalValue = pricePerStock * stock.second.first;
     sum += totalValue;
     std::cout << "Stock name: " << stock.first
               << " Amount of stock owned: " << stock.second.first
@@ -142,10 +142,10 @@ void StockAccount::printPortfolio() {
   }
   std::cout << "Total value of portfolio: " << sum << std::endl;
 }
-void StockAccount::addStopLossRule(std::string name, uint limit) {
+void StockAccount::addStopLossRule(std::string name, int limit) {
   auto handler = std::bind(&StockAccount::onStockUpdate, this,
                            std::placeholders::_1, std::placeholders::_2);
   stock::Server::getInstance().getSignal(name).connect(handler);
 }
-void StockAccount::removeStopLossRule(std::string name, uint limit) {}
+void StockAccount::removeStopLossRule(std::string name, int limit) {}
 } // namespace bank::stock

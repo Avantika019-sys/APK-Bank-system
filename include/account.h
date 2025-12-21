@@ -10,9 +10,9 @@ class Account {
 public:
   Account(std::string name, std::string id);
 
-  void deposit(uint amount);
+  void deposit(int amount);
 
-  void withdraw(uint amount);
+  void withdraw(int amount);
 
   void printTransactionHistory() const;
 

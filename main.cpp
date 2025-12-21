@@ -5,8 +5,9 @@
 
 int main() {
   auto &serv = bank::stock::Server::getInstance();
-  std::thread stockUpdaterThread([&]() { serv.startUpdateStocksWorker(); });
-  std::thread stockOrderThread([&]() { serv.startStockWorker(); });
+  std::thread stockUpdaterThread(
+      [&]() { serv.startSimulatingStockPriceUpdates(); });
+  std::thread stockOrderThread([&]() { serv.startMessageProccesor(); });
   Cli cli;
   cli.loop();
   stockUpdaterThread.join();

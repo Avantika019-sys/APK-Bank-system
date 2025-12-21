@@ -6,10 +6,10 @@
 
 namespace bank::stock {
 Server::Server() : msgQueue_(10) {
-  stocks_["AAPL"].first.push_back(189);
-  stocks_["MSFT"].first.push_back(129);
-  stocks_["GOOG"].first.push_back(889);
-  stocks_["TSLA"].first.push_back(589);
+  stocks_["AAPL"].prices.push_back(189);
+  stocks_["MSFT"].prices.push_back(129);
+  stocks_["GOOG"].prices.push_back(889);
+  stocks_["TSLA"].prices.push_back(589);
 }
 
 Server &Server::getInstance() {
@@ -17,32 +17,32 @@ Server &Server::getInstance() {
   return instance;
 }
 StockUpdateSignal &Server::getSignal(std::string stockName) {
-  return stocks_[stockName].second;
+  return stocks_[stockName].signal;
 }
 
-void Server::startUpdateStocksWorker() {
+void Server::startSimulatingStockPriceUpdates() {
   std::random_device rd;
   std::mt19937 gen(rd());
   std::uniform_int_distribution<int> distrib(1, 1000);
 
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
-    for (auto &stock : stocks_) {
-      uint newPrice = distrib(gen);
-      stock.second.first.push_back(newPrice);
-      stock.second.second(stock.first, newPrice);
+    for (auto &[stockName, stock] : stocks_) {
+      int newPrice = distrib(gen);
+      stock.prices.push_back(newPrice);
+      stock.signal(stockName, newPrice);
     }
   }
 }
 
-void Server::startStockWorker() {
+void Server::startMessageProccesor() {
   struct visitor {
     Server &serv;
     void operator()(messages::Order &o) { o.prom.set_value(true); }
     void operator()(messages::Info &i) {
       double trend = serv.calculateStockTrend(i.stockName);
       i.prom.set_value(
-          std::make_pair(serv.stocks_[i.stockName].first.back(), trend));
+          std::make_pair(serv.stocks_[i.stockName].prices.back(), trend));
     }
     void operator()(messages::PortfolioTrend &p) {
       std::vector<std::future<double>> futures;
@@ -60,7 +60,6 @@ void Server::startStockWorker() {
     void operator()(messages::Stop &s) { serv.run = false; }
   };
   while (run) {
-    std::this_thread::sleep_for(std::chrono::seconds(3));
     auto msg = msgQueue_.pop();
     std::visit(visitor{*this}, msg);
   }
@@ -68,13 +67,13 @@ void Server::startStockWorker() {
 
 void Server::pushMsg(Message &&msg) { msgQueue_.push(std::move(msg)); }
 double Server::calculateStockTrend(std::string stockName) {
-  auto &vec = stocks_[stockName].first;
-  uint sumX = 0;
-  uint sumY = 0;
-  uint sumXY = 0;
-  uint sumX2 = 0;
+  auto &vec = stocks_[stockName].prices;
+  int sumX = 0;
+  int sumY = 0;
+  int sumXY = 0;
+  int sumX2 = 0;
   for (int i = 0; i < vec.size(); i++) {
-    uint price = vec[i];
+    int price = vec[i];
     sumX = i;
     sumY += price;
     sumXY += (i * price);

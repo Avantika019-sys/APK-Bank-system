@@ -4,19 +4,19 @@
 #include <variant>
 struct stockPurchaseDetails {
   std::string stockName_;
-  uint stocksBought_;
-  uint pricePerStock_;
+  int stocksBought_;
+  int pricePerStock_;
 };
 struct stockSellDetails {
   std::string stockName_;
-  uint stocksSold_;
-  uint pricePerStock_;
+  int stocksSold_;
+  int pricePerStock_;
 };
 struct withdrawDetails {
-  uint amountWithdrawn_;
+  int amountWithdrawn_;
 };
 struct depositDetails {
-  uint amountDepositted_;
+  int amountDepositted_;
 };
 typedef std::variant<stockPurchaseDetails, stockSellDetails, withdrawDetails,
                      depositDetails>

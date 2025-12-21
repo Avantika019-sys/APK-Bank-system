@@ -23,14 +23,14 @@ Account::Account(std::string name, std::string id)
 //   return *this;
 // }
 
-void Account::deposit(uint amount) {
+void Account::deposit(int amount) {
   // add some logs/statistics
   Tx tx(depositDetails{amount});
   txs_.push_back(tx);
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
 
-void Account::withdraw(uint amount) {
+void Account::withdraw(int amount) {
   int curBalance = getBalance();
   if (curBalance < amount) {
     logger_.log("failed to withdraw because insufficient funds", level::ERROR,

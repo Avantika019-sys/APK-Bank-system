@@ -8,25 +8,29 @@ namespace bank::stock {
 typedef boost::signals2::signal<void(std::string stockName,
                                      double UpdatedPrice)>
     StockUpdateSignal;
+
+typedef std::string stockName;
+typedef std::vector<int> pricePerStockOverTime;
+struct stock {
+  pricePerStockOverTime prices;
+  StockUpdateSignal signal;
+};
 class Server {
 public:
   Server();
 
   static Server &getInstance();
 
-  // boost::signals2::signal<void(std::string stockName, double UpdatedPrice)>
-  // sig;
   StockUpdateSignal &getSignal(std::string stockName);
-  void startUpdateStocksWorker();
+  void startSimulatingStockPriceUpdates();
 
-  void startStockWorker();
+  void startMessageProccesor();
   void pushMsg(Message &&msg);
 
 private:
   double calculateStockTrend(std::string stockName);
   MessageQueue msgQueue_;
-  std::map<std::string, std::pair<std::vector<uint>, StockUpdateSignal>>
-      stocks_;
+  std::map<stockName, stock> stocks_;
   std::mutex mtx;
   std::atomic<bool> run{true};
 };

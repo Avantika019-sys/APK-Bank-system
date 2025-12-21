@@ -5,12 +5,12 @@ namespace bank::stock {
 class StockAccount : public Account {
 public:
   StockAccount(std::string name, std::string id);
-  void buyStock(std::string name, uint qty);
-  void sellStock(std::string name, uint qty);
+  void buyStock(std::string name, int qty);
+  void sellStock(std::string name, int qty);
   void setMonitorStocks(bool monitor);
   void printPortfolio();
-  void addStopLossRule(std::string name, uint limit);
-  void removeStopLossRule(std::string name, uint limit);
+  void addStopLossRule(std::string name, int limit);
+  void removeStopLossRule(std::string name, int limit);
   StockAccount(StockAccount &&other) noexcept;
   StockAccount &operator=(StockAccount &&other) noexcept;
 
@@ -18,8 +18,8 @@ public:
   StockAccount &operator=(const StockAccount &) = delete;
 
 private:
-  void onStockUpdate(std::string stockName, uint updatedPrice);
-  std::map<std::string, std::pair<uint, std::optional<uint>>> portfolio_;
+  void onStockUpdate(std::string stockName, int updatedPrice);
+  std::map<std::string, std::pair<int, std::optional<int>>> portfolio_;
   std::mutex mtx_;
 };
 
