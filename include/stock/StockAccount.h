@@ -13,7 +13,6 @@ public:
   StockAccount(std::string name, std::string id);
   void buyStock(std::string name, int qty);
   void sellStock(std::string name, int qty);
-  void setMonitorStocks(bool monitor);
   void printPortfolio();
   void addStopLossRule(std::string name, int limit);
   void removeStopLossRule(std::string name, int limit);
