@@ -7,13 +7,16 @@ enum class OrderType {
   BUY,
   SELL,
 };
-struct Order {
-  Order(std::string stockName, int amountOfStocks, OrderType type)
+struct OrderResponse {
+  bool isSucceded;
+};
+struct OrderRequest {
+  OrderRequest(std::string stockName, int amountOfStocks, OrderType type)
       : stockName(stockName), amountOfStocks(amountOfStocks), type(type) {}
   std::string stockName;
   int amountOfStocks;
   OrderType type;
-  std::promise<bool> prom; // result of the order
+  std::promise<OrderResponse> prom;
 };
 } // namespace bank::stock::messages
 #endif // BANK_ORDER_H

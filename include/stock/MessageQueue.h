@@ -10,7 +10,7 @@
 #include <variant>
 
 namespace bank::stock {
-typedef std::variant<messages::Order, messages::InfoRequest,
+typedef std::variant<messages::OrderRequest, messages::InfoRequest,
                      messages::PortfolioTrend, messages::Stop>
     Message;
 class MessageQueue {

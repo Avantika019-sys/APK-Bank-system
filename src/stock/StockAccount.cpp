@@ -19,7 +19,7 @@ void StockAccount::buyStock(std::string stockName, int qty) {
 
   infoF.wait();
   auto infoResp = infoF.get();
-  int totalPrice = infoResp.latestPrice * qty;
+  int totalPrice = infoResp.currentPrice * qty;
   if (getBalance() < totalPrice) {
     throw std::invalid_argument("you dont have enough money to buy stock");
   }
@@ -32,18 +32,19 @@ void StockAccount::buyStock(std::string stockName, int qty) {
     return;
   }
 
-  messages::Order o(stockName, qty, messages::OrderType::BUY);
+  messages::OrderRequest o(stockName, qty, messages::OrderType::BUY);
   auto orderF = o.prom.get_future();
   serv.pushMsg(Message(std::move(o)));
 
   orderF.wait();
-  bool success = orderF.get();
-  if (!success) {
+  auto resp = orderF.get();
+  if (!resp.isSucceded) {
     throw std::invalid_argument(
         "server failed to process purchase please try later");
   }
   std::lock_guard<std::mutex> lock(mtx_);
-  txs_.emplace_back(stockPurchaseDetails{stockName, qty, infoResp.latestPrice});
+  txs_.emplace_back(
+      stockPurchaseDetails{stockName, qty, infoResp.currentPrice});
   if (portfolio_.contains(stockName)) {
     portfolio_[stockName].NoOfStocksOwned += qty;
   } else {
@@ -62,13 +63,13 @@ void StockAccount::onStockUpdate(std::string stockName, int updatedPrice) {
     return;
   }
   if (updatedPrice <= it->second.stopLossRule.value()) {
-    messages::Order o(stockName, it->second.NoOfStocksOwned,
-                      messages::OrderType::SELL);
+    messages::OrderRequest o(stockName, it->second.NoOfStocksOwned,
+                             messages::OrderType::SELL);
     auto orderFut = o.prom.get_future();
     serv.pushMsg(Message(std::move(o)));
 
     orderFut.wait();
-    if (!orderFut.get()) {
+    if (!orderFut.get().isSucceded) {
       throw std::invalid_argument(
           "server failed to process sale please try later");
     }
@@ -107,7 +108,7 @@ void StockAccount::sellStock(std::string stockName, int qty) {
 
   f.wait();
   auto infoResp = f.get();
-  int totalSellValue = infoResp.latestPrice * qty;
+  int totalSellValue = infoResp.currentPrice * qty;
 
   std::cout << "Confirm you would like to sell stock, you will get: "
             << totalSellValue << "\nPlease confirm purchase by pressing y: ";
@@ -117,13 +118,13 @@ void StockAccount::sellStock(std::string stockName, int qty) {
     std::cout << "stock sell cancelled";
     return;
   }
-  messages::Order o(stockName, qty, messages::OrderType::SELL);
+  messages::OrderRequest o(stockName, qty, messages::OrderType::SELL);
   auto orderFut = o.prom.get_future();
   serv.pushMsg(Message(std::move(o)));
 
   orderFut.wait();
-  if (orderFut.get()) {
-    txs_.emplace_back(stockSellDetails{stockName, qty, infoResp.latestPrice});
+  if (orderFut.get().isSucceded) {
+    txs_.emplace_back(stockSellDetails{stockName, qty, infoResp.currentPrice});
   }
 }
 void StockAccount::printPortfolio() {
@@ -134,11 +135,11 @@ void StockAccount::printPortfolio() {
     Server::getInstance().pushMsg(Message(std::move(i)));
     f.wait();
     auto infoResp = f.get();
-    int totalValue = infoResp.latestPrice * ownedStock.NoOfStocksOwned;
+    int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
     sum += totalValue;
     std::cout << "Stock name: " << stockName
               << " Amount of stock owned: " << ownedStock.NoOfStocksOwned
-              << " Price per stock: " << infoResp.latestPrice
+              << " Price per stock: " << infoResp.currentPrice
               << " Total value: " << totalValue;
   }
   std::cout << "Total value of portfolio: " << sum << std::endl;

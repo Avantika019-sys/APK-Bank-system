@@ -1,4 +1,5 @@
 #include "../../include/stock/Server.h"
+#include "stock/messages/Info.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
 #include <utility>
@@ -23,12 +24,14 @@ StockUpdateSignal &Server::getSignal(std::string stockName) {
 void Server::startSimulatingStockPriceUpdates() {
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<int> distrib(1, 1000);
+  std::uniform_real_distribution<double> distrib(-0.005, 0.005);
 
   while (run) {
     std::this_thread::sleep_for(std::chrono::seconds(3));
+    std::lock_guard<std::mutex> lock(mtx);
     for (auto &[stockName, stock] : stocks_) {
-      int newPrice = distrib(gen);
+      double percentChange = distrib(gen);
+      double newPrice = stock.prices.back() * (1 + percentChange);
       stock.prices.push_back(newPrice);
       stock.signal(stockName, newPrice);
     }
@@ -38,11 +41,14 @@ void Server::startSimulatingStockPriceUpdates() {
 void Server::startMessageProccesor() {
   struct visitor {
     Server &serv;
-    void operator()(messages::Order &o) { o.prom.set_value(true); }
+    void operator()(messages::OrderRequest &o) {
+      messages::OrderResponse resp(true);
+      o.prom.set_value(resp);
+    }
     void operator()(messages::InfoRequest &i) {
       double trend = serv.calculateStockTrend(i.stockName);
-      i.prom.set_value(
-          std::make_pair(serv.stocks_[i.stockName].prices.back(), trend));
+      int currentPrice = serv.stocks_[i.stockName].prices.back();
+      i.prom.set_value(messages::InfoResponse(currentPrice, trend));
     }
     void operator()(messages::PortfolioTrend &p) {
       std::vector<std::future<double>> futures;
