@@ -10,11 +10,11 @@ enum class OrderType {
 struct OrderResponse {
   bool isSucceded;
 };
-struct OrderRequest {
-  OrderRequest(std::string stockName, int amountOfStocks, OrderType type)
-      : stockName(stockName), amountOfStocks(amountOfStocks), type(type) {}
-  std::string stockName;
-  int amountOfStocks;
+template <typename T> struct OrderRequest {
+  OrderRequest(std::string assetName, int amountOfAsset, OrderType type)
+      : assetName(assetName), amountOfAsset(amountOfAsset), type(type) {}
+  std::string assetName;
+  int amountOfAsset;
   OrderType type;
   std::promise<OrderResponse> prom;
 };

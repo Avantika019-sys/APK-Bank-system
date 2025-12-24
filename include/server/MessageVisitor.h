@@ -1,26 +1,28 @@
+#include "../asset/Calculator.h"
 #include "Server.h"
-#include "asset/Calculator.h"
 namespace bank::server {
-struct MessageVisitor {
-  Server &serv;
-  void operator()(messages::OrderRequest &o) {
+template <typename T> struct MessageVisitor {
+  Server<T> &serv;
+  void operator()(messages::OrderRequest<T> &o) {
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
   }
-  void operator()(messages::InfoRequest &i) {
+  void operator()(messages::InfoRequest<T> &i) {
     double trend = serv.calculateTrendForStock(i.stockName);
     int currentPrice = serv.stocks_[i.stockName].prices.back();
-    i.prom.set_value(messages::InfoResponse(currentPrice, trend));
+    i.prom.set_value(messages::InfoResponse<T>(currentPrice, trend));
   }
-  void operator()(messages::PortfolioTrend &p) {
-    int totalDataPoints = 0;
-    for (auto stock : p.ownedStocks) {
-      totalDataPoints += serv.stocks_[stock].prices.size();
+  void operator()(messages::PortfolioTrend<T> &p) {
+    std::vector<T> assets;
+    for (auto stock : p.ownedAsset) {
+      assets.push_back(assets[stock]);
     }
-    double trend = 0;
-    if (totalDataPoints > 1000) {
-      CalculatePortfolioTrend(, sequential);
+    typedef typename AssetTraits<T>::AccT AccT;
+    AccT trend;
+    if (p.ownedAsset.size() * AssetTraits<T>::LookbackPeriod() < 1000) {
+      trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
+      trend = CalculatePortfolioTrend(assets, parallel{});
     }
     p.prom.set_value(trend);
   }

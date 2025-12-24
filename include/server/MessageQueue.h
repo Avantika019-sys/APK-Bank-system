@@ -10,19 +10,20 @@
 #include <variant>
 
 namespace bank::server {
-typedef std::variant<messages::OrderRequest, messages::InfoRequest,
-                     messages::PortfolioTrend, messages::Stop>
-    Message;
-class MessageQueue {
+template <typename T>
+using Message =
+    std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
+                 messages::PortfolioTrend<T>, messages::Stop>;
+template <typename T> class MessageQueue {
 public:
   MessageQueue(unsigned long maxSize) : maxSize(maxSize) {}
 
-  void push(Message &&msg);
+  void push(Message<T> &&msg);
 
-  Message pop();
+  Message<T> pop();
 
 private:
-  std::queue<Message> queue;
+  std::queue<Message<T>> queue;
   unsigned long maxSize;
   std::mutex mtx;
   std::condition_variable cv_not_empty;
