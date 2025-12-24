@@ -6,7 +6,7 @@ typedef boost::signals2::signal<void(std::string stockName,
     StockUpdateSignal;
 
 typedef std::vector<int> pricePerStockOverTime;
-struct StockData {
+struct Stock {
   pricePerStockOverTime prices;
   StockUpdateSignal signal;
 };

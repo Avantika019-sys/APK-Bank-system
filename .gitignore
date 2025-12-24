@@ -5,4 +5,5 @@ launch.json
 .cache/
 compile_commands.json
 build
+.obsidian
 

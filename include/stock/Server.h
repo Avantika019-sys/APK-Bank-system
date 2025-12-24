@@ -20,7 +20,7 @@ public:
 private:
   double calculateStockTrend(std::string stockName);
   MessageQueue msgQueue_;
-  std::map<std::string, StockData> stocks_;
+  std::map<std::string, Stock> stocks_;
   std::mutex mtx;
   std::atomic<bool> run{true};
 };
