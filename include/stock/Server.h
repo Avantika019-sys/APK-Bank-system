@@ -1,9 +1,9 @@
 #include "MessageQueue.h"
 #include "Stock.h"
 #include <boost/signals2/signal.hpp>
+#include <utility>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
-
 namespace bank::stock {
 class Server {
 public:
@@ -18,7 +18,7 @@ public:
   void pushMsg(Message &&msg);
 
 private:
-  double calculateStockTrend(std::string stockName);
+  double calculateTrendForStock(std::string stockName);
   MessageQueue msgQueue_;
   std::map<std::string, Stock> stocks_;
   std::mutex mtx;

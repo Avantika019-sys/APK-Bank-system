@@ -1,4 +1,5 @@
 #include "../../include/stock/Server.h"
+#include "Bank.h"
 #include "stock/messages/Info.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
@@ -46,22 +47,37 @@ void Server::startMessageProccesor() {
       o.prom.set_value(resp);
     }
     void operator()(messages::InfoRequest &i) {
-      double trend = serv.calculateStockTrend(i.stockName);
+      double trend = serv.calculateTrendForStock(i.stockName);
       int currentPrice = serv.stocks_[i.stockName].prices.back();
       i.prom.set_value(messages::InfoResponse(currentPrice, trend));
     }
     void operator()(messages::PortfolioTrend &p) {
-      std::vector<std::future<double>> futures;
+      int totalDataPoints = 0;
       for (auto stock : p.ownedStocks) {
-        futures.push_back(std::async(std::launch::async, [this, stock]() {
-          return serv.calculateStockTrend(stock);
-        }));
+        totalDataPoints += serv.stocks_[stock].prices.size();
       }
-      double total = 0;
-      for (auto &f : futures) {
-        total += f.get();
+      double trend = 0;
+      if (totalDataPoints > 1000) {
+        std::vector<std::future<double>> futures;
+        for (auto name : p.ownedStocks) {
+          futures.push_back(std::async(std::launch::async,
+                                       &Server::calculateTrendForStock, &serv,
+                                       name));
+        }
+        double total = 0;
+        for (auto &f : futures) {
+          total += f.get();
+        }
+        trend = total / futures.size();
+      } else {
+
+        double total = 0;
+        for (auto name : p.ownedStocks) {
+          total += serv.calculateTrendForStock(name);
+        }
+        trend = total;
       }
-      p.prom.set_value(total / futures.size());
+      p.prom.set_value(trend);
     }
     void operator()(messages::Stop &s) { serv.run = false; }
   };
@@ -72,7 +88,7 @@ void Server::startMessageProccesor() {
 }
 
 void Server::pushMsg(Message &&msg) { msgQueue_.push(std::move(msg)); }
-double Server::calculateStockTrend(std::string stockName) {
+double Server::calculateTrendForStock(std::string stockName) {
   auto &vec = stocks_[stockName].prices;
   int sumX = 0;
   int sumY = 0;
