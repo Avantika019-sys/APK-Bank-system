@@ -2,7 +2,7 @@
 #include "stock/Server.h"
 #include <boost/signals2/connection.hpp>
 
-namespace bank::stock {
+namespace bank::server {
 struct ownedStock {
   int NoOfStocksOwned;
   std::optional<int> stopLossRule;
@@ -35,4 +35,4 @@ private:
 //
 // template <typename... Args> void place_sell_order(Args &&...args) {
 //   order_history_.emplace_back(std::forward<Args>(args)...);
-} // namespace bank::stock
+} // namespace bank::server

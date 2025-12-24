@@ -13,7 +13,7 @@ void Bank::switchToThisBank(Bank *fromBank, std::string accId) {
   }
   auto it = std::find_if(fromBank->stockAccounts.begin(),
                          fromBank->stockAccounts.end(),
-                         [&](const bank::stock::StockAccount &acc) {
+                         [&](const bank::server::StockAccount &acc) {
                            return acc.getId() == accId;
                          });
   if (it != fromBank->stockAccounts.end()) {
@@ -22,7 +22,7 @@ void Bank::switchToThisBank(Bank *fromBank, std::string accId) {
   }
 }
 
-bank::stock::StockAccount &Bank::getAccountById(std::string id) {
+bank::server::StockAccount &Bank::getAccountById(std::string id) {
   auto it = std::find_if(stockAccounts.begin(), stockAccounts.end(),
                          [&](const Account &acc) { return acc.getId() == id; });
   if (it == stockAccounts.end()) {

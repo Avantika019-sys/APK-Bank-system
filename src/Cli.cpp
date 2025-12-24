@@ -66,7 +66,7 @@ void Cli::loop() {
       handleRemoveStopLossRule();
       break;
     case -1:
-      bank::stock::Server::getInstance().pushMsg(bank::stock::messages::Stop());
+      bank::server::Server::getInstance().pushMsg(bank::server::messages::Stop());
       run = false;
       break;
     }

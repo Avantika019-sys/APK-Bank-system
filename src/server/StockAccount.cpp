@@ -6,7 +6,7 @@
 #include "stock/Server.h"
 #include <iostream>
 #include <stdexcept>
-namespace bank::stock {
+namespace bank::server {
 StockAccount::StockAccount(std::string name, std::string id)
     : Account(name, id) {}
 
@@ -153,4 +153,4 @@ void StockAccount::addStopLossRule(std::string name, int limit) {
 void StockAccount::removeStopLossRule(std::string name, int limit) {
   portfolio_[name].conn.disconnect();
 }
-} // namespace bank::stock
+} // namespace bank::server

@@ -12,15 +12,15 @@ public:
   // Bank &operator=(const Bank &other) = delete;
   void switchToThisBank(Bank *fromBank, std::string accId);
   template <typename... Args>
-  bank::stock::StockAccount *addStockAccount(Args &&...args) {
+  bank::server::StockAccount *addStockAccount(Args &&...args) {
     stockAccounts.emplace_back(std::forward<Args>(args)...);
     return &stockAccounts.back();
   }
-  bank::stock::StockAccount &getAccountById(std::string id);
+  bank::server::StockAccount &getAccountById(std::string id);
   std::string getBankName() const;
 
 private:
-  std::vector<bank::stock::StockAccount> stockAccounts;
+  std::vector<bank::server::StockAccount> stockAccounts;
   std::string name_;
 };
 #endif // ANK_BANK_H

@@ -1,12 +1,13 @@
-#include "../../include/stock/Server.h"
+#include "../../include/server/Server.h"
 #include "Bank.h"
+#include "asset/Calculator.h"
 #include "stock/messages/Info.h"
 #include <bits/this_thread_sleep.h>
 #include <random>
 #include <utility>
 #include <variant>
 
-namespace bank::stock {
+namespace bank::server {
 Server::Server() : msgQueue_(10) {
   stocks_["AAPL"].prices.push_back(189);
   stocks_["MSFT"].prices.push_back(129);
@@ -58,24 +59,8 @@ void Server::startMessageProccesor() {
       }
       double trend = 0;
       if (totalDataPoints > 1000) {
-        std::vector<std::future<double>> futures;
-        for (auto name : p.ownedStocks) {
-          futures.push_back(std::async(std::launch::async,
-                                       &Server::calculateTrendForStock, &serv,
-                                       name));
-        }
-        double total = 0;
-        for (auto &f : futures) {
-          total += f.get();
-        }
-        trend = total / futures.size();
+        CalculatePortfolioTrend(, sequential)
       } else {
-
-        double total = 0;
-        for (auto name : p.ownedStocks) {
-          total += serv.calculateTrendForStock(name);
-        }
-        trend = total;
       }
       p.prom.set_value(trend);
     }
@@ -88,24 +73,4 @@ void Server::startMessageProccesor() {
 }
 
 void Server::pushMsg(Message &&msg) { msgQueue_.push(std::move(msg)); }
-double Server::calculateTrendForStock(std::string stockName) {
-  auto &vec = stocks_[stockName].prices;
-  int sumX = 0;
-  int sumY = 0;
-  int sumXY = 0;
-  int sumX2 = 0;
-  for (int i = 0; i < vec.size(); i++) {
-    int price = vec[i];
-    sumX = i;
-    sumY += price;
-    sumXY += (i * price);
-    sumX2 += (i * i);
-  }
-  double numerator = (vec.size() * sumXY) - (sumX * sumY);
-  double denominator = (vec.size() * sumX2) - (sumX * sumX);
-  double m = numerator / denominator;
-  double b = (sumY - m * sumX) / vec.size();
-  double totalChange = m * (vec.size() - 1);
-  return (totalChange / b) * 100;
-}
-} // namespace bank::stock
+} // namespace bank::server

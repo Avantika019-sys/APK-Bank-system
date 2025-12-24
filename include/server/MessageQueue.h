@@ -9,7 +9,7 @@
 #include <queue>
 #include <variant>
 
-namespace bank::stock {
+namespace bank::server {
 typedef std::variant<messages::OrderRequest, messages::InfoRequest,
                      messages::PortfolioTrend, messages::Stop>
     Message;
@@ -28,5 +28,5 @@ private:
   std::condition_variable cv_not_empty;
   std::condition_variable cv_not_full;
 };
-} // namespace bank::stock
+} // namespace bank::server
 #endif // BANK_MSGQUEUE_H

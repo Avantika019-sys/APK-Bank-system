@@ -1,10 +1,10 @@
+#include "./../asset/Crypto.h"
+#include "./../asset/Stock.h"
 #include "MessageQueue.h"
-#include "Stock.h"
 #include <boost/signals2/signal.hpp>
-#include <utility>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
-namespace bank::stock {
+namespace bank::server {
 class Server {
 public:
   Server();
@@ -18,12 +18,12 @@ public:
   void pushMsg(Message &&msg);
 
 private:
-  double calculateTrendForStock(std::string stockName);
   MessageQueue msgQueue_;
   std::map<std::string, Stock> stocks_;
+  std::map<std::string, Crypto> crypto_;
   std::mutex mtx;
   std::atomic<bool> run{true};
 };
-} // namespace bank::stock
+} // namespace bank::server
 
 #endif // BANK_STOCKSERVER_H

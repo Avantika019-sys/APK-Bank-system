@@ -1,5 +1,5 @@
-#include "stock/MessageQueue.h"
-namespace bank::stock {
+#include "server/MessageQueue.h"
+namespace bank::server {
 void MessageQueue::push(Message &&msg) {
 
   std::unique_lock<std::mutex> lock(mtx);
@@ -20,4 +20,4 @@ Message MessageQueue::pop() {
   cv_not_full.notify_one();
   return msg;
 }
-} // namespace bank::stock
+} // namespace bank::server
