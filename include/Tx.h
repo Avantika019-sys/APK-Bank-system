@@ -1,40 +1,18 @@
 #ifndef BANK_TRANSACTION_H
 #define BANK_TRANSACTION_H
+#include "TxDetails.h"
 #include <chrono>
 #include <iostream>
 #include <memory_resource>
 #include <string>
-#include <variant>
 #include <vector>
 
 using namespace std;
 
-struct stockPurchaseDetails {
-  std::string stockName_;
-  uint stocksBought_;
-  uint pricePerStock_;
-};
-struct stockSellDetails {
-  std::string stockName_;
-  uint stocksSold_;
-  uint pricePerStock_;
-};
-struct withdrawDetails {
-  uint amountWithdrawn_;
-};
-struct depositDetails {
-  uint amountDepositted_;
-};
-// enum stock, buy sell
-typedef std::variant<stockPurchaseDetails, stockSellDetails, withdrawDetails,
-                     depositDetails>
-    details;
-;
-
 class Tx {
 
 public:
-  Tx(details d, std::pmr::memory_resource* memRes);
+  Tx(details d, std::pmr::memory_resource *memRes);
   const details &getDetails() const;
   std::chrono::system_clock::time_point getCreatedAt() const;
 
@@ -44,38 +22,9 @@ private:
   std::chrono::system_clock::time_point createdAt_;
   std::string from_account;
   std::string to_account;
-  details details_;
+  details d_;
   // std::string transaction_id_;
 };
-struct ToString {
-  std::string operator()(const stockSellDetails &arg) {
-    return "transaction type: stock sale\nPrice per stock: " +
-           std::to_string(arg.pricePerStock_) +
-           "\nAmount of stocks sold: " + std::to_string(arg.pricePerStock_) +
-           "\nStock name: " + arg.stockName_;
-  }
-  std::string operator()(stockPurchaseDetails arg) {
-    return "transaction type: stock purchase\nPrice per stock: " +
-           std::to_string(arg.pricePerStock_) +
-           "\nAmount of stocks bought: " + std::to_string(arg.stocksBought_) +
-           "\nStock name: " + arg.stockName_;
-  }
-  std::string operator()(withdrawDetails arg) {
-    return "transaction type: withdrawal\nAmount withdrawn: " +
-           std::to_string(arg.amountWithdrawn_);
-  }
-  std::string operator()(depositDetails arg) {
-    return "transaction type: deposit\nAmount depositted: " +
-           std::to_string(arg.amountDepositted_);
-  }
-};
-//
-// private:
-//   std::chrono::system_clock::time_point createdAt_;
-//   int amount_;
-//   std::string stockName_;
-// };
-
 std::ostream &operator<<(std::ostream &os, const Tx &t);
 // std::ostream &operator<<(std::ostream &os, const stockTx &t);
 #endif // BANK_TRANSACTION_H

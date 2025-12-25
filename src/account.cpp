@@ -1,5 +1,6 @@
 #include "account.h"
-#include "transaction.h"
+#include "Tx.h"
+#include "TxDetails.h"
 #include <algorithm>
 #include <iostream>
 #include <numeric>
@@ -22,7 +23,7 @@ Account::Account(std::string name, std::string id)
 //   return *this;
 // }
 
-void Account::deposit(uint amount) {
+void Account::deposit(int amount) {
   // add some logs/statistics
   Tx tx(depositDetails{amount});
   txs_.push_back(tx);
@@ -30,7 +31,7 @@ void Account::deposit(uint amount) {
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
 
-void Account::withdraw(uint amount) {
+void Account::withdraw(int amount) {
   int curBalance = getBalance();
   if (curBalance < amount) {
     logger_.log("failed to withdraw because insufficient funds", level::ERROR,
@@ -47,15 +48,24 @@ void Account::printTransactionHistory() const {
 }
 
 int Account::getBalance() const {
+  struct getAmount {
+    int operator()(const stockSellDetails &arg) {
+      return arg.pricePerStock_ * arg.stocksSold_;
+    }
+    int operator()(const stockPurchaseDetails &arg) {
+      return -(arg.pricePerStock_ * arg.stocksBought_);
+    }
+    int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }
+    int operator()(const depositDetails &arg) { return arg.amountDepositted_; }
+  };
   int res =
       std::accumulate(txs_.begin(), txs_.end(), 0, [](int acc, const Tx &tx) {
-        return std::visit(getTransactionAmount{}, tx.getDetails());
+        return std::visit(getAmount{}, tx.getDetails());
       });
   return res;
 }
 
 std::string Account::getId() const { return id_; }
-std::string Account::getAccountType() const { return type_; }
 //
 // bool transfer(double amount, Account &to_account) {
 //   if (withdraw(amount)) {

@@ -9,19 +9,19 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(Bank main.cpp
         include/account.h
         src/account.cpp
-        src/transaction.cpp
-        include/transaction.h
-        include/stock/server.h
-        src/stock/server.cpp
-        include/stock/messageQueue.h
-        include/stock/visitor.h
-        src/stock/visitor.cpp
+        src/Tx.cpp
+        include/Tx.h
+        include/stock/Server.h
+        src/stock/Server.cpp
+        include/stock/MsgQueue.h
+        include/stock/variant.h
         include/utils.h
         src/utils.cpp
-        src/stock/messageQueue.cpp
-        include/bank.h
-        src/bank.cpp
+        src/stock/MsgQueue.cpp
+        include/Bank.h
+        src/Bank.cpp
         main.cpp
         src/logger.cpp
-        src/stockaccount.cpp
+        src/stock/StockAccount.cpp
+        include/stock/StockAccount.h
 )
