@@ -1,7 +1,7 @@
 #ifndef BANK_ACCOUNT_H
 #define BANK_ACCOUNT_H
+#include "Logger.h"
 #include "Tx.h"
-#include "logger.h"
 #include <string>
 #include <sys/types.h>
 #include <vector>
