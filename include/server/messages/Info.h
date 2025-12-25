@@ -9,9 +9,9 @@ template <typename T> struct InfoResponse {
   double trend;
 };
 template <typename T> struct InfoRequest {
-  explicit InfoRequest(std::string name) : stockName(name) {}
+  explicit InfoRequest(std::string name) : assetName(name) {}
 
-  std::string stockName;
+  std::string assetName;
   std::promise<InfoResponse<T>> prom;
 };
 } // namespace bank::server::messages

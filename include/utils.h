@@ -3,7 +3,10 @@
 #include <future>
 #include <iostream>
 #include <string>
-constexpr int operator"" _DKK(long double amount);
+// constexpr int operator"" _DKK(long double amount) {
+//
+//   return static_cast<int>(amount * 100);
+// }
 
 template <typename T> void spin(std::future<T> &fut, std::string msg) {
   char spinner[] = {'/', '-', '\\', '|'};

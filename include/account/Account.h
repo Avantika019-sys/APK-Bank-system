@@ -20,6 +20,9 @@ public:
 
   std::string getId() const;
 
+  Account(Account &&other) noexcept;
+  Account &operator=(Account &&other) noexcept;
+
 protected:
   std::pmr::vector<Tx> txs_{&pool_};
   std::pmr::monotonic_buffer_resource pool_;

@@ -1,4 +1,4 @@
-#include "account.h"
+#include "../include/account/Account.h"
 #include "Tx.h"
 #include "TxDetails.h"
 #include <algorithm>
@@ -10,24 +10,23 @@
 Account::Account(std::string name, std::string id)
     : logger_(id), name_(name), id_(id) {}
 
-// Account::Account(Account &&other) noexcept
-//     : moneyTxs_(std::move(other.moneyTxs_)), name_(std::move(other.name_)),
-//       logger_(std::move(other.logger_)) {}
-//
-// Account &Account::operator=(Account &&other) noexcept {
-//   if (this != &other) {
-//
-//     moneyTxs_ = std::move(other.moneyTxs_);
-//     // name_ = std::move(other.name_);
-//   }
-//   return *this;
-// }
+Account::Account(Account &&other) noexcept
+    : txs_(std::move(other.txs_)), name_(std::move(other.name_)),
+      logger_(std::move(other.logger_)) {}
+
+Account &Account::operator=(Account &&other) noexcept {
+  if (this != &other) {
+
+    txs_ = std::move(other.txs_);
+    // name_ = std::move(other.name_);
+  }
+  return *this;
+}
 
 void Account::deposit(int amount) {
   // add some logs/statistics
-  Tx tx(depositDetails{amount});
+  Tx tx(depositDetails{amount}, &pool_);
   txs_.push_back(tx);
-  txs_.emplace_back(amount, TxType: deposit )
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
 

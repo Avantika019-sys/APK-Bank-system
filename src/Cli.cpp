@@ -1,19 +1,19 @@
 #include "Cli.h"
 #include "Bank.h"
-#include "stock/MessageQueue.h"
-#include "stock/messages/Stop.h"
+#include "server/MessageQueue.h"
+#include "server/messages/Stop.h"
 #include "utils.h"
 #include <future>
 #include <iostream>
 
 Cli::Cli() {
   banks_ = {
-      {"Danske Bank", Bank("Danske Bank")},
-      {"Nordea", Bank("Danske Bank")},
-      {"Jyske Bank", Bank("Jyske Bank")},
+      {"Danske Bank", Bank<Stock>("Danske Bank")},
+      {"Nordea", Bank<Stock>("Danske Bank")},
+      {"Jyske Bank", Bank<Stock>("Jyske Bank")},
   };
   currentBank = "Dankse Bank";
-  acc = banks_[currentBank].addStockAccount("Jens Nielsen", accId);
+  acc = banks_[currentBank].addAssetAccount("Jens Nielsen", accId);
 }
 void Cli::loop() {
   while (run) {
@@ -22,7 +22,7 @@ void Cli::loop() {
     std::cout << "3: Buy stock" << std::endl;
     std::cout << "4: Sell stock" << std::endl;
     std::cout << "5: Switch bank" << std::endl;
-    std::cout << "6: Monitor stocks" << std::endl;
+    std::cout << "6: " << std::endl;
     std::cout << "7: Get transaction history" << std::endl;
     std::cout << "8: Get current balance" << std::endl;
     std::cout << "9: Get current portfolio value" << std::endl;
@@ -48,7 +48,6 @@ void Cli::loop() {
       handleSwitchBank();
       break;
     case 6:
-      acc->setMonitorStocks(true);
       break;
     case 7:
       acc->printTransactionHistory();
@@ -66,7 +65,8 @@ void Cli::loop() {
       handleRemoveStopLossRule();
       break;
     case -1:
-      bank::server::Server::getInstance().pushMsg(bank::server::messages::Stop());
+      bank::server::Server<Stock>::getInstance().pushMsg(
+          bank::server::messages::Stop());
       run = false;
       break;
     }
