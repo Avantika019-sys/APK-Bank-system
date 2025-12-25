@@ -14,7 +14,8 @@
 # System description
 The banking system has four main features where each feature have set of requirements that needs to be fullfiled. 
 
-Features
+#### Features
+
 Feature 1: Account management 
 This feature allows users to create accounts and also manage their account. 
 
@@ -27,15 +28,24 @@ This allows the user to manage their invesments, includign buying and selling st
 Feature 4: Currency exchange 
 This lets the user exchange between currency. 
 
-Requirements
+#### Requirements
+
 F1.1: The system shall allow users to create an account. 
+
 F1.2: The system shall support to link one or more bank accounts 
+
 F2.1: The system shall have deposit funds into their account
+
 F2.2: The system shall allow users to withdraw funds from their account 
+
 F2.3: The system shall allow users to check the transaction history 
+
 F2.4: The system shall allow users to check their current balance. 
+
 F3.1: The system shall allow users to buy stocks
+
 F3.2: The system shall allow users to sell stocks
+
 F4.1: The system shall allow users to exchange from one currency to another. 
 
 # Architecture
