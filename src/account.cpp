@@ -37,7 +37,7 @@ void Account::withdraw(int amount) {
                 "withdraw_amount", amount);
     throw std::invalid_argument("Not enough money on account");
   }
-  txs_.emplace_back(withdrawDetails{amount});
+  txs_.emplace_back(withdrawDetails{amount}, &pool_);
   // add some logs/statistics
 }
 

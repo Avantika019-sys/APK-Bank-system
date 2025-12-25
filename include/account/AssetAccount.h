@@ -7,6 +7,8 @@
 #include <boost/signals2/connection.hpp>
 #include <map>
 
+#ifndef BANK_ASSETACCOUNT_H
+#define BANK_ASSETACCOUNT_H
 namespace bank::account {
 struct ownedAsset {
   int NoOfStocksOwned;
@@ -15,7 +17,7 @@ struct ownedAsset {
 };
 template <typename T> class AssetAccount : public Account {
 public:
-  AssetAccount(std::string name, std::string id);
+  AssetAccount(std::string name, std::string id) : Account(name, id) {}
   void buyStock(std::string name, int qty) {
     auto &serv = server::Server<T>::getInstance();
 
@@ -50,8 +52,9 @@ public:
           "server failed to process purchase please try later");
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    txs_.emplace_back(stockPurchaseDetails{name, qty, infoResp.currentPrice},
-                      &pool_);
+    txs_.emplace_back(
+        details(stockPurchaseDetails{name, qty, infoResp.currentPrice}),
+        &pool_);
     if (portfolio_.contains(name)) {
       portfolio_[name].NoOfStocksOwned += qty;
     } else {
@@ -93,7 +96,8 @@ public:
 
     orderFut.wait();
     if (orderFut.get().isSucceded) {
-      txs_.emplace_back(stockSellDetails{name, qty, infoResp.currentPrice});
+      txs_.emplace_back(
+          details(stockSellDetails{name, qty, infoResp.currentPrice}), &pool_);
     }
   }
   void printPortfolio() {
@@ -210,3 +214,4 @@ private:
 // StockAccount::StockAccount(std::string name, std::string id)
 //     : Account(name, id) {}
 //
+#endif // BANK_ASSETACCOUNT_H

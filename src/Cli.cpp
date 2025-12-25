@@ -1,19 +1,19 @@
 #include "Cli.h"
-#include "Bank.h"
 #include "server/MessageQueue.h"
 #include "server/messages/Stop.h"
 #include "utils.h"
 #include <future>
 #include <iostream>
 
-Cli::Cli() {
-  banks_ = {
-      {"Danske Bank", Bank<Stock>("Danske Bank")},
-      {"Nordea", Bank<Stock>("Danske Bank")},
-      {"Jyske Bank", Bank<Stock>("Jyske Bank")},
-  };
-  currentBank = "Dankse Bank";
-  acc = banks_[currentBank].addAssetAccount("Jens Nielsen", accId);
+Cli::Cli() : acc("hek", "hh") {
+  // banks_ = {
+  //     {"Danske Bank", Bank<Stock>("Danske Bank")},
+  //     {"Nordea", Bank<Stock>("Danske Bank")},
+  //     {"Jyske Bank", Bank<Stock>("Jyske Bank")},
+  // };
+  // currentBank = "Dankse Bank";
+  // acc = banks_[currentBank].addAssetAccount("Jens Nielsen", accId);
+  // acc = bank::account::AssetAccount<Stock>("hej", "h");
 }
 void Cli::loop() {
   while (run) {
@@ -50,13 +50,13 @@ void Cli::loop() {
     case 6:
       break;
     case 7:
-      acc->printTransactionHistory();
+      acc.printTransactionHistory();
       break;
     case 8:
-      std::cout << "Current balance: " << acc->getBalance() << std::endl;
+      std::cout << "Current balance: " << acc.getBalance() << std::endl;
       break;
     case 9:
-      acc->printPortfolio();
+      acc.printPortfolio();
       break;
     case 10:
       handleAddStopLossRule();
@@ -77,7 +77,7 @@ void Cli::handleWithdraw() {
   int withdrawAmount;
   std::cin >> withdrawAmount;
   try {
-    acc->withdraw(withdrawAmount);
+    acc.withdraw(withdrawAmount);
   } catch (const std::invalid_argument e) {
     std::cout << "Failed to withdraw because: " << e.what() << std::endl;
     return;
@@ -88,7 +88,7 @@ void Cli::handleDeposit() {
   std::cout << "Enter amount to deposit: ";
   int depositAmount;
   std::cin >> depositAmount;
-  acc->deposit(depositAmount);
+  acc.deposit(depositAmount);
   std::cout << "Successfull deposit!" << std::endl;
 }
 void Cli::handleBuyStock() {
@@ -100,7 +100,7 @@ void Cli::handleBuyStock() {
   int qty;
   std::cin >> qty;
   auto fut =
-      std::async(std::launch::async, [&]() { acc->buyStock(stockName, qty); });
+      std::async(std::launch::async, [&]() { acc.buyStock(stockName, qty); });
   spin(fut, "wait for server to proccesing order");
   try {
     fut.get();
@@ -111,23 +111,25 @@ void Cli::handleBuyStock() {
   std::cout << "succesfull stock purchase!" << std::endl;
 }
 void Cli::handleSwitchBank() {
-  std::cout << "Enter name of bank to switch to" << std::endl;
-  std::cout << "Available banks:" << std::endl;
-  std::cout << "1: Dansk Bank" << std::endl;
-  std::cout << "2: Nordea" << std::endl;
-  std::cout << "3: JyskeBank" << std::endl;
-  std::string bankName;
-  std::cin >> bankName;
-  if (!banks_.contains(bankName)) {
-    std::cout << "Bank with that name does not exist" << std::endl;
-    return;
-  }
-  try {
-    banks_[bankName].switchToThisBank(&banks_[currentBank], accId);
-  } catch (const std::invalid_argument e) {
-    std::cout << " error: already on this bank " << e.what() << std::endl;
-    return;
-  }
-  std::cout << "Switched bank!" << std::endl;
+  // std::cout << "Enter name of bank to switch to" << std::endl;
+  // std::cout << "Available banks:" << std::endl;
+  // std::cout << "1: Dansk Bank" << std::endl;
+  // std::cout << "2: Nordea" << std::endl;
+  // std::cout << "3: JyskeBank" << std::endl;
+  // std::string bankName;
+  // std::cin >> bankName;
+  // if (!banks_.contains(bankName)) {
+  //   std::cout << "Bank with that name does not exist" << std::endl;
+  //   return;
+  // }
+  // try {
+  //   banks_[bankName].switchToThisBank(&banks_[currentBank], accId);
+  // } catch (const std::invalid_argument e) {
+  //   std::cout << " error: already on this bank " << e.what() << std::endl;
+  //   return;
+  // }
+  // std::cout << "Switched bank!" << std::endl;
 }
 void Cli::handleAddStopLossRule() {}
+void Cli::handleSellStock() {}
+void Cli::handleRemoveStopLossRule() {}

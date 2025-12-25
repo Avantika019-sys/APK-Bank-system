@@ -1,6 +1,5 @@
 
 #include "./include/asset/Crypto.h"
-#include "Bank.h"
 #include "Cli.h"
 #include "server/Server.h"
 
