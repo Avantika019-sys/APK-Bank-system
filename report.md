@@ -95,7 +95,11 @@ Finally the Server also needs to publish when a asset price changes. For this we
 Each asset has defined asset traits, here we defined a accumulator type, for example for crypto assets then having a high decimal precision is important, if we  just use a double then som decimals will be discarded which underestimates the value of a accounts assets, while a stock does not require the same precision. 
 
 ## Account
+The account
+## Calculator/analyzer
 ## Logger
+Each account has its own logger which logs to a file, which belongs to a account, The logger uses a **\*FILE**  pointer to write and read to files. The class uses RAII, when constructing the logger it aquires a file descriptor in the constructor and the destructor releases the file descriptor. This class has explicitly deleted the copy constructor and assignment operator, since we cant have 2 objects using the pointer, if one of the objects are destructed which closes the file descriptor and later the other object then tries write it will be an issue. Therefore we implemted the rule of 5, by implementing move semantics. now the FILE pointer can be moved from object to object. 
+
 ## Meta programming
 
 
