@@ -27,6 +27,7 @@ void Account::deposit(int amount) {
   // add some logs/statistics
   Tx tx(depositDetails{amount});
   txs_.push_back(tx);
+  txs_.emplace_back(amount, TxType: deposit )
   logger_.log("successfully made deposit", level::INFO, "transaction", tx);
 }
 
