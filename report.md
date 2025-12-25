@@ -3,7 +3,6 @@
 | 202307397 | Ali Najafi |
 | --------- | ---------- |
 | 202207320 | Avantika   |
-| --------- | ---------- |
 |           | Adriana    |
 
 ## SWAPK
@@ -30,28 +29,28 @@ This lets the user exchange between currency.
 
 #### Requirements
 
-F1.1: The system shall allow users to create an account. 
+- F1.1: The system shall allow users to create an account. 
 
-F1.2: The system shall support to link one or more bank accounts 
+- F1.2: The system shall support to link one or more bank accounts 
 
-F2.1: The system shall have deposit funds into their account
+- F2.1: The system shall have deposit funds into their account
 
-F2.2: The system shall allow users to withdraw funds from their account 
+- F2.2: The system shall allow users to withdraw funds from their account 
 
-F2.3: The system shall allow users to check the transaction history 
+- F2.3: The system shall allow users to check the transaction history 
 
-F2.4: The system shall allow users to check their current balance. 
+- F2.4: The system shall allow users to check their current balance. 
 
-F3.1: The system shall allow users to buy stocks
+- F3.1: The system shall allow users to buy stocks
 
-F3.2: The system shall allow users to sell stocks
+- F3.2: The system shall allow users to sell stocks
 
-F4.1: The system shall allow users to exchange from one currency to another. 
+- F4.1: The system shall allow users to exchange from one currency to another. 
 
 # Architecture
-This is an overall class diagram which represents the main funtional components for the banking system and their relationships without showing the utility and helper classes such as logging and exception handling. The diagram shows that the system is designed for the user to one or multiple accounts, transact money and stocks. It illustrates the dependency of transaction on CurrencyExchnage for handling currency conversion. 
+This is an overall class diagram which represents the main funtional components for the banking system and their relationships without showing the utility and helper classes such as logging and exception handling. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
 
-![alt text](image.png)
+![alt text](cd.png)
 
 # Design
 # Implementation
