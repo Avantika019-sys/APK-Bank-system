@@ -1,6 +1,6 @@
 #ifndef BANK_BANK_H
 #define BANK_BANK_H
-#include "stock/StockAccount.h"
+#include "server/StockAccount.h"
 #include <string>
 #include <utility>
 #include <vector>

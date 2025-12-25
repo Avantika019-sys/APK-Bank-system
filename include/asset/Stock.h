@@ -3,15 +3,14 @@
 #include <string>
 #ifndef BANK_STOCK_H
 #define BANK_STOCK_H
-typedef boost::signals2::signal<void(std::string stockName,
+typedef boost::signals2::signal<void(std::string assetName,
                                      double UpdatedPrice)>
-    StockUpdateSignal;
+    UpdateSignal;
 
-typedef std::vector<int> pricePerStockOverTime;
 struct Stock {
   std::string name;
-  pricePerStockOverTime prices;
-  StockUpdateSignal signal;
+  std::vector<int> priceOverTime;
+  UpdateSignal signal;
 };
 
 #endif // BANK_STOCK_H

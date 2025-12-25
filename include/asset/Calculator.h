@@ -4,14 +4,14 @@
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
 template <typename T> auto calculateTrendForIndividualAsset(T asset) {
-  int window = AssetTraits<T>::defaultWindow();
   typedef typename AssetTraits<T>::AccT AccT;
-  auto &vec = asset.prices[window];
+  auto &vec = asset.priceOverTime;
   AccT sumX = 0;
   AccT sumY = 0;
   AccT sumXY = 0;
   AccT sumX2 = 0;
-  for (int i = 0; i < vec.size(); i++) {
+  for (int i = vec.size() - 1;
+       i > vec.size() - AssetTraits<T>::LookBackPeriod(); i--) {
     int price = vec[i];
     sumX += i;
     sumY += price;

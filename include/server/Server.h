@@ -17,10 +17,10 @@ public:
     return instance;
   }
   void addAsset(std::string name, T asset) { assets_[name] = asset; }
-  StockUpdateSignal &getSignal(std::string assetName) {
+  UpdateSignal &getSignal(std::string assetName) {
     return assets_[assetName].signal;
   }
-  void startSimulatingStockPriceUpdates() {
+  void startSimulatingAssetPriceUpdates() {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(-0.005, 0.005);

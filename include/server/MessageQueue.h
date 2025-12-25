@@ -18,9 +18,25 @@ template <typename T> class MessageQueue {
 public:
   MessageQueue(unsigned long maxSize) : maxSize(maxSize) {}
 
-  void push(Message<T> &&msg);
+  void push(Message<T> &&msg) {
+    std::unique_lock<std::mutex> lock(mtx);
 
-  Message<T> pop();
+    cv_not_full.wait(lock, [this] { return queue.size() < maxSize; });
+
+    queue.push(std::move(msg));
+    cv_not_empty.notify_one();
+  }
+
+  Message<T> pop() {
+    std::unique_lock<std::mutex> lock(mtx);
+
+    cv_not_empty.wait(lock, [this] { return !queue.empty(); });
+
+    auto msg = std::move(queue.front());
+    queue.pop();
+    cv_not_full.notify_one();
+    return msg;
+  }
 
 private:
   std::queue<Message<T>> queue;
