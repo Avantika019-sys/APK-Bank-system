@@ -9,7 +9,6 @@
 
 # Introduction
 
-
 # System description
 The banking system has four main features where each feature have set of requirements that needs to be fullfiled. 
 
@@ -47,10 +46,18 @@ This lets the user exchange between currency.
 
 - F4.1: The system shall allow users to exchange from one currency to another. 
 
+
 # Architecture
 This is an overall class diagram which represents the main funtional components for the banking system and their relationships without showing the utility and helper classes such as logging and exception handling. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
 
-![alt text](cd.png)
+```puml
+@startuml
+BankSystem *-- Account
+BankSystem *-- CurrencyExchange
+BankSystem *-- Server
+Account *-- Tx
+@enduml
+```
 
 # Design
 # Implementation
