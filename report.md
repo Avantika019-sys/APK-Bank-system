@@ -51,7 +51,6 @@ This is an overall class diagram which represents the main functional components
 @startuml
 Bank *-- Account
 Bank *-- Server
-
 Account *-- Tx
 @enduml
 ```
