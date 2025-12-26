@@ -8,9 +8,11 @@
 ## SWAPK
 
 # Introduction
-We have chosen to do a Portfolio system for our SWAPK. 
+This report describes our chosen project, the Portfolio System for SWAPK. The system is implemented using the C++ concepts learned throughout the course.
 
-# System description
+The portfolio system is designed to manage user accounts, perform financial transactions, and support stock investments within a banking context. The goal of the project is not only to create a functional system, but also to demonstrate how the C++ concepts taught in SWAPK can be incorporated into a coherent and well‑structured software solution.
+
+# System description 
 The banking system has three main features where each feature have set of requirements that needs to be fullfiled. 
 
 #### Features
@@ -61,6 +63,7 @@ The Server class is event driven, it has a message queue where the asset account
 - Order - Place an order on an asset(buy or sell)
 - Portfolio trend - Calculate the trend of a portfolio
 - Stop - Stops the server
+
 ```plantuml
 @startuml
 AssetAccount -> Server: PushMsg(msg)
@@ -80,6 +83,8 @@ The account class stores a collection of transactions, a transaction occurs when
 One account object can only manage a portfolio of a certain type of asset.
 The account class will interface with the server through message queue but also through a publisher/subscriber pattern. Here the account i able to subscribe to asset price updates. This enables defining stop loss limits for assets. If an asset goes below a certain price then it should be sold.
 The stock market and the crypto market has different charateristics, for example the crypto market moves alot faster, so when calculating a trend then we have to look at a smaller window. Therefore its important to be able to use the same class definition while allowing market differences, this can be achieved by having defining traits on each asset type. 
+
+
 # Implementation
 ## Event-driven server
 To implement the event driven server, we defined a **MessageQueue** class with pop and push methods, this will ensure that pushing to a queue which is full blocks, and popping from and empty queue also blocks. This is achieved with condition variables and a mutex.
