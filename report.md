@@ -1,4 +1,4 @@
-# Bank system
+# Portfolio system
 
 | 202307397 | Ali Najafi |
 | --------- | ---------- |
@@ -8,6 +8,7 @@
 ## SWAPK
 
 # Introduction
+We have chosen to do a Portfolio system for our SWAPK 
 
 # System description
 The banking system has four main features where each feature have set of requirements that needs to be fullfiled. 
@@ -58,7 +59,6 @@ BankSystem *-- Server
 Account *-- Tx
 @enduml
 ```
-
 # Design
 # Implementation
 # Discussion
