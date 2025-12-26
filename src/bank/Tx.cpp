@@ -1,7 +1,8 @@
 
-#include "Tx.h"
+#include "bank/Tx.h"
 #include <iostream>
 
+namespace bank {
 Tx::Tx(details d, std::pmr::memory_resource *memRes)
     : memRes_(memRes), details_(memRes),
       createdAt_(std::chrono::system_clock::now()) {}
@@ -40,3 +41,4 @@ std::ostream &operator<<(std::ostream &os, const Tx &t) {
      << std::endl;
   return os;
 }
+} // namespace bank

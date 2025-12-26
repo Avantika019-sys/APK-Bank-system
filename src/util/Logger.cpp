@@ -1,9 +1,10 @@
-#include "Logger.h"
+#include "util/Logger.h"
 #include <cstdio>
 #include <ctime>
 #include <format>
 #include <stdexcept>
 #include <string>
+namespace util {
 Logger::Logger(std::string id) {
   const std::string fileName = id + ".txt";
   fptrLogs_ = std::fopen(fileName.c_str(), "w");
@@ -40,3 +41,4 @@ std::string Logger::levelToString(level l) {
   }
   return "ERROR";
 }
+} // namespace util

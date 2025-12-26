@@ -1,8 +1,8 @@
 
 #include <functional>
 #include <string>
-namespace bank::server::messages {
+namespace asset::messages {
 struct OrderEvent {
   std::function<void(std::string assetName, int qty)> cb;
 };
-} // namespace bank::server::messages
+} // namespace asset::messages

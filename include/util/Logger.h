@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string>
 #include <type_traits>
+namespace util {
+
 template <typename T, typename = void> struct streamable : std::false_type {};
 template <typename T>
 struct streamable<T, std::void_t<decltype(std::declval<std::ostream &>()
@@ -61,5 +63,5 @@ private:
   std::string levelToString(level l);
   FILE *fptrLogs_;
 };
-
+} // namespace util
 #endif // BANK_LOGGER_H

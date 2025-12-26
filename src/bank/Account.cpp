@@ -1,24 +1,22 @@
-#include "../include/account/Account.h"
-#include "Tx.h"
-#include "TxDetails.h"
+#include "bank/Account.h"
+#include "bank/Tx.h"
+#include "bank/TxDetails.h"
+#include "util/Logger.h"
 #include <algorithm>
 #include <iostream>
+#include <mutex>
 #include <numeric>
 #include <string>
 #include <sys/types.h>
-
-Account::Account(std::string name, std::string id)
-    : logger_(id), name_(name), id_(id) {}
+namespace bank {
+Account::Account(util::Logger *logger) : logger_(logger) {}
 
 Account::Account(Account &&other) noexcept
-    : txs_(std::move(other.txs_)), name_(std::move(other.name_)),
-      logger_(std::move(other.logger_)) {}
+    : txs_(std::move(other.txs_)), logger_(std::move(other.logger_)) {}
 
 Account &Account::operator=(Account &&other) noexcept {
   if (this != &other) {
-
     txs_ = std::move(other.txs_);
-    // name_ = std::move(other.name_);
   }
   return *this;
 }
@@ -27,16 +25,16 @@ void Account::deposit(int amount) {
   // add some logs/statistics
   Tx tx(depositDetails{amount}, &pool_);
   txs_.push_back(tx);
-  logger_.log("successfully made deposit", level::INFO,
-              field("transaction", tx));
+  logger_.log("successfully made deposit", util::level::INFO,
+              util::field("transaction", tx));
 }
 
 void Account::withdraw(int amount) {
   int curBalance = getBalance();
   if (curBalance < amount) {
-    logger_.log("failed to withdraw because insufficient funds", level::ERROR,
-                field("withdraw amount", amount),
-                field("current balance", curBalance));
+    logger_.log("failed to withdraw because insufficient funds",
+                util::level::ERROR, util::field("withdraw amount", amount),
+                util::field("current balance", curBalance));
     throw std::invalid_argument("Not enough money on account");
   }
   txs_.emplace_back(withdrawDetails{amount}, &pool_);
@@ -66,17 +64,8 @@ int Account::getBalance() const {
   return res;
 }
 
-std::string Account::getId() const { return id_; }
-//
-// bool transfer(double amount, Account &to_account) {
-//   if (withdraw(amount)) {
-//     if (to_account.deposit(amount)) {
-//       return true;
-//     } else {
-//       // Rollback - strong exception guarantee
-//       deposit(amount);
-//       throw exceptions::InvalidTransactionException("Transfer failed");
-//     }
-//   }
-//   return false;
-// }
+void Account::addTransaction(details &&txDetail) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  txs_.emplace_back(std::move(txDetail), &pool_);
+}
+} // namespace bank

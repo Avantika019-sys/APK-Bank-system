@@ -1,16 +1,16 @@
 #ifndef BANK_MSGQUEUE_H
 #define BANK_MSGQUEUE_H
-#include "./messages/Info.h"
-#include "./messages/Order.h"
-#include "./messages/OrderEvent.h"
-#include "./messages/PortfolioTrend.h"
-#include "./messages/Stop.h"
+#include "messages/Info.h"
+#include "messages/Order.h"
+#include "messages/OrderEvent.h"
+#include "messages/PortfolioTrend.h"
+#include "messages/Stop.h"
 #include <condition_variable>
 #include <mutex>
 #include <queue>
 #include <variant>
 
-namespace bank::server {
+namespace asset {
 template <typename T>
 using Message =
     std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
@@ -47,5 +47,5 @@ private:
   std::condition_variable cv_not_empty;
   std::condition_variable cv_not_full;
 };
-} // namespace bank::server
+} // namespace asset
 #endif // BANK_MSGQUEUE_H

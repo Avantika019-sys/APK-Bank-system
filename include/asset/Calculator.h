@@ -1,17 +1,18 @@
-#include "traits.h"
+#include "Traits.h"
 #include <future>
 #include <vector>
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
+namespace asset {
 template <typename T> auto calculateTrendForIndividualAsset(const T &asset) {
-  typedef typename AssetTraits<T>::AccT AccT;
+  typedef typename Traits<T>::AccT AccT;
   auto &vec = asset.priceOverTime;
   AccT sumX = 0;
   AccT sumY = 0;
   AccT sumXY = 0;
   AccT sumX2 = 0;
-  for (int i = vec.size() - 1;
-       i > vec.size() - AssetTraits<T>::LookBackPeriod(); i--) {
+  for (int i = vec.size() - 1; i > vec.size() - Traits<T>::LookBackPeriod();
+       i--) {
     int price = vec[i];
     sumX += i;
     sumY += price;
@@ -51,4 +52,5 @@ auto CalculatePortfolioTrend(std::vector<T> assets, sequential) {
   }
   return total / assets.size();
 }
+} // namespace asset
 #endif // BANK_CALCULATOR_H

@@ -1,7 +1,7 @@
 #ifndef BANK_INFO_H
 #define BANK_INFO_H
 #include <future>
-namespace bank::server::messages {
+namespace asset::messages {
 template <typename T> struct InfoResponse {
   InfoResponse(int currentPrice, double trend)
       : currentPrice(currentPrice), trend(trend) {}
@@ -14,5 +14,5 @@ template <typename T> struct InfoRequest {
   std::string assetName;
   std::promise<InfoResponse<T>> prom;
 };
-} // namespace bank::server::messages
+} // namespace asset::messages
 #endif // BANK_INFO_H

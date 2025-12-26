@@ -2,7 +2,7 @@
 #define BANK_ORDER_H
 
 #include <future>
-namespace bank::server::messages {
+namespace asset::messages {
 enum class OrderType {
   BUY,
   SELL,
@@ -18,5 +18,5 @@ template <typename T> struct OrderRequest {
   OrderType type;
   std::promise<OrderResponse> prom;
 };
-} // namespace bank::server::messages
+} // namespace asset::messages
 #endif // BANK_ORDER_H

@@ -1,18 +1,21 @@
-#include "Crypto.h"
-#include "Stock.h"
+#include "types/Crypto.h"
+#include "types/Stock.h"
 
 #ifndef BANK_ASSETTRAITS_H
 #define BANK_ASSETTRAITS_H
-template <typename T> class AssetTraits;
 
-template <> struct AssetTraits<Crypto> {
+namespace asset {
+template <typename T> class Traits;
+
+template <> struct Traits<types::Crypto> {
   typedef long double AccT;
   static int updateRate() { return 1; }
   static int LookBackPeriod() { return 15; }
 };
-template <> struct AssetTraits<Stock> {
+template <> struct Traits<types::Stock> {
   typedef double AccT;
   static int updateRate() { return 5; }
   static int LookBackPeriod() { return 150; }
 };
+} // namespace asset
 #endif // BANK_ASSETTRAITS_H

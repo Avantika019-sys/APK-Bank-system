@@ -1,33 +1,39 @@
-#include "./Account.h"
-#include "server/Server.h"
-#include "server/messages/Info.h"
-#include "server/messages/Order.h"
-#include "server/messages/PortfolioTrend.h"
-#include "server/messages/Stop.h"
+#include "MessageQueue.h"
+#include "Server.h"
+#include "bank/Account.h"
+#include "bank/TxDetails.h"
+#include "messages/Info.h"
+#include "messages/Order.h"
+#include "messages/PortfolioTrend.h"
+#include "messages/Stop.h"
+#include "util/Logger.h"
 #include <boost/signals2/connection.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <iostream>
 #include <map>
 
 #ifndef BANK_ASSETACCOUNT_H
 #define BANK_ASSETACCOUNT_H
-namespace bank::account {
+namespace asset {
 struct ownedAsset {
   int NoOfStocksOwned;
   std::optional<int> stopLossRule;
   boost::signals2::connection conn;
 };
-template <typename T> class AssetAccount : public Account {
+template <typename T> class Manager {
 public:
-  AssetAccount(std::string name, std::string id, server::Server<T> &serv)
-      : Account(name, id), serv(serv) {}
+  Manager(Server<T> *serv, boost::shared_ptr<bank::Account> acc,
+          util::Logger *logger)
+      : serv(serv), acc(acc), logger(logger) {}
   void buyStock(std::string name, int qty) {
-    server::messages::InfoRequest<T> i(name);
+    messages::InfoRequest<T> i(name);
     auto infoF = i.prom.get_future();
-    serv.pushMsg(bank::server::Message<T>(std::move(i)));
+    serv.pushMsg(Message<T>(std::move(i)));
 
     infoF.wait();
     auto infoResp = infoF.get();
     int totalPrice = infoResp.currentPrice * qty;
-    if (getBalance() < totalPrice) {
+    if (acc->getBalance() < totalPrice) {
       throw std::invalid_argument("you dont have enough money to buy stock");
     }
     std::cout << "Total price: " << totalPrice
@@ -39,10 +45,9 @@ public:
       return;
     }
 
-    server::messages::OrderRequest<T> o(name, qty,
-                                        server::messages::OrderType::BUY);
+    messages::OrderRequest<T> o(name, qty, messages::OrderType::BUY);
     auto orderF = o.prom.get_future();
-    serv.pushMsg(bank::server::Message<T>(std::move(i)));
+    serv.pushMsg(Message<T>(std::move(i)));
 
     orderF.wait();
     auto resp = orderF.get();
@@ -51,9 +56,7 @@ public:
           "server failed to process purchase please try later");
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    txs_.emplace_back(
-        details(stockPurchaseDetails{name, qty, infoResp.currentPrice}),
-        &pool_);
+    acc->addTransaction(stockPurchaseDetails{name, qty, infoResp.currentPrice});
     if (portfolio_.contains(name)) {
       portfolio_[name].NoOfStocksOwned += qty;
     } else {
@@ -70,7 +73,7 @@ public:
       throw std::invalid_argument(
           "you do not own enough of this stock too sell that amount");
     }
-    server::messages::InfoRequest<T> i(name);
+    messages::InfoRequest<T> i(name);
     auto f = i.prom.get_future();
     serv.pushMsg(Message(std::move(i)));
 
@@ -86,23 +89,22 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    server::messages::OrderRequest<T> o(name, qty,
-                                        server::messages::OrderType::SELL);
+    messages::OrderRequest<T> o(name, qty, messages::OrderType::SELL);
     auto orderFut = o.prom.get_future();
     serv.pushMsg(Message(std::move(o)));
 
     orderFut.wait();
     if (orderFut.get().isSucceded) {
-      txs_.emplace_back(
-          details(stockSellDetails{name, qty, infoResp.currentPrice}), &pool_);
+      acc->addTransaction(
+          details(stockSellDetails{name, qty, infoResp.currentPrice}));
     }
   }
   void printPortfolio() {
     int sum = 0;
     for (auto &[stockName, ownedStock] : portfolio_) {
-      server::messages::InfoRequest<T> i(stockName);
+      messages::InfoRequest<T> i(stockName);
       auto f = i.prom.get_future();
-      serv.pushMsg(bank::server::Message<T>(std::move(i)));
+      serv.pushMsg(Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
@@ -117,24 +119,24 @@ public:
 
   void addStopLossRule(std::string name, int limit) {
 
-    auto handler = std::bind(&AssetAccount<T>::onStockUpdate, this,
+    auto handler = std::bind(&Manager<T>::onStockUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
-    portfolio_[name].conn = serv().getSignal(name).connect(handler);
+    portfolio_[name].conn = serv.getSignal(name).connect(handler);
   }
   void removeStopLossRule(std::string name, int limit) {
     portfolio_[name].conn.disconnect();
   }
-  AssetAccount(const AssetAccount &) = delete;
-  AssetAccount &operator=(const AssetAccount &) = delete;
+  Manager(const Manager &) = delete;
+  Manager &operator=(const Manager &) = delete;
 
-  AssetAccount(AssetAccount &&other) noexcept : Account(std::move(other)) {
+  Manager(Manager &&other) noexcept {
     for (auto &[name, asset] : other.portfolio_) {
       if (asset.conn.connected()) {
         asset.conn.disconnect();
       }
     }
     portfolio_ = std::move(other.portfolio_);
-    auto handler = std::bind(&AssetAccount<T>::onStockUpdate, this,
+    auto handler = std::bind(&Manager<T>::onStockUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
     for (auto &[name, asset] : portfolio_) {
       if (asset.stopLossRule.has_value()) {
@@ -142,16 +144,15 @@ public:
       }
     }
   }
-  AssetAccount &operator=(AssetAccount &&other) noexcept {
+  Manager &operator=(Manager &&other) noexcept {
     if (this != &other) {
-      Account::operator=(std::move(other));
       for (auto &[name, asset] : other.portfolio_) {
         if (asset.conn.connected()) {
           asset.conn.disconnect();
         }
       }
       portfolio_ = std::move(other.portfolio_);
-      auto handler = std::bind(&AssetAccount<T>::onStockUpdate, this,
+      auto handler = std::bind(&Manager<T>::onStockUpdate, this,
                                std::placeholders::_1, std::placeholders::_2);
       for (auto &[name, asset] : portfolio_) {
         if (asset.stopLossRule.has_value()) {
@@ -173,40 +174,28 @@ private:
       return;
     }
     if (updatedPrice <= it->second.stopLossRule.value()) {
-      server::messages::OrderRequest<T> o(stockName, it->second.NoOfStocksOwned,
-                                          server::messages::OrderType::SELL);
+      messages::OrderRequest<T> o(stockName, it->second.NoOfStocksOwned,
+                                  messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
-      serv.pushMsg(bank::server::Message<T>(std::move(o)));
+      serv.pushMsg(Message<T>(std::move(o)));
 
       orderFut.wait();
       if (!orderFut.get().isSucceded) {
-        throw std::invalid_argument(
-            "server failed to process sale please try later");
+        throw std::invalid_argument("server failed to process sale");
       }
-      Tx tx(
-          stockSellDetails{stockName, it->second.NoOfStocksOwned, updatedPrice},
-          nullptr);
-      txs_.push_back(tx);
-      logger_.log(
-          "automatically sold stock because of stock loss limit", level::INFO,
-          field("transaction", tx),
-          field("stop loss value limit", it->second.stopLossRule.value()));
+      acc->addTransaction(stockSellDetails{
+          stockName, it->second.NoOfStocksOwned, updatedPrice});
+      logger.log("automatically sold stock because of stock loss limit",
+                 util::level::INFO,
+                 util::field("stop loss value limit",
+                             it->second.stopLossRule.value()));
     }
   }
   std::map<std::string, ownedAsset> portfolio_;
   std::mutex mtx_;
-  server::Server<T> &serv;
+  Server<T> &serv;
+  boost::shared_ptr<bank::Account> acc;
+  util::Logger *logger;
 };
-
-//    template<typename... Args>
-// void place_buy_order(Args &&...args) {
-//   order_history_.emplace_back(std::forward<Args>(args)...);
-// }
-//
-// template <typename... Args> void place_sell_order(Args &&...args) {
-//   order_history_.emplace_back(std::forward<Args>(args)...);
-} // namespace bank::account
-// StockAccount::StockAccount(std::string name, std::string id)
-//     : Account(name, id) {}
-//
+} // namespace asset
 #endif // BANK_ASSETACCOUNT_H

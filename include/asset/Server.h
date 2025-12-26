@@ -1,15 +1,14 @@
-#include "./../asset/Calculator.h"
-#include "./../asset/Crypto.h"
-#include "./../asset/Stock.h"
-#include "./../asset/traits.h"
+#include "Calculator.h"
 #include "MessageQueue.h"
+#include "Traits.h"
+#include "types/Crypto.h"
+#include "types/Stock.h"
 #include <boost/signals2/signal.hpp>
-#include <memory>
 #include <random>
 #include <thread>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
-namespace bank::server {
+namespace asset {
 typedef boost::signals2::signal<void(std::string assetName,
                                      double UpdatedPrice)>
     UpdateSignal;
@@ -32,7 +31,7 @@ public:
 
     while (run && !assets_.empty()) {
       std::this_thread::sleep_for(
-          std::chrono::seconds(AssetTraits<T>::updateRate()));
+          std::chrono::seconds(Traits<T>::updateRate()));
       std::lock_guard<std::mutex> lock(mtx);
       for (auto &[assetName, asset] : assets_) {
         double percentChange = distrib(gen);
@@ -85,9 +84,9 @@ template <typename T> struct MessageVisitor {
     for (auto assetName : p.ownedAsset) {
       assets.push_back(serv.assets_[assetName].first);
     }
-    typedef typename AssetTraits<T>::AccT AccT;
+    typedef typename Traits<T>::AccT AccT;
     AccT trend;
-    if (p.ownedAsset.size() * AssetTraits<T>::LookBackPeriod() < 1000) {
+    if (p.ownedAsset.size() * Traits<T>::LookBackPeriod() < 1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
       trend = CalculatePortfolioTrend(assets, parallel{});
@@ -99,6 +98,6 @@ template <typename T> struct MessageVisitor {
     serv.OrderEventCbs.push_back(o.cb);
   }
 };
-} // namespace bank::server
+} // namespace asset
 
 #endif // BANK_STOCKSERVER_H
