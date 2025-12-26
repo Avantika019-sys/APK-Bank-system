@@ -49,6 +49,8 @@ This allows the user to manage their invesments, including buying and selling st
 # Architecture
 This is an overall class diagram which represents the main functional components for the portfolio system and their relationships without showing the helper class such as logger. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
 
+NOTE!! need to change class diagram to component diagram
+
 ```puml
 @startuml
 Bank *-- Account
@@ -80,6 +82,7 @@ The account class stores a collection of transactions, a transaction occurs when
 - depositting
 - buying assets
 - selling assets
+
 One account object can only manage a portfolio of a certain type of asset.
 The account class will interface with the server through message queue but also through a publisher/subscriber pattern. Here the account i able to subscribe to asset price updates. This enables defining stop loss limits for assets. If an asset goes below a certain price then it should be sold.
 The stock market and the crypto market has different charateristics, for example the crypto market moves alot faster, so when calculating a trend then we have to look at a smaller window. Therefore its important to be able to use the same class definition while allowing market differences, this can be achieved by having defining traits on each asset type. 
@@ -92,15 +95,30 @@ Then on the Server class we can define a special while loop, which pops from the
 Finally the Server also needs to publish when a asset price changes. For this we use boost::signals, each asset has its own signal, this allows the asset account for granular subscription.  
 // add communication diagram here
 
+```plantuml
+@startuml
+AssetAccount -> Server: PushMsg(msg)
+Server -> Server: ProccessMsg()
+Server --> AssetAccount: Response
+@enduml
+```
 
 Each asset has defined asset traits, here we defined a accumulator type, for example for crypto assets then having a high decimal precision is important, if we  just use a double then som decimals will be discarded which underestimates the value of a accounts assets, while a stock does not require the same precision. 
 
+
 ## Account
-The account
+To account is a important aspect in our system. There is a general account class and one specific for assets. The general account class takes care of the functionality such as deposit, withdraw and where you can see the history of transaction and check the current balance for a specific account. Move semantics is used when copy the account that was created to transfer ownership of internal resources.  
+
+## AssetAccount
+
+
+
+
 ## Calculator/analyzer
 When the server receives request to calculate trends it calls free functions defined in Calculator.h
 These functions are template and takes a asset type, 
 Here we make use of alghoritm selection using tagging, depending on the amount of data that needs to proccesed we choose either a parallel or sequential calculation. The idea is that if the amount of data isnt very large then the overhead of spawning threads with std::async too large and doing it sequentially is faster. 
+
 ## Logger
 Each account has its own logger which logs to a file, which belongs to a account, The logger uses a **\*FILE**  pointer to write and read to files. The class uses RAII, when constructing the logger it aquires a file descriptor in the constructor and the destructor releases the file descriptor. This class has explicitly deleted the copy constructor and assignment operator, since we cant have 2 objects using the pointer, if one of the objects are destructed which closes the file descriptor and later the other object then tries write it will be an issue. Therefore we implemented the rule of 5, by implementing move semantics. now the FILE pointer can be moved from object to object. 
 
