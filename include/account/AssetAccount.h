@@ -17,10 +17,9 @@ struct ownedAsset {
 };
 template <typename T> class AssetAccount : public Account {
 public:
-  AssetAccount(std::string name, std::string id) : Account(name, id) {}
+  AssetAccount(std::string name, std::string id, server::Server<T> &serv)
+      : Account(name, id), serv(serv) {}
   void buyStock(std::string name, int qty) {
-    auto &serv = server::Server<T>::getInstance();
-
     server::messages::InfoRequest<T> i(name);
     auto infoF = i.prom.get_future();
     serv.pushMsg(bank::server::Message<T>(std::move(i)));
@@ -62,8 +61,6 @@ public:
     }
   }
   void sellStock(std::string name, int qty) {
-    auto &serv = server::Server<T>::getInstance();
-
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(name);
     if (it == portfolio_.end()) {
@@ -105,8 +102,7 @@ public:
     for (auto &[stockName, ownedStock] : portfolio_) {
       server::messages::InfoRequest<T> i(stockName);
       auto f = i.prom.get_future();
-      server::Server<T>::getInstance().pushMsg(
-          bank::server::Message<T>(std::move(i)));
+      serv.pushMsg(bank::server::Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
@@ -123,8 +119,7 @@ public:
 
     auto handler = std::bind(&AssetAccount<T>::onStockUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
-    portfolio_[name].conn =
-        server::Server<T>::getInstance().getSignal(name).connect(handler);
+    portfolio_[name].conn = serv().getSignal(name).connect(handler);
   }
   void removeStopLossRule(std::string name, int limit) {
     portfolio_[name].conn.disconnect();
@@ -143,8 +138,7 @@ public:
                              std::placeholders::_1, std::placeholders::_2);
     for (auto &[name, asset] : portfolio_) {
       if (asset.stopLossRule.has_value()) {
-        asset.conn =
-            server::Server<T>::getInstance().getSignal(name).connect(handler);
+        asset.conn = serv().getSignal(name).connect(handler);
       }
     }
   }
@@ -161,8 +155,7 @@ public:
                                std::placeholders::_1, std::placeholders::_2);
       for (auto &[name, asset] : portfolio_) {
         if (asset.stopLossRule.has_value()) {
-          asset.conn =
-              server::Server<T>::getInstance().getSignal(name).connect(handler);
+          asset.conn = serv().getSignal(name).connect(handler);
         }
       }
     }
@@ -171,7 +164,6 @@ public:
 
 private:
   void onStockUpdate(std::string stockName, int updatedPrice) {
-    auto &serv = server::Server<T>::getInstance();
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(stockName);
     if (it == portfolio_.end()) {
@@ -203,6 +195,7 @@ private:
   }
   std::map<std::string, ownedAsset> portfolio_;
   std::mutex mtx_;
+  server::Server<T> &serv;
 };
 
 //    template<typename... Args>

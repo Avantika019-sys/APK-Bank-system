@@ -2,6 +2,7 @@
 #define BANK_MSGQUEUE_H
 #include "./messages/Info.h"
 #include "./messages/Order.h"
+#include "./messages/OrderEvent.h"
 #include "./messages/PortfolioTrend.h"
 #include "./messages/Stop.h"
 #include <condition_variable>
@@ -13,7 +14,8 @@ namespace bank::server {
 template <typename T>
 using Message =
     std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
-                 messages::PortfolioTrend<T>, messages::Stop>;
+                 messages::PortfolioTrend<T>, messages::OrderEvent,
+                 messages::Stop>;
 template <typename T> class MessageQueue {
 public:
   MessageQueue(unsigned long maxSize) : maxSize(maxSize) {}

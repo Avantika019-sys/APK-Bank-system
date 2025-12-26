@@ -16,16 +16,11 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server() : msgQueue_(10) {
-    std::thread stockUpdaterThread(
-        [&]() { startSimulatingAssetPriceUpdates(); });
-    std::thread stockOrderThread([&]() { startMessageProccesor(); });
-  }
+  Server()
+      : msgQueue_(10),
+        simulatorThread([this] { startSimulatingAssetPriceUpdates(); }),
+        messageProccessorThread([this] { startMessageProccesor(); }) {}
 
-  static Server &getInstance() {
-    static Server instance;
-    return instance;
-  }
   void addAsset(std::string name, T asset) { assets_[name] = asset; }
   UpdateSignal &getSignal(std::string assetName) {
     return assets_[assetName].second;
@@ -56,6 +51,12 @@ public:
     }
   }
   void pushMsg(Message<T> &&msg) { msgQueue_.push(std::move(msg)); }
+  ~Server() {
+    if (simulatorThread.joinable())
+      simulatorThread.join();
+    if (messageProccessorThread.joinable())
+      messageProccessorThread.join();
+  }
 
 private:
   friend struct MessageVisitor<T>;
@@ -63,6 +64,8 @@ private:
   std::map<std::string, std::pair<T, UpdateSignal>> assets_;
   std::mutex mtx;
   std::atomic<bool> run{true};
+  std::vector<std::function<void(std::string assetName, int qty)>>
+      OrderEventCbs;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };
@@ -92,6 +95,9 @@ template <typename T> struct MessageVisitor {
     p.prom.set_value(trend);
   }
   void operator()(messages::Stop &s) { serv.run = false; }
+  void operator()(messages::OrderEvent &o) {
+    serv.OrderEventCbs.push_back(o.cb);
+  }
 };
 } // namespace bank::server
 

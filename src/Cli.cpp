@@ -5,7 +5,7 @@
 #include <future>
 #include <iostream>
 
-Cli::Cli() : acc("hek", "hh") {
+Cli::Cli() : serv() {
   // banks_ = {
   //     {"Danske Bank", Bank<Stock>("Danske Bank")},
   //     {"Nordea", Bank<Stock>("Danske Bank")},
@@ -65,8 +65,8 @@ void Cli::loop() {
       handleRemoveStopLossRule();
       break;
     case -1:
-      bank::server::Server<Stock>::getInstance().pushMsg(
-          bank::server::messages::Stop());
+      // bank::server::Server<Stock>::getInstance().pushMsg(
+      //     bank::server::messages::Stop());
       run = false;
       break;
     }

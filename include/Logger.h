@@ -41,14 +41,14 @@ public:
                                                  field<T> field, Args... args) {
     std::stringstream ss;
     ss << field.value;
-    msg += std::format(", (field: {} value: {})", field.name, ss.str());
+    msg += std::format(", ({}:{})", field.name, ss.str());
     log(msg, l, args...);
   }
   template <typename T, typename... Args>
   void log(std::string msg, level l, field<T> field, Args... args)
     requires(!streamable<T>::value && std::formattable<T, char>)
   {
-    msg += std::format(", (field: {} value: {})", field.name, field.value);
+    msg += std::format(", ({}:{})", field.name, field.value);
     log(msg, l, args...);
   }
   ~Logger();

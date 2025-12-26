@@ -1,15 +1,6 @@
 
 
 #include "logger.h"
-// template <typename T> class PrintTraits {
-//   static std::string String() { return ""; };
-// };
-//
-// template <> struct PrintTraits<Tx> {
-//   static std::string Header() { return "Transaction:"; };
-//   static std::string Footer() { return "Transaction:"; };
-// };
-//
 class Printer {
 public:
   template <typename T, typename... Args>
