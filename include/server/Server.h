@@ -6,6 +6,7 @@
 #include <boost/signals2/signal.hpp>
 #include <memory>
 #include <random>
+#include <thread>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
 namespace bank::server {
@@ -15,7 +16,11 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server() : msgQueue_(10) {}
+  Server() : msgQueue_(10) {
+    std::thread stockUpdaterThread(
+        [&]() { startSimulatingAssetPriceUpdates(); });
+    std::thread stockOrderThread([&]() { startMessageProccesor(); });
+  }
 
   static Server &getInstance() {
     static Server instance;
@@ -58,6 +63,8 @@ private:
   std::map<std::string, std::pair<T, UpdateSignal>> assets_;
   std::mutex mtx;
   std::atomic<bool> run{true};
+  std::thread simulatorThread;
+  std::thread messageProccessorThread;
 };
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
