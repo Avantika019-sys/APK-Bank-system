@@ -19,60 +19,47 @@ enum class level {
   DEBUG,
   ERROR,
 };
-class logger {
+template <typename T> struct field {
+  field(std::string name, T value) : name(name), value(value) {}
+  std::string name;
+  T value;
+};
+class Logger {
 public:
-  logger(std::string id);
-  template <typename T>
-  std::enable_if<streamable<T>::value>::type log(std::string msg, level l,
-                                                 std::string key, T val) {
-    std::stringstream ss;
-    ss << val;
+  Logger(std::string id);
+  void log(std::string msg, level l) {
     std::string levelStr = levelToString(l);
     auto now = std::chrono::system_clock::now();
-    std::string logMsg =
-        std::format("[{}][{:%Y-%m-%d %H:%M:%S}] msg: {} key: {} val: {}",
-                    levelStr, now, msg, key, ss.str());
-    const char *buffer = logMsg.c_str();
+    std::string finalMsg =
+        std::format("[{}][{:%Y-%m-%d %H:%M:%S}] {}\n", levelStr, now, msg);
+    const char *buffer = finalMsg.c_str();
     fputs(buffer, fptrLogs_);
     fflush(fptrLogs_);
   }
-
-  template <typename T>
-  void log(std::string msg, level l, std::string key, T val)
+  template <typename T, typename... Args>
+  std::enable_if<streamable<T>::value>::type log(std::string msg, level l,
+                                                 field<T> field, Args... args) {
+    std::stringstream ss;
+    ss << field.value;
+    msg += std::format(", (field: {} value: {})", field.name, ss.str());
+    log(msg, l, args...);
+  }
+  template <typename T, typename... Args>
+  void log(std::string msg, level l, field<T> field, Args... args)
     requires(!streamable<T>::value && std::formattable<T, char>)
   {
-
-    std::string levelStr = levelToString(l);
-    auto timeNow = std::time(nullptr);
-    auto timeNowStr = std::string(std::ctime(&timeNow));
-    std::string logMsg = std::format("[{}][{}] msg: {} key: {} val: {}",
-                                     levelStr, timeNowStr, msg, key, val);
-    const char *buffer = logMsg.c_str();
-    fputs(buffer, fptrLogs_);
-    fflush(fptrLogs_);
+    msg += std::format(", (field: {} value: {})", field.name, field.value);
+    log(msg, l, args...);
   }
-  void log(std::string msg, level l) {
-
-    std::string levelStr = levelToString(l);
-    auto timeNow = std::time(nullptr);
-    auto timeNowStr = std::string(std::ctime(&timeNow));
-    std::string logMsg =
-        std::format("[{}][{}] msg: {}", levelStr, timeNowStr, msg);
-    const char *buffer = logMsg.c_str();
-    fputs(buffer, fptrLogs_);
-    fflush(fptrLogs_);
-  }
-  ~logger();
-  logger(logger &&other) noexcept;
-  logger &operator=(logger &&other) noexcept;
+  ~Logger();
+  Logger(Logger &&other) noexcept;
+  Logger &operator=(Logger &&other) noexcept;
 
 private:
-  logger(const logger &other);
-  logger &operator=(const logger &other);
+  Logger(const Logger &other);
+  Logger &operator=(const Logger &other);
   std::string levelToString(level l);
   FILE *fptrLogs_;
 };
 
 #endif // BANK_LOGGER_H
-// std::pmr::vector<string> entries;
-// std::pmr::memory_resource* memRes = std::pmr::get_default_resource();

@@ -26,7 +26,7 @@ public:
 protected:
   std::pmr::vector<Tx> txs_{&pool_};
   std::pmr::monotonic_buffer_resource pool_;
-  logger logger_;
+  Logger logger_;
 
 private:
   std::string name_;

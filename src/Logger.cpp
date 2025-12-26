@@ -4,7 +4,7 @@
 #include <format>
 #include <stdexcept>
 #include <string>
-logger::logger(std::string id) {
+Logger::Logger(std::string id) {
   const std::string fileName = id + ".txt";
   fptrLogs_ = std::fopen(fileName.c_str(), "w");
   if (fptrLogs_ == NULL) {
@@ -12,15 +12,15 @@ logger::logger(std::string id) {
   }
 }
 
-logger::~logger() {
+Logger::~Logger() {
   if (fptrLogs_ != nullptr) {
     std::fclose(fptrLogs_);
   }
 }
-logger::logger(logger &&other) noexcept : fptrLogs_(other.fptrLogs_) {
+Logger::Logger(Logger &&other) noexcept : fptrLogs_(other.fptrLogs_) {
   other.fptrLogs_ = nullptr;
 }
-logger &logger::operator=(logger &&other) noexcept {
+Logger &Logger::operator=(Logger &&other) noexcept {
   if (this == &other) {
     return *this;
   }
@@ -31,7 +31,7 @@ logger &logger::operator=(logger &&other) noexcept {
   other.fptrLogs_ = nullptr;
   return *this;
 }
-std::string logger::levelToString(level l) {
+std::string Logger::levelToString(level l) {
   if (l == level::INFO) {
     return "INFO";
   }

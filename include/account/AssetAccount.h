@@ -195,8 +195,10 @@ private:
           stockSellDetails{stockName, it->second.NoOfStocksOwned, updatedPrice},
           nullptr);
       txs_.push_back(tx);
-      logger_.log("automatically sold stock because of stock loss limit",
-                  level::INFO, "transaction", tx);
+      logger_.log(
+          "automatically sold stock because of stock loss limit", level::INFO,
+          field("transaction", tx),
+          field("stop loss value limit", it->second.stopLossRule.value()));
     }
   }
   std::map<std::string, ownedAsset> portfolio_;
