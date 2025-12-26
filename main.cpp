@@ -22,6 +22,5 @@ int main() {
 
   b1.addUser("Jens Thomasen", "3535134365");
   b1.addUser("Simon Jensen", "1235638135", stockServ, cryptoServ);
-
-  auto UserJens = b1.getUserByCpr("1235638135");
+  b2.addUser("Simon Jensen", "1235638135", cryptoServ);
 }
