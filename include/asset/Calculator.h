@@ -3,7 +3,7 @@
 #include <vector>
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
-template <typename T> auto calculateTrendForIndividualAsset(T asset) {
+template <typename T> auto calculateTrendForIndividualAsset(const T &asset) {
   typedef typename AssetTraits<T>::AccT AccT;
   auto &vec = asset.priceOverTime;
   AccT sumX = 0;
@@ -29,12 +29,14 @@ struct parallel {};
 struct sequential {};
 template <typename T>
 auto CalculatePortfolioTrend(std::vector<T> assets, parallel) {
-  std::vector<std::future<double>> futures;
-  for (auto asset : assets) {
-    futures.push_back(std::async(std::launch::async,
-                                 calculateTrendForIndividualAsset, asset));
+  using resType = decltype(calculateTrendForIndividualAsset<T>(assets[0]));
+  std::vector<std::future<resType>> futures;
+  for (auto &asset : assets) {
+    futures.push_back(std::async(std::launch::async, [asset]() {
+      return calculateTrendForIndividualAsset<T>(asset);
+    }));
   }
-  double total = 0;
+  resType total = 0;
   for (auto &f : futures) {
     total += f.get();
   }
@@ -42,9 +44,10 @@ auto CalculatePortfolioTrend(std::vector<T> assets, parallel) {
 }
 template <typename T>
 auto CalculatePortfolioTrend(std::vector<T> assets, sequential) {
-  double total = 0;
-  for (auto asset : assets) {
-    total += calculateTrendForIndividualAsset(asset);
+  using resType = decltype(calculateTrendForIndividualAsset<T>(assets[0]));
+  resType total = 0;
+  for (auto &asset : assets) {
+    total += calculateTrendForIndividualAsset<T>(asset);
   }
   return total / assets.size();
 }
