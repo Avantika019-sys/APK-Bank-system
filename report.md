@@ -8,10 +8,10 @@
 ## SWAPK
 
 # Introduction
-We have chosen to do a Portfolio system for our SWAPK 
+We have chosen to do a Portfolio system for our SWAPK. 
 
 # System description
-The banking system has four main features where each feature have set of requirements that needs to be fullfiled. 
+The banking system has three main features where each feature have set of requirements that needs to be fullfiled. 
 
 #### Features
 
@@ -19,19 +19,18 @@ Feature 1: Account management
 This feature allows users to create accounts and also manage their account. 
 
 Feature 2: Payment and transfer 
-This feature enables user to deposit, withdraw and track transaction in their accounts. It also allows the user to view their transaction history and acoount balance. 
+This feature enables user to deposit, withdraw and track transaction in their accounts. It also allows the user to view their transaction history and account balance. 
 
 Feature 3: Investment management
-This allows the user to manage their invesments, includign buying and selling stocks. 
-
-Feature 4: Currency exchange 
-This lets the user exchange between currency. 
+This allows the user to manage their invesments, including buying and selling stocks.  
 
 #### Requirements
 
-- F1.1: The system shall allow users to create an account. 
+- F1.1: The system shall allow users to create an account
 
-- F1.2: The system shall support to link one or more bank accounts 
+- F1.2: The system shall allow users to have more than one account
+
+- F1.3: The system shall support switching to another bank
 
 - F2.1: The system shall have deposit funds into their account
 
@@ -39,26 +38,24 @@ This lets the user exchange between currency.
 
 - F2.3: The system shall allow users to check the transaction history 
 
-- F2.4: The system shall allow users to check their current balance. 
+- F2.4: The system shall allow users to check their current balance
 
 - F3.1: The system shall allow users to buy stocks
 
 - F3.2: The system shall allow users to sell stocks
 
-- F4.1: The system shall allow users to exchange from one currency to another. 
-
-
 # Architecture
-This is an overall class diagram which represents the main funtional components for the banking system and their relationships without showing the utility and helper classes such as logging and exception handling. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
+This is an overall class diagram which represents the main functional components for the portfolio system and their relationships without showing the helper class such as logger. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
 
 ```puml
 @startuml
-BankSystem *-- Account
-BankSystem *-- CurrencyExchange
-BankSystem *-- Server
+Bank *-- Account
+Bank *-- Server
+
 Account *-- Tx
 @enduml
 ```
+
 # Design
 # Implementation
 # Discussion
