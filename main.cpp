@@ -6,21 +6,12 @@
 
 int main() {
   asset::Server<asset::types::Stock> stockServ;
-  std::thread stockSimThread(
-      [&stockServ]() { stockServ.startSimulatingAssetPriceUpdates(); });
-  std::thread stockMsgThread(
-      [&stockServ]() { stockServ.startMessageProccesor(); });
-
-  asset::Server<asset::types::Crypto> cryptoServ;
-  std::thread cryptoSimThread(
-      [&cryptoServ]() { cryptoServ.startSimulatingAssetPriceUpdates(); });
-  std::thread cryptoMsgThread(
-      [&cryptoServ]() { cryptoServ.startMessageProccesor(); });
   stockServ.addAsset("APPL", asset::types::Stock("Apple"));
   stockServ.addAsset("TSLA", asset::types::Stock("Tesla motor technologies"));
   stockServ.addAsset("MSFT", asset::types::Stock("Microsoft"));
   stockServ.addAsset("NVDA", asset::types::Stock("Nvidia"));
 
+  asset::Server<asset::types::Crypto> cryptoServ;
   cryptoServ.addAsset("BTC", asset::types::Crypto("Bitcoin"));
   cryptoServ.addAsset("ETH", asset::types::Crypto("Etherium"));
   cryptoServ.addAsset("DOGE", asset::types::Crypto("Doge coin"));
@@ -38,9 +29,4 @@ int main() {
     user.cryptoManager->buyAsset("BTC", 10);
     user.cryptoManager->printPortfolio();
   }
-  stockSimThread.join();
-  stockMsgThread.join();
-
-  cryptoSimThread.join();
-  cryptoMsgThread.join();
 }
