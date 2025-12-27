@@ -12,8 +12,8 @@
 #include <iostream>
 #include <map>
 
-#ifndef BANK_ASSETACCOUNT_H
-#define BANK_ASSETACCOUNT_H
+#ifndef BANK_ASSETMANAGER_H
+#define BANK_ASSETMANAGER_H
 namespace asset {
 struct ownedAsset {
   int NoOfStocksOwned;
@@ -25,10 +25,10 @@ public:
   Manager(Server<T> *serv, boost::shared_ptr<bank::Account> acc,
           util::Logger *logger)
       : serv(serv), acc(acc), logger(logger) {}
-  void buyStock(std::string name, int qty) {
+  void buyAsset(std::string name, int qty) {
     messages::InfoRequest<T> i(name);
     auto infoF = i.prom.get_future();
-    serv.pushMsg(Message<T>(std::move(i)));
+    serv->pushMsg(Message<T>(std::move(i)));
 
     infoF.wait();
     auto infoResp = infoF.get();
@@ -47,7 +47,7 @@ public:
 
     messages::OrderRequest<T> o(name, qty, messages::OrderType::BUY);
     auto orderF = o.prom.get_future();
-    serv.pushMsg(Message<T>(std::move(i)));
+    serv->pushMsg(Message<T>(std::move(i)));
 
     orderF.wait();
     auto resp = orderF.get();
@@ -63,7 +63,7 @@ public:
       portfolio_[name].NoOfStocksOwned = qty;
     }
   }
-  void sellStock(std::string name, int qty) {
+  void sellAsset(std::string name, int qty) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(name);
     if (it == portfolio_.end()) {
@@ -104,7 +104,7 @@ public:
     for (auto &[stockName, ownedStock] : portfolio_) {
       messages::InfoRequest<T> i(stockName);
       auto f = i.prom.get_future();
-      serv.pushMsg(Message<T>(std::move(i)));
+      serv->pushMsg(Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
@@ -185,15 +185,15 @@ private:
       }
       acc->addTransaction(stockSellDetails{
           stockName, it->second.NoOfStocksOwned, updatedPrice});
-      logger.log("automatically sold stock because of stock loss limit",
-                 util::level::INFO,
-                 util::field("stop loss value limit",
-                             it->second.stopLossRule.value()));
+      logger->log("automatically sold stock because of stock loss limit",
+                  util::level::INFO,
+                  util::field("stop loss value limit",
+                              it->second.stopLossRule.value()));
     }
   }
   std::map<std::string, ownedAsset> portfolio_;
   std::mutex mtx_;
-  Server<T> &serv;
+  Server<T> *serv;
   boost::shared_ptr<bank::Account> acc;
   util::Logger *logger;
 };

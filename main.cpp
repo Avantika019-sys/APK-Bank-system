@@ -6,21 +6,41 @@
 
 int main() {
   asset::Server<asset::types::Stock> stockServ;
-  asset::Server<asset::types::Crypto> cryptoServ;
   std::thread stockSimThread(
       [&stockServ]() { stockServ.startSimulatingAssetPriceUpdates(); });
-  std::thread cryptoSimThread(
-      [&cryptoServ]() { cryptoServ.startSimulatingAssetPriceUpdates(); });
-
   std::thread stockMsgThread(
       [&stockServ]() { stockServ.startMessageProccesor(); });
+
+  asset::Server<asset::types::Crypto> cryptoServ;
+  std::thread cryptoSimThread(
+      [&cryptoServ]() { cryptoServ.startSimulatingAssetPriceUpdates(); });
   std::thread cryptoMsgThread(
       [&cryptoServ]() { cryptoServ.startMessageProccesor(); });
+  stockServ.addAsset("APPL", asset::types::Stock("Apple"));
+  stockServ.addAsset("TSLA", asset::types::Stock("Tesla motor technologies"));
+  stockServ.addAsset("MSFT", asset::types::Stock("Microsoft"));
+  stockServ.addAsset("NVDA", asset::types::Stock("Nvidia"));
 
-  bank::Bank b1("Nordea");
-  bank::Bank b2("Nykredit");
+  cryptoServ.addAsset("BTC", asset::types::Crypto("Bitcoin"));
+  cryptoServ.addAsset("ETH", asset::types::Crypto("Etherium"));
+  cryptoServ.addAsset("DOGE", asset::types::Crypto("Doge coin"));
+  cryptoServ.addAsset("SOL", asset::types::Crypto("Solana"));
+
+  bank::Bank b1;
+  bank::Bank b2;
 
   b1.addUser("Jens Thomasen", "3535134365");
-  b1.addUser("Simon Jensen", "1235638135", stockServ, cryptoServ);
-  b2.addUser("Simon Jensen", "1235638135", cryptoServ);
+  b1.addUser("Thomas Simonsen", "9235638135", &cryptoServ);
+  b2.addUser("Simon Jensen", "1235638135", &cryptoServ, &stockServ);
+
+  {
+    auto &user = b2.getUserByCpr("1235638135");
+    user.cryptoManager->buyAsset("BTC", 10);
+    user.cryptoManager->printPortfolio();
+  }
+  stockSimThread.join();
+  stockMsgThread.join();
+
+  cryptoSimThread.join();
+  cryptoMsgThread.join();
 }

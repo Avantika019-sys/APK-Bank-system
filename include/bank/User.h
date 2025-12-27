@@ -1,6 +1,6 @@
+#include "asset/Manager.h"
 #include "asset/Server.h"
 #include "bank/Account.h"
-#include "bank/Bank.h"
 #include "util/Logger.h"
 #include <boost/smart_ptr/shared_ptr.hpp>
 #ifndef BANK_USER_H

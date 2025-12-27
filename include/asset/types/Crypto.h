@@ -5,6 +5,7 @@
 #define BANK_CRYPTO_H
 namespace asset::types {
 struct Crypto {
+  Crypto(std::string name) : name(name) {}
   std::string name;
   std::vector<int> priceOverTime;
 };

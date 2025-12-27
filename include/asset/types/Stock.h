@@ -5,6 +5,7 @@
 #define BANK_STOCK_H
 namespace asset::types {
 struct Stock {
+  Stock(std::string name) : name(name) {}
   std::string name;
   std::vector<int> priceOverTime;
 };

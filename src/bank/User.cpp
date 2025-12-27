@@ -24,5 +24,5 @@ User::User(std::string name, std::string cpr,
 User::User(std::string name, std::string cpr,
            asset::Server<asset::types::Stock> *stockServ)
     : User(name, cpr, nullptr, stockServ) {}
-std::string User::getCpr() { return cpr_; }
+std::string User::getCpr() const { return cpr_; }
 } // namespace bank

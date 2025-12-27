@@ -10,7 +10,6 @@
 namespace bank {
 class Bank {
 public:
-  Bank(std::string name) : name_(name) {}
   // Bank(const Bank &other) = delete;
   // Bank &operator=(const Bank &other) = delete;
   template <typename T>

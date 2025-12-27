@@ -1,7 +1,7 @@
-#ifndef BANK_TXDETAILS_H
-#define BANK_TXDETAILS_H
 #include <string>
 #include <variant>
+#ifndef BANK_TXDETAILS_H
+#define BANK_TXDETAILS_H
 struct stockPurchaseDetails {
   std::string stockName_;
   int stocksBought_;

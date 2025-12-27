@@ -1,5 +1,3 @@
-#ifndef BANK_MSGQUEUE_H
-#define BANK_MSGQUEUE_H
 #include "messages/Info.h"
 #include "messages/Order.h"
 #include "messages/OrderEvent.h"
@@ -10,6 +8,8 @@
 #include <queue>
 #include <variant>
 
+#ifndef BANK_MESSAGEQUEUE_H
+#define BANK_MESSAGEQUEUE_H
 namespace asset {
 template <typename T>
 using Message =
@@ -48,4 +48,4 @@ private:
   std::condition_variable cv_not_full;
 };
 } // namespace asset
-#endif // BANK_MSGQUEUE_H
+#endif // BANK_MESSAGEQUEUE_H

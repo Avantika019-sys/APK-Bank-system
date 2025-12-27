@@ -25,16 +25,16 @@ void Account::deposit(int amount) {
   // add some logs/statistics
   Tx tx(depositDetails{amount}, &pool_);
   txs_.push_back(tx);
-  logger_.log("successfully made deposit", util::level::INFO,
-              util::field("transaction", tx));
+  logger_->log("successfully made deposit", util::level::INFO,
+               util::field("transaction", tx));
 }
 
 void Account::withdraw(int amount) {
   int curBalance = getBalance();
   if (curBalance < amount) {
-    logger_.log("failed to withdraw because insufficient funds",
-                util::level::ERROR, util::field("withdraw amount", amount),
-                util::field("current balance", curBalance));
+    logger_->log("failed to withdraw because insufficient funds",
+                 util::level::ERROR, util::field("withdraw amount", amount),
+                 util::field("current balance", curBalance));
     throw std::invalid_argument("Not enough money on account");
   }
   txs_.emplace_back(withdrawDetails{amount}, &pool_);

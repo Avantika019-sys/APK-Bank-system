@@ -6,6 +6,8 @@
 #include <boost/signals2/signal.hpp>
 #include <random>
 #include <thread>
+#include <tuple>
+#include <utility>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
 namespace asset {
@@ -20,7 +22,9 @@ public:
         simulatorThread([this] { startSimulatingAssetPriceUpdates(); }),
         messageProccessorThread([this] { startMessageProccesor(); }) {}
 
-  void addAsset(std::string name, T asset) { assets_[name] = asset; }
+  void addAsset(std::string symbol, T asset) {
+    assets_.try_emplace(symbol, std::forward_as_tuple(asset, UpdateSignal()));
+  }
   UpdateSignal &getSignal(std::string assetName) {
     return assets_[assetName].second;
   }
@@ -76,8 +80,8 @@ template <typename T> struct MessageVisitor {
   }
   void operator()(messages::InfoRequest<T> &i) {
     // double trend = serv.calculateTrendForStock(i.assetName);
-    int currentPrice = serv.assets_[i.assetName].first.priceOverTime.back();
-    i.prom.set_value(messages::InfoResponse<T>(currentPrice, 1.0));
+    // int currentPrice = serv.assets_[i.assetName].first.priceOverTime.back();
+    i.prom.set_value(messages::InfoResponse<T>(1, 1.0));
   }
   void operator()(messages::PortfolioTrend<T> &p) {
     std::vector<T> assets;

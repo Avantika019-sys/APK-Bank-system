@@ -1,7 +1,7 @@
-#ifndef BANK_PORTFOLIOTREND_H
-#define BANK_PORTFOLIOTREND_H
 #include <future>
 #include <set>
+#ifndef BANK_PORTFOLIOTREND_H
+#define BANK_PORTFOLIOTREND_H
 namespace asset::messages {
 template <typename T> struct PortfolioTrend {
   PortfolioTrend(std::set<std::string> ownedStocks) : ownedAsset(ownedStocks) {}

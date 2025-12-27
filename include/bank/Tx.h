@@ -1,5 +1,3 @@
-#ifndef BANK_TRANSACTION_H
-#define BANK_TRANSACTION_H
 #include "TxDetails.h"
 #include <chrono>
 #include <iostream>
@@ -7,8 +5,10 @@
 #include <string>
 #include <vector>
 
+#ifndef BANK_TX_H
+#define BANK_TX_H
 using namespace std;
-
+namespace bank {
 class Tx {
 
 public:
@@ -27,7 +27,6 @@ private:
 };
 std::ostream &operator<<(std::ostream &os, const Tx &t);
 // std::ostream &operator<<(std::ostream &os, const stockTx &t);
-#endif // BANK_TRANSACTION_H
 // using TransactionData =
 //     std::variant<DepositTransaction, WithdrawalTransaction,
 //     TransferTransaction,
@@ -58,3 +57,5 @@ std::ostream &operator<<(std::ostream &os, const Tx &t);
 //     return std::get_if<T>(&data_);
 //   }
 // };
+} // namespace bank
+#endif // BANK_TX_H
