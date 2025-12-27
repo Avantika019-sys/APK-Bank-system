@@ -3,30 +3,43 @@
 #include "asset/types/Crypto.h"
 #include "bank/Bank.h"
 #include "bank/User.h"
+#include <stdexcept>
 
 int main() {
-  asset::Server<asset::types::Stock> stockServ;
-  stockServ.addAsset("APPL", asset::types::Stock("Apple"));
-  stockServ.addAsset("TSLA", asset::types::Stock("Tesla motor technologies"));
-  stockServ.addAsset("MSFT", asset::types::Stock("Microsoft"));
-  stockServ.addAsset("NVDA", asset::types::Stock("Nvidia"));
+  asset::Server<asset::types::Stock> stockServ(10);
+  stockServ.addAsset("APPL", asset::types::Stock("Apple", 1231));
+  stockServ.addAsset("TSLA",
+                     asset::types::Stock("Tesla motor technologies", 2322));
+  stockServ.addAsset("MSFT", asset::types::Stock("Microsoft", 2342));
+  stockServ.addAsset("NVDA", asset::types::Stock("Nvidia", 234234));
 
-  asset::Server<asset::types::Crypto> cryptoServ;
-  cryptoServ.addAsset("BTC", asset::types::Crypto("Bitcoin"));
-  cryptoServ.addAsset("ETH", asset::types::Crypto("Etherium"));
-  cryptoServ.addAsset("DOGE", asset::types::Crypto("Doge coin"));
-  cryptoServ.addAsset("SOL", asset::types::Crypto("Solana"));
+  asset::Server<asset::types::Crypto> cryptoServ(10);
+  cryptoServ.addAsset("BTC", asset::types::Crypto("Bitcoin", 32423));
+  cryptoServ.addAsset("ETH", asset::types::Crypto("Etherium", 32423));
+  cryptoServ.addAsset("DOGE", asset::types::Crypto("Doge coin", 324));
+  cryptoServ.addAsset("SOL", asset::types::Crypto("Solana", 23423));
 
   bank::Bank b1;
   bank::Bank b2;
 
   b1.addUser("Jens Thomasen", "3535134365");
   b1.addUser("Thomas Simonsen", "9235638135", &cryptoServ);
+  b2.addUser("Magnus", "8139638135", &stockServ);
   b2.addUser("Simon Jensen", "1235638135", &cryptoServ, &stockServ);
 
   {
     auto &user = b2.getUserByCpr("1235638135");
-    user.cryptoManager->buyAsset("BTC", 10);
+    user.account->deposit(9310);
+    try {
+      user.cryptoManager->buyAsset("BTC", 10);
+      user.stockManager->buyAsset("APPL", 5);
+
+      user.stockManager->sellAsset("APPL", 3);
+    } catch (std::invalid_argument e) {
+      std::cout << "Failed to buy assets:" << e.what() << std::endl;
+    }
+    user.account->getBalance();
     user.cryptoManager->printPortfolio();
+    user.stockManager->printPortfolio();
   }
 }

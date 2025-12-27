@@ -2,12 +2,12 @@
 #include <variant>
 #ifndef BANK_TXDETAILS_H
 #define BANK_TXDETAILS_H
-struct stockPurchaseDetails {
+struct assetPurchaseDetails {
   std::string stockName_;
   int stocksBought_;
   int pricePerStock_;
 };
-struct stockSellDetails {
+struct assetSellDetails {
   std::string stockName_;
   int stocksSold_;
   int pricePerStock_;
@@ -18,7 +18,7 @@ struct withdrawDetails {
 struct depositDetails {
   int amountDepositted_;
 };
-typedef std::variant<stockPurchaseDetails, stockSellDetails, withdrawDetails,
+typedef std::variant<assetPurchaseDetails, assetSellDetails, withdrawDetails,
                      depositDetails>
     details;
 ;

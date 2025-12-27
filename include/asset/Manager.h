@@ -56,7 +56,7 @@ public:
           "server failed to process purchase please try later");
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    acc->addTransaction(stockPurchaseDetails{name, qty, infoResp.currentPrice});
+    acc->addTransaction(assetPurchaseDetails{name, qty, infoResp.currentPrice});
     if (portfolio_.contains(name)) {
       portfolio_[name].NoOfStocksOwned += qty;
     } else {
@@ -96,7 +96,7 @@ public:
     orderFut.wait();
     if (orderFut.get().isSucceded) {
       acc->addTransaction(
-          details(stockSellDetails{name, qty, infoResp.currentPrice}));
+          details(assetSellDetails{name, qty, infoResp.currentPrice}));
     }
   }
   void printPortfolio() {
@@ -183,7 +183,7 @@ private:
       if (!orderFut.get().isSucceded) {
         throw std::invalid_argument("server failed to process sale");
       }
-      acc->addTransaction(stockSellDetails{
+      acc->addTransaction(assetSellDetails{
           stockName, it->second.NoOfStocksOwned, updatedPrice});
       logger->log("automatically sold stock because of stock loss limit",
                   util::level::INFO,

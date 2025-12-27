@@ -4,6 +4,7 @@
 #include "types/Crypto.h"
 #include "types/Stock.h"
 #include <boost/signals2/signal.hpp>
+#include <memory>
 #include <random>
 #include <thread>
 #include <tuple>
@@ -17,16 +18,22 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server()
-      : msgQueue_(10),
-        simulatorThread([this] { startSimulatingAssetPriceUpdates(); }),
-        messageProccessorThread([this] { startMessageProccesor(); }) {}
+  Server(int msgQueueSize) : msgQueue_(msgQueueSize) {
+
+    simulatorThread =
+        std::thread([this]() { startSimulatingAssetPriceUpdates(); });
+    messageProccessorThread =
+        std::thread([this]() { startMessageProccesor(); });
+  }
 
   void addAsset(std::string symbol, T asset) {
-    assets_.try_emplace(symbol, std::forward_as_tuple(asset, UpdateSignal()));
+    std::lock_guard<std::mutex> lock(mtx);
+    assets_.emplace(
+        std::piecewise_construct, std::forward_as_tuple(symbol),
+        std::forward_as_tuple(asset, std::make_shared<UpdateSignal>()));
   }
   UpdateSignal &getSignal(std::string assetName) {
-    return assets_[assetName].second;
+    return *(assets_.at(assetName).second);
   }
   void startSimulatingAssetPriceUpdates() {
     std::random_device rd;
@@ -42,7 +49,7 @@ public:
         double newPrice =
             asset.first.priceOverTime.back() * (1 + percentChange);
         asset.first.priceOverTime.push_back(newPrice);
-        asset.second(assetName, newPrice);
+        (*asset.second)(assetName, newPrice);
       }
     }
   }
@@ -64,7 +71,7 @@ public:
 private:
   friend struct MessageVisitor<T>;
   MessageQueue<T> msgQueue_;
-  std::map<std::string, std::pair<T, UpdateSignal>> assets_;
+  std::map<std::string, std::pair<T, std::shared_ptr<UpdateSignal>>> assets_;
   std::mutex mtx;
   std::atomic<bool> run{true};
   std::vector<std::function<void(std::string assetName, int qty)>>
@@ -80,13 +87,14 @@ template <typename T> struct MessageVisitor {
   }
   void operator()(messages::InfoRequest<T> &i) {
     // double trend = serv.calculateTrendForStock(i.assetName);
-    // int currentPrice = serv.assets_[i.assetName].first.priceOverTime.back();
+    // int currentPrice =
+    // serv.assets_[i.assetName].first.priceOverTime.back();
     i.prom.set_value(messages::InfoResponse<T>(1, 1.0));
   }
   void operator()(messages::PortfolioTrend<T> &p) {
     std::vector<T> assets;
     for (auto assetName : p.ownedAsset) {
-      assets.push_back(serv.assets_[assetName].first);
+      assets.push_back(serv.assets_.at(assetName).first);
     }
     typedef typename Traits<T>::AccT AccT;
     AccT trend;

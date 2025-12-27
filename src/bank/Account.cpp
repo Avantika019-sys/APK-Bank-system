@@ -48,10 +48,10 @@ void Account::printTransactionHistory() const {
 
 int Account::getBalance() const {
   struct getAmount {
-    int operator()(const stockSellDetails &arg) {
+    int operator()(const assetSellDetails &arg) {
       return arg.pricePerStock_ * arg.stocksSold_;
     }
-    int operator()(const stockPurchaseDetails &arg) {
+    int operator()(const assetPurchaseDetails &arg) {
       return -(arg.pricePerStock_ * arg.stocksBought_);
     }
     int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }

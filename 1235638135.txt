@@ -1,0 +1,5 @@
+[INFO][2025-12-27 21:18:56.591737163] successfully made deposit, (transaction:Transaction created at: 2025-12-27 21:18:56.591634834transaction type: stock purchase
+Price per stock: 0
+Amount of stocks bought: 0
+Stock name: 
+)
