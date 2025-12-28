@@ -120,7 +120,7 @@ public:
 
   void addStopLossRule(std::string name, int limit) {
 
-    auto handler = std::bind(&Manager<T>::onStockUpdate, this,
+    auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
     portfolio_[name].conn = serv->getSignal(name).connect(handler);
   }
@@ -137,7 +137,7 @@ public:
       }
     }
     portfolio_ = std::move(other.portfolio_);
-    auto handler = std::bind(&Manager<T>::onStockUpdate, this,
+    auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
     for (auto &[name, asset] : portfolio_) {
       if (asset.stopLossRule.has_value()) {
@@ -153,7 +153,7 @@ public:
         }
       }
       portfolio_ = std::move(other.portfolio_);
-      auto handler = std::bind(&Manager<T>::onStockUpdate, this,
+      auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
                                std::placeholders::_1, std::placeholders::_2);
       for (auto &[name, asset] : portfolio_) {
         if (asset.stopLossRule.has_value()) {
@@ -165,7 +165,7 @@ public:
   }
 
 private:
-  void onStockUpdate(std::string stockName, int updatedPrice) {
+  void onAssetUpdate(std::string stockName, int updatedPrice) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(stockName);
     if (it == portfolio_.end()) {
