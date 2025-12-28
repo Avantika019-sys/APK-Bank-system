@@ -22,8 +22,8 @@ Account &Account::operator=(Account &&other) noexcept {
 }
 
 void Account::deposit(int amount) {
-  // add some logs/statistics
-  Tx tx(depositDetails{amount}, &pool_);
+  details d = depositDetails{amount};
+  Tx tx(d, &pool_);
   txs_.push_back(tx);
   logger_->log("successfully made deposit", util::level::INFO,
                util::field("transaction", tx));
@@ -38,7 +38,6 @@ void Account::withdraw(int amount) {
     throw std::invalid_argument("Not enough money on account");
   }
   txs_.emplace_back(withdrawDetails{amount}, &pool_);
-  // add some logs/statistics
 }
 
 void Account::printTransactionHistory() const {
@@ -49,10 +48,10 @@ void Account::printTransactionHistory() const {
 int Account::getBalance() const {
   struct getAmount {
     int operator()(const assetSellDetails &arg) {
-      return arg.pricePerStock_ * arg.stocksSold_;
+      return arg.pricePerAsset_ * arg.assetsSold_;
     }
     int operator()(const assetPurchaseDetails &arg) {
-      return -(arg.pricePerStock_ * arg.stocksBought_);
+      return -(arg.pricePerAsset_ * arg.assetsBought_);
     }
     int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }
     int operator()(const depositDetails &arg) { return arg.amountDepositted_; }

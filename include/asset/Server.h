@@ -1,6 +1,7 @@
 #include "Calculator.h"
 #include "MessageQueue.h"
 #include "Traits.h"
+#include "asset/messages/Stop.h"
 #include "types/Crypto.h"
 #include "types/Stock.h"
 #include <boost/signals2/signal.hpp>
@@ -40,16 +41,16 @@ public:
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(-0.005, 0.005);
 
-    while (run && !assets_.empty()) {
+    while (run) {
       std::this_thread::sleep_for(
           std::chrono::seconds(Traits<T>::updateRate()));
       std::lock_guard<std::mutex> lock(mtx);
-      for (auto &[assetName, asset] : assets_) {
+      for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
         double newPrice =
             asset.first.priceOverTime.back() * (1 + percentChange);
         asset.first.priceOverTime.push_back(newPrice);
-        (*asset.second)(assetName, newPrice);
+        (*asset.second)(symbol, newPrice);
       }
     }
   }
@@ -62,6 +63,7 @@ public:
   }
   void pushMsg(Message<T> &&msg) { msgQueue_.push(std::move(msg)); }
   ~Server() {
+    pushMsg(messages::Stop());
     if (simulatorThread.joinable())
       simulatorThread.join();
     if (messageProccessorThread.joinable())
@@ -86,10 +88,10 @@ template <typename T> struct MessageVisitor {
     o.prom.set_value(resp);
   }
   void operator()(messages::InfoRequest<T> &i) {
-    // double trend = serv.calculateTrendForStock(i.assetName);
-    // int currentPrice =
-    // serv.assets_[i.assetName].first.priceOverTime.back();
-    i.prom.set_value(messages::InfoResponse<T>(1, 1.0));
+    auto asset = serv.assets_.at(i.assetName).first;
+    auto trend = calculateTrendForIndividualAsset<T>(asset);
+    int price = serv.assets_[i.assetName].first.priceOverTime.back();
+    i.prom.set_value(messages::InfoResponse<T>(price, trend));
   }
   void operator()(messages::PortfolioTrend<T> &p) {
     std::vector<T> assets;

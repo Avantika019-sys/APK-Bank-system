@@ -5,6 +5,7 @@
 #define BANK_CRYPTO_H
 namespace asset::types {
 struct Crypto {
+  Crypto() = default;
   Crypto(std::string name, double initPrice) : name(name) {
     priceOverTime.push_back(initPrice);
   }

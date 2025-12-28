@@ -36,11 +36,9 @@ public:
     }
     return *it;
   }
-  std::string getBankName() const { return name_; }
 
 private:
   std::vector<User> users_;
-  std::string name_;
 };
 } // namespace bank
 #endif // BANK_BANK_H

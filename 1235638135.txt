@@ -1,5 +1,15 @@
-[INFO][2025-12-27 21:18:56.591737163] successfully made deposit, (transaction:Transaction created at: 2025-12-27 21:18:56.591634834transaction type: stock purchase
-Price per stock: 0
-Amount of stocks bought: 0
+[INFO][2025-12-28 17:41:49.957798060] successfully made deposit, (transaction:Transaction created at: 2025-12-28 17:41:49.957696512 transaction type: asset sale
+Price per asset: 0
+Amount of stocks sold: 0
+Stock name: 
+)
+[INFO][2025-12-28 17:41:49.957911966] successfully made deposit, (transaction:Transaction created at: 2025-12-28 17:41:49.957868442 transaction type: asset sale
+Price per asset: 0
+Amount of stocks sold: 0
+Stock name: 
+)
+[INFO][2025-12-28 17:41:49.957996312] successfully made deposit, (transaction:Transaction created at: 2025-12-28 17:41:49.957956143 transaction type: asset sale
+Price per asset: 0
+Amount of stocks sold: 0
 Stock name: 
 )

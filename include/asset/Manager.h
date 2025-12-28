@@ -33,7 +33,8 @@ public:
     infoF.wait();
     auto infoResp = infoF.get();
     int totalPrice = infoResp.currentPrice * qty;
-    if (acc->getBalance() < totalPrice) {
+    auto balance = acc->getBalance();
+    if (balance < totalPrice) {
       throw std::invalid_argument("you dont have enough money to buy stock");
     }
     std::cout << "Total price: " << totalPrice
@@ -75,7 +76,7 @@ public:
     }
     messages::InfoRequest<T> i(name);
     auto f = i.prom.get_future();
-    serv.pushMsg(Message(std::move(i)));
+    serv->pushMsg(Message<T>(std::move(i)));
 
     f.wait();
     auto infoResp = f.get();
@@ -91,7 +92,7 @@ public:
     }
     messages::OrderRequest<T> o(name, qty, messages::OrderType::SELL);
     auto orderFut = o.prom.get_future();
-    serv.pushMsg(Message(std::move(o)));
+    serv->pushMsg(Message<T>(std::move(o)));
 
     orderFut.wait();
     if (orderFut.get().isSucceded) {
@@ -121,7 +122,7 @@ public:
 
     auto handler = std::bind(&Manager<T>::onStockUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
-    portfolio_[name].conn = serv.getSignal(name).connect(handler);
+    portfolio_[name].conn = serv->getSignal(name).connect(handler);
   }
   void removeStopLossRule(std::string name, int limit) {
     portfolio_[name].conn.disconnect();
@@ -177,7 +178,7 @@ private:
       messages::OrderRequest<T> o(stockName, it->second.NoOfStocksOwned,
                                   messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
-      serv.pushMsg(Message<T>(std::move(o)));
+      serv->pushMsg(Message<T>(std::move(o)));
 
       orderFut.wait();
       if (!orderFut.get().isSucceded) {

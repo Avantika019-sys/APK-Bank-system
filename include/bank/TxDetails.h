@@ -3,23 +3,24 @@
 #ifndef BANK_TXDETAILS_H
 #define BANK_TXDETAILS_H
 struct assetPurchaseDetails {
-  std::string stockName_;
-  int stocksBought_;
-  int pricePerStock_;
+  std::string assetName_;
+  int assetsBought_;
+  int pricePerAsset_;
 };
 struct assetSellDetails {
-  std::string stockName_;
-  int stocksSold_;
-  int pricePerStock_;
+  std::string assetName_;
+  int assetsSold_;
+  int pricePerAsset_;
 };
 struct withdrawDetails {
   int amountWithdrawn_;
 };
 struct depositDetails {
+  depositDetails(int amnt) : amountDepositted_(amnt) {}
   int amountDepositted_;
 };
-typedef std::variant<assetPurchaseDetails, assetSellDetails, withdrawDetails,
-                     depositDetails>
+typedef std::variant<assetSellDetails, withdrawDetails, depositDetails,
+                     assetPurchaseDetails>
     details;
 ;
 

@@ -4,20 +4,33 @@
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
 namespace asset {
-template <typename T> auto calculateTrendForIndividualAsset(const T &asset) {
+template <typename T> auto calculateTrendForIndividualAsset(const T asset) {
   typedef typename Traits<T>::AccT AccT;
   auto &vec = asset.priceOverTime;
+  if (vec.size() == 1) {
+    return AccT(0);
+  }
   AccT sumX = 0;
   AccT sumY = 0;
   AccT sumXY = 0;
   AccT sumX2 = 0;
-  for (int i = vec.size() - 1; i > vec.size() - Traits<T>::LookBackPeriod();
-       i--) {
-    int price = vec[i];
-    sumX += i;
-    sumY += price;
-    sumXY += (i * price);
-    sumX2 += (i * i);
+  if (Traits<T>::LookBackPeriod() > vec.size()) {
+    for (int i = 0; i < vec.size(); i++) {
+      int price = vec[i];
+      sumX += i;
+      sumY += price;
+      sumXY += (i * price);
+      sumX2 += (i * i);
+    }
+  } else {
+    for (int i = vec.size() - 1; i > vec.size() - Traits<T>::LookBackPeriod();
+         i--) {
+      int price = vec[i];
+      sumX += i;
+      sumY += price;
+      sumXY += (i * price);
+      sumX2 += (i * i);
+    }
   }
   AccT numerator = (vec.size() * sumXY) - (sumX * sumY);
   AccT denominator = (vec.size() * sumX2) - (sumX * sumX);
