@@ -26,7 +26,7 @@ public:
           util::Logger *logger)
       : serv(serv), acc(acc), logger(logger) {}
   void buyAsset(std::string name, int qty) {
-    messages::InfoRequest<T> i(name);
+    messages::InfoRequest<T> i{name};
     auto infoF = i.prom.get_future();
     serv->pushMsg(Message<T>(std::move(i)));
 
@@ -46,7 +46,7 @@ public:
       return;
     }
 
-    messages::OrderRequest<T> o(name, qty, messages::OrderType::BUY);
+    messages::OrderRequest<T> o{name, qty, messages::OrderType::BUY};
     auto orderF = o.prom.get_future();
     serv->pushMsg(Message<T>(std::move(i)));
 
@@ -74,7 +74,7 @@ public:
       throw std::invalid_argument(
           "you do not own enough of this stock too sell that amount");
     }
-    messages::InfoRequest<T> i(name);
+    messages::InfoRequest<T> i{name};
     auto f = i.prom.get_future();
     serv->pushMsg(Message<T>(std::move(i)));
 
@@ -90,7 +90,7 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    messages::OrderRequest<T> o(name, qty, messages::OrderType::SELL);
+    messages::OrderRequest<T> o{name, qty, messages::OrderType::SELL};
     auto orderFut = o.prom.get_future();
     serv->pushMsg(Message<T>(std::move(o)));
 

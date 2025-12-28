@@ -24,8 +24,6 @@ public:
 private:
   std::string cpr_;
   util::Logger logger;
-  asset::Server<asset::types::Crypto> *cryptoServ;
-  asset::Server<asset::types::Stock> *stockServ;
   std::string name_;
 };
 } // namespace bank

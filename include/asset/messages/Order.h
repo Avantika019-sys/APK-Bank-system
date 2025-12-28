@@ -11,8 +11,6 @@ struct OrderResponse {
   bool isSucceded;
 };
 template <typename T> struct OrderRequest {
-  OrderRequest(std::string assetName, int amountOfAsset, OrderType type)
-      : assetName(assetName), amountOfAsset(amountOfAsset), type(type) {}
   std::string assetName;
   int amountOfAsset;
   OrderType type;

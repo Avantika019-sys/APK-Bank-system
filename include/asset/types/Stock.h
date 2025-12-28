@@ -5,12 +5,8 @@
 #define BANK_STOCK_H
 namespace asset::types {
 struct Stock {
-  Stock() = default;
-  Stock(std::string name, double initPrice) : name(name) {
-    priceOverTime.push_back(initPrice);
-  }
   std::string name;
-  std::vector<int> priceOverTime;
+  std::vector<std::pair<double, double>> priceOverTime;
 };
 } // namespace asset::types
 
