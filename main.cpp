@@ -1,5 +1,7 @@
 
 #include "asset/Server.h"
+#include "asset/bots/Crypto.h"
+#include "asset/messages/Info.h"
 #include "asset/types/Crypto.h"
 #include "bank/Bank.h"
 #include "bank/User.h"
@@ -11,13 +13,23 @@ int main() {
   stockServ.addAsset("TSLA", asset::types::Stock{"Tesla technologies", {2322}});
   stockServ.addAsset("MSFT", asset::types::Stock{"Microsoft", {2342}});
   stockServ.addAsset("NVDA", asset::types::Stock{"Nvidia", {234234}});
+  stockServ.pushMsg(asset::messages::OrderEvent<asset::types::Stock>{
+      asset::CalculateDemandStatistics<asset::types::Stock>});
 
   asset::Server<asset::types::Crypto> cryptoServ;
   cryptoServ.addAsset("BTC", asset::types::Crypto{"Bitcoin", {32423}});
   cryptoServ.addAsset("ETH", asset::types::Crypto{"Etherium", {32423}});
   cryptoServ.addAsset("DOGE", asset::types::Crypto{"Doge coin", {324}});
   cryptoServ.addAsset("SOL", asset::types::Crypto{"Solana", {23423}});
-
+  cryptoServ.pushMsg(asset::messages::OrderEvent<asset::types::Crypto>{
+      asset::CalculateDemandStatistics<asset::types::Crypto>});
+  asset::bots::Crypto bot;
+  auto handler = std::bind(&asset::bots::Crypto::OnNewOrder, &bot,
+                           std::placeholders::_1, std::placeholders::_2,
+                           std::placeholders::_3, std::placeholders::_4,
+                           std::placeholders::_5, std::placeholders::_6);
+  cryptoServ.pushMsg(
+      asset::messages::OrderEvent<asset::types::Crypto>{handler});
   bank::Bank b1;
   bank::Bank b2;
 

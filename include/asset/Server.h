@@ -1,7 +1,7 @@
 #include "Calculator.h"
 #include "MessageQueue.h"
-#include "Traits.h"
 #include "asset/messages/Stop.h"
+#include "asset/traits/Server.h"
 #include "types/Crypto.h"
 #include "types/Stock.h"
 #include <boost/signals2/signal.hpp>
@@ -9,17 +9,24 @@
 #include <random>
 #include <thread>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #ifndef BANK_STOCKSERVER_H
 #define BANK_STOCKSERVER_H
 namespace asset {
+template <typename T, typename = void>
+struct hasPriceOverTime : std::false_type {};
+template <typename T>
+struct hasPriceOverTime<T,
+                        std::void_t<decltype(std::declval<T>().priceOverTime)>>
+    : std::true_type {};
 typedef boost::signals2::signal<void(std::string assetName,
                                      double UpdatedPrice)>
     UpdateSignal;
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server() : msgQueue_(Traits<T>::QueueCapacity()) {
+  Server() : msgQueue_(traits::Server<T>::QueueCapacity()) {
 
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
@@ -40,10 +47,10 @@ public:
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(-0.005, 0.005);
-
+    static_assert(hasPriceOverTime<T>::value);
     while (run) {
       std::this_thread::sleep_for(
-          std::chrono::seconds(Traits<T>::updateRate()));
+          std::chrono::seconds(traits::Server<T>::UpdateRate()));
       std::lock_guard<std::mutex> lock(mtx);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
@@ -76,7 +83,9 @@ private:
   std::map<std::string, std::pair<T, std::shared_ptr<UpdateSignal>>> assets_;
   std::mutex mtx;
   std::atomic<bool> run{true};
-  std::vector<std::function<void(std::string assetName, int qty)>>
+  std::vector<std::function<void(
+      std::string assetName, int qty, int totalNoOfAssetForSale,
+      int totalNoOfAssetDemand, double price, bool isBuy)>>
       OrderEventCbs;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
@@ -86,21 +95,24 @@ template <typename T> struct MessageVisitor {
   void operator()(messages::OrderRequest<T> &o) {
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
+    for (auto cb : serv.OrderEventCbs) {
+      cb(o.assetName, o.amountOfAsset, 100, 100, 102, true);
+    }
   }
   void operator()(messages::InfoRequest<T> &i) {
     auto asset = serv.assets_.at(i.assetName).first;
     auto trend = calculateTrendForIndividualAsset<T>(asset);
     int price = serv.assets_[i.assetName].first.priceOverTime.back();
-    i.prom.set_value(messages::InfoResponse<T>(price, trend));
+    i.prom.set_value(messages::InfoResponse<T>{price, trend});
   }
-  void operator()(messages::PortfolioTrend<T> &p) {
+  void operator()(messages::PortfolioTrendRequest<T> &p) {
     std::vector<T> assets;
     for (auto assetName : p.ownedAsset) {
       assets.push_back(serv.assets_.at(assetName).first);
     }
-    typedef typename Traits<T>::AccT AccT;
+    typedef typename traits::Calculator<T>::AccT AccT;
     AccT trend;
-    if (p.ownedAsset.size() * Traits<T>::LookBackPeriod() < 1000) {
+    if (p.ownedAsset.size() * traits::Calculator<T>::LookBackPeriod() < 1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
       trend = CalculatePortfolioTrend(assets, parallel{});
@@ -108,7 +120,7 @@ template <typename T> struct MessageVisitor {
     p.prom.set_value(trend);
   }
   void operator()(messages::Stop &s) { serv.run = false; }
-  void operator()(messages::OrderEvent &o) {
+  void operator()(messages::OrderEvent<T> &o) {
     serv.OrderEventCbs.push_back(o.cb);
   }
 };

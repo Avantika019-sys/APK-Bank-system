@@ -13,18 +13,6 @@ public:
   // Bank(const Bank &other) = delete;
   // Bank &operator=(const Bank &other) = delete;
   // template <typename T>
-  // void switchToThisBank(Bank *fromBank, std::string accId) {
-  //   if (this == fromBank) {
-  //     throw std::invalid_argument("already on this bank");
-  //   }
-  //   auto it = std::find_if(
-  //       fromBank->users_.begin(), fromBank->users_.end(),
-  //       [&](const asset::Manager<T> &acc) { return acc.getId() == accId; });
-  //   if (it != fromBank->users_.end()) {
-  //     users_.push_back(std::move(*it));
-  //     fromBank->users_.erase(it);
-  //   }
-  // }
   template <typename... Args> void addUser(Args &&...args) {
     users_.emplace_back(std::forward<Args>(args)...);
   }
@@ -39,6 +27,7 @@ public:
 
 private:
   std::vector<User> users_;
+  double totalAssetValueOwnedbyUsers;
 };
 } // namespace bank
 #endif // BANK_BANK_H

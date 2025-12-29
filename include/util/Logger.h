@@ -2,6 +2,7 @@
 #ifndef BANK_LOGGER_H
 #define BANK_LOGGER_H
 #include <chrono>
+#include <concepts>
 #include <format>
 #include <sstream>
 #include <stdio.h>
@@ -14,7 +15,10 @@ template <typename T>
 struct streamable<T, std::void_t<decltype(std::declval<std::ostream &>()
                                           << std::declval<T>())>>
     : std::true_type {};
-
+template <typename T>
+concept toStringable = requires(T t) {
+  { t.toString() } -> std::same_as<std::string>;
+};
 enum class level {
   INFO,
   DEBUG,
@@ -47,9 +51,16 @@ public:
   }
   template <typename T, typename... Args>
   void log(std::string msg, level l, field<T> field, Args... args)
-    requires(!streamable<T>::value && std::formattable<T, char>)
+    requires std::formattable<T, char>
   {
     msg += std::format(", ({}:{})", field.name, field.value);
+    log(msg, l, args...);
+  }
+  template <typename T, typename... Args>
+  void log(std::string msg, level l, field<T> field, Args... args)
+    requires toStringable<T>
+  {
+    msg += std::format(", ({}:{})", field.name, field.value.toString());
     log(msg, l, args...);
   }
   ~Logger();

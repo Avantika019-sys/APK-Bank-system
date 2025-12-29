@@ -11,6 +11,7 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <iostream>
 #include <map>
+#include <unordered_set>
 
 #ifndef BANK_ASSETMANAGER_H
 #define BANK_ASSETMANAGER_H
@@ -100,17 +101,26 @@ public:
           details(assetSellDetails{name, qty, infoResp.currentPrice}));
     }
   }
+  void printPortfolioTrend() {
+    std::unordered_set<T> ownedAssets;
+    for (auto &[assetName, _] : portfolio_) {
+      ownedAssets.insert(assetName);
+    }
+    messages::PortfolioTrendRequest<T> p{ownedAssets};
+    auto f = p.prom.get_future();
+    std::cout << "Portfolio Trend: " << f.get();
+  }
   void printPortfolio() {
     int sum = 0;
-    for (auto &[stockName, ownedStock] : portfolio_) {
-      messages::InfoRequest<T> i(stockName);
+    for (auto &[assetName, ownedStock] : portfolio_) {
+      messages::InfoRequest<T> i{assetName};
       auto f = i.prom.get_future();
       serv->pushMsg(Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
       sum += totalValue;
-      std::cout << "Stock name: " << stockName
+      std::cout << "Stock name: " << assetName
                 << " Amount of stock owned: " << ownedStock.NoOfStocksOwned
                 << " Price per stock: " << infoResp.currentPrice
                 << " Total value: " << totalValue;
@@ -186,7 +196,7 @@ private:
       }
       acc->addTransaction(assetSellDetails{
           stockName, it->second.NoOfStocksOwned, updatedPrice});
-      logger->log("automatically sold stock because of stock loss limit",
+      logger->log("automatically sold asset because of stop loss limit",
                   util::level::INFO,
                   util::field("stop loss value limit",
                               it->second.stopLossRule.value()));

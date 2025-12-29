@@ -14,7 +14,7 @@ namespace asset {
 template <typename T>
 using Message =
     std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
-                 messages::PortfolioTrend<T>, messages::OrderEvent,
+                 messages::PortfolioTrendRequest<T>, messages::OrderEvent<T>,
                  messages::Stop>;
 template <typename T> class MessageQueue {
 public:

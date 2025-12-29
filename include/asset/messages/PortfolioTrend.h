@@ -1,10 +1,11 @@
 #include <future>
 #include <set>
+#include <unordered_set>
 #ifndef BANK_PORTFOLIOTREND_H
 #define BANK_PORTFOLIOTREND_H
 namespace asset::messages {
-template <typename T> struct PortfolioTrend {
-  std::set<std::string> ownedAsset;
+template <typename T> struct PortfolioTrendRequest {
+  std::unordered_set<std::string> ownedAsset;
   std::promise<double> prom;
 };
 } // namespace asset::messages
