@@ -6,13 +6,13 @@
 #include <stdexcept>
 
 int main() {
-  asset::Server<asset::types::Stock> stockServ(10);
+  asset::Server<asset::types::Stock> stockServ;
   stockServ.addAsset("APPL", asset::types::Stock{"Apple", {1231}});
   stockServ.addAsset("TSLA", asset::types::Stock{"Tesla technologies", {2322}});
   stockServ.addAsset("MSFT", asset::types::Stock{"Microsoft", {2342}});
   stockServ.addAsset("NVDA", asset::types::Stock{"Nvidia", {234234}});
 
-  asset::Server<asset::types::Crypto> cryptoServ(10);
+  asset::Server<asset::types::Crypto> cryptoServ;
   cryptoServ.addAsset("BTC", asset::types::Crypto{"Bitcoin", {32423}});
   cryptoServ.addAsset("ETH", asset::types::Crypto{"Etherium", {32423}});
   cryptoServ.addAsset("DOGE", asset::types::Crypto{"Doge coin", {324}});
