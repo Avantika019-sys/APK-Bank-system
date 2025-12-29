@@ -6,7 +6,7 @@
 namespace asset::types {
 struct Stock {
   std::string name;
-  std::vector<std::pair<double, double>> priceOverTime;
+  std::vector<double> priceOverTime;
 };
 } // namespace asset::types
 
