@@ -11,11 +11,13 @@ template <> struct Traits<types::Crypto> {
   typedef long double AccT;
   static int updateRate() { return 1; }
   static int LookBackPeriod() { return 15; }
+  static int QueueCapacity() { return 80; }
 };
 template <> struct Traits<types::Stock> {
   typedef double AccT;
   static int updateRate() { return 5; }
   static int LookBackPeriod() { return 150; }
+  static int QueueCapacity() { return 100; }
 };
 } // namespace asset
 #endif // BANK_ASSETTRAITS_H
