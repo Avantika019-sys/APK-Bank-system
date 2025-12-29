@@ -19,7 +19,7 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server(int msgQueueSize) : msgQueue_(msgQueueSize) {
+  Server() : msgQueue_(Traits<T>::QueueCapacity()) {
 
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
