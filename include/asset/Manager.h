@@ -1,7 +1,6 @@
 #include "MessageQueue.h"
 #include "Server.h"
 #include "bank/Account.h"
-#include "bank/TxDetails.h"
 #include "messages/Info.h"
 #include "messages/Order.h"
 #include "messages/PortfolioTrend.h"
@@ -57,15 +56,15 @@ public:
       throw std::invalid_argument(
           "server failed to process purchase please try later");
     }
+    acc->addTransaction(name, qty, infoResp.currentPrice, totalPrice);
     std::lock_guard<std::mutex> lock(mtx_);
-    acc->addTransaction(assetPurchaseDetails{name, qty, infoResp.currentPrice});
     if (portfolio_.contains(name)) {
       portfolio_[name].NoOfStocksOwned += qty;
     } else {
       portfolio_[name].NoOfStocksOwned = qty;
     }
   }
-  void sellAsset(std::string name, int qty) {
+  void sellAsset(std::string name, double qty) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(name);
     if (it == portfolio_.end()) {
@@ -97,8 +96,7 @@ public:
 
     orderFut.wait();
     if (orderFut.get().isSucceded) {
-      acc->addTransaction(
-          details(assetSellDetails{name, qty, infoResp.currentPrice}));
+      acc->addTransaction(::tx::asset::Sale{name, qty, infoResp.currentPrice});
     }
   }
   void printPortfolioTrend() {
@@ -175,7 +173,7 @@ public:
   }
 
 private:
-  void onAssetUpdate(std::string stockName, int updatedPrice) {
+  void onAssetUpdate(std::string stockName, double updatedPrice) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(stockName);
     if (it == portfolio_.end()) {
@@ -194,8 +192,9 @@ private:
       if (!orderFut.get().isSucceded) {
         throw std::invalid_argument("server failed to process sale");
       }
-      acc->addTransaction(assetSellDetails{
-          stockName, it->second.NoOfStocksOwned, updatedPrice});
+      auto total = it->second.NoOfStocksOwned + updatedPrice;
+      acc->addTransaction(stockName, it->second.NoOfStocksOwned, updatedPrice,
+                          total);
       logger->log("automatically sold asset because of stop loss limit",
                   util::level::INFO,
                   util::field("stop loss value limit",

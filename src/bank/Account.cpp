@@ -1,6 +1,4 @@
 #include "bank/Account.h"
-#include "bank/Tx.h"
-#include "bank/TxDetails.h"
 #include "util/Logger.h"
 #include <algorithm>
 #include <iostream>
@@ -8,8 +6,11 @@
 #include <numeric>
 #include <string>
 #include <sys/types.h>
+#include <type_traits>
+#include <utility>
+#include <variant>
 namespace bank {
-Account::Account(util::Logger *logger) : logger_(logger) {}
+Account::Account(util::Logger *logger) : logger_(logger), pool_() {}
 
 Account::Account(Account &&other) noexcept
     : txs_(std::move(other.txs_)), logger_(std::move(other.logger_)) {}
@@ -21,15 +22,13 @@ Account &Account::operator=(Account &&other) noexcept {
   return *this;
 }
 
-void Account::deposit(int amount) {
-  details d = depositDetails{amount};
-  Tx tx(d, &pool_);
-  txs_.push_back(tx);
+void Account::deposit(double amount) {
+  txs_.emplace_back(tx::Deposit{amount, &pool_});
   logger_->log("successfully made deposit", util::level::INFO,
-               util::field("transaction", tx));
+               util::field("amount", amount));
 }
 
-void Account::withdraw(int amount) {
+void Account::withdraw(double amount) {
   int curBalance = getBalance();
   if (curBalance < amount) {
     logger_->log("failed to withdraw because insufficient funds",
@@ -37,34 +36,34 @@ void Account::withdraw(int amount) {
                  util::field("current balance", curBalance));
     throw std::invalid_argument("Not enough money on account");
   }
-  txs_.emplace_back(withdrawDetails{amount}, &pool_);
+  txs_.emplace_back(tx::Deposit{amount, &pool_});
 }
 
 void Account::printTransactionHistory() const {
-  std::for_each(txs_.begin(), txs_.end(),
-                [](const Tx &tx) { std::cout << tx << std::endl; });
+  std::for_each(txs_.begin(), txs_.end(), [](const txVariant &txV) {
+    std::visit(
+        [](const auto &tx) {
+          // static_assert(util::toStringable<std::decay_t<decltype(tx)>>::value);
+          std::cout << tx.toString() << std::endl;
+        },
+        txV);
+  });
 }
 
+// template <typename T>
+// concept totalField = requires(T t) {
+//   { t.total } -> std::same_as<double>;
+// };
 int Account::getBalance() const {
-  struct getAmount {
-    int operator()(const assetSellDetails &arg) {
-      return arg.pricePerAsset_ * arg.assetsSold_;
-    }
-    int operator()(const assetPurchaseDetails &arg) {
-      return -(arg.pricePerAsset_ * arg.assetsBought_);
-    }
-    int operator()(const withdrawDetails &arg) { return -arg.amountWithdrawn_; }
-    int operator()(const depositDetails &arg) { return arg.amountDepositted_; }
-  };
-  int res =
-      std::accumulate(txs_.begin(), txs_.end(), 0, [](int acc, const Tx &tx) {
-        return std::visit(getAmount{}, tx.getDetails());
-      });
+  int res = std::accumulate(txs_.begin(), txs_.end(), 0,
+                            [](double acc, const txVariant &txV) {
+                              return acc + std::visit(
+                                               [](const auto &tx) {
+                                                 // static_assert(totalField<std::decay_t<decltype(tx)>>);
+                                                 return tx.total;
+                                               },
+                                               txV);
+                            });
   return res;
-}
-
-void Account::addTransaction(details &&txDetail) {
-  std::lock_guard<std::mutex> lock(mtx_);
-  txs_.emplace_back(std::move(txDetail), &pool_);
 }
 } // namespace bank

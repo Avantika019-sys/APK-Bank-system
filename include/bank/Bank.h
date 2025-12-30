@@ -10,9 +10,6 @@
 namespace bank {
 class Bank {
 public:
-  // Bank(const Bank &other) = delete;
-  // Bank &operator=(const Bank &other) = delete;
-  // template <typename T>
   template <typename... Args> void addUser(Args &&...args) {
     users_.emplace_back(std::forward<Args>(args)...);
   }
@@ -27,7 +24,6 @@ public:
 
 private:
   std::vector<User> users_;
-  double totalAssetValueOwnedbyUsers;
 };
 } // namespace bank
 #endif // BANK_BANK_H

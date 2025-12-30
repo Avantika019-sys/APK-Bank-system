@@ -9,7 +9,7 @@ namespace bank {
 class User {
 public:
   User(std::string name, std::string cpr,
-       asset::Server<asset::types::Crypto> *cryptoServ,
+       ::asset::Server<asset::types::Crypto> *cryptoServ,
        asset::Server<asset::types::Stock> *stockServ);
   User(std::string name, std::string cpr);
   User(std::string name, std::string cpr,

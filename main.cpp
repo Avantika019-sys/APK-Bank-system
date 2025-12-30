@@ -44,17 +44,17 @@ int main() {
     user.account->deposit(50000);
     user.account->deposit(50000);
     user.account->printTransactionHistory();
-    // try {
-    //   user.cryptoManager->buyAsset("BTC", 1);
-    //   user.stockManager->buyAsset("APPL", 5);
-    //
-    //   user.cryptoManager->addStopLossRule("BTC", 32000);
-    //   user.stockManager->sellAsset("APPL", 3);
-    // } catch (std::invalid_argument e) {
-    //   std::cout << "Error: " << e.what() << std::endl;
-    // }
-    // user.account->getBalance();
-    // user.cryptoManager->printPortfolio();
-    // user.stockManager->printPortfolio();
+    try {
+      user.cryptoManager->buyAsset("BTC", 1);
+      user.stockManager->buyAsset("APPL", 5);
+
+      user.cryptoManager->addStopLossRule("BTC", 32000);
+      user.stockManager->sellAsset("APPL", 3);
+    } catch (std::invalid_argument e) {
+      std::cout << "Error: " << e.what() << std::endl;
+    }
+    user.account->getBalance();
+    user.cryptoManager->printPortfolio();
+    user.stockManager->printPortfolio();
   }
 }
