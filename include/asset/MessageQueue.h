@@ -1,3 +1,4 @@
+#include "asset/traits/MessageQueue.h"
 #include "messages/Info.h"
 #include "messages/Order.h"
 #include "messages/OrderEvent.h"
@@ -11,11 +12,7 @@
 #ifndef BANK_MESSAGEQUEUE_H
 #define BANK_MESSAGEQUEUE_H
 namespace asset {
-template <typename T>
-using Message =
-    std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
-                 messages::PortfolioTrendRequest<T>, messages::OrderEvent<T>,
-                 messages::Stop>;
+template <typename T> using Message = traits::MessageQueue<T>::Variant;
 template <typename T> class MessageQueue {
 public:
   MessageQueue(unsigned long maxSize) : maxSize(maxSize) {}

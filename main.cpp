@@ -1,6 +1,7 @@
 
 #include "asset/Server.h"
 #include "asset/bots/Crypto.h"
+#include "asset/crypto/Miner.h"
 #include "asset/messages/Info.h"
 #include "asset/types/Crypto.h"
 #include "bank/Bank.h"
@@ -34,7 +35,7 @@ int main() {
       asset::messages::OrderEvent<asset::types::Crypto>{handler});
   bank::Bank b1;
   bank::Bank b2;
-
+  asset::crypto::Miner miner("BTC", &cryptoServ);
   b1.addUser("Jens Thomasen", "3535134365");
   b1.addUser("Thomas Simonsen", "9235638135", &cryptoServ);
   b2.addUser("Magnus Jensen", "8139638135", &stockServ);
