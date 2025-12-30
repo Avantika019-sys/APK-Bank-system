@@ -13,16 +13,15 @@ struct OrderResponse {
 };
 template <typename T> struct OrderRequest {
   std::string assetName;
-  double amountOfAsset;
+  double qty;
   OrderType type;
   std::promise<OrderResponse> prom;
-  std::string toString() {
+  std::string getTypeStr() {
     std::string typeStr = "BUY";
     if (type == OrderType::SELL) {
       typeStr = "SELL";
     }
-    return traits::Print<T>::Header() + ": " + assetName + "\n" +
-           "quantity: " + amountOfAsset + "\n" + "type:" + typeStr;
+    return typeStr;
   }
 };
 } // namespace asset::messages

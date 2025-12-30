@@ -25,7 +25,6 @@ enum class level {
   ERROR,
 };
 template <typename T> struct field {
-  field(std::string name, T value) : name(name), value(value) {}
   std::string name;
   T value;
 };

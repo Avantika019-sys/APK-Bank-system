@@ -99,11 +99,13 @@ template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(messages::OrderRequest<T> &o) {
     serv.logger.log("Received order request", util::level::INFO,
-                    util::field("Order", o));
+                    util::field{"Quantity", o.qty},
+                    util::field{traits::Print<T>::Header(), o.assetName},
+                    util::field{"Type", o.getTypeStr()});
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
     for (auto cb : serv.OrderEventCbs) {
-      cb(o.assetName, o.amountOfAsset, 100, 100, 102, true);
+      cb(o.assetName, o.qty, 100, 100, 102, true);
     }
   }
   void operator()(messages::InfoRequest<T> &i) {
