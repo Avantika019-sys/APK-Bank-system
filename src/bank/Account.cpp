@@ -1,6 +1,8 @@
 #include "bank/Account.h"
 #include "util/Logger.h"
 #include <algorithm>
+#include <format>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <numeric>
@@ -10,7 +12,7 @@
 #include <utility>
 #include <variant>
 namespace bank {
-Account::Account(util::Logger *logger) : logger_(logger), pool_() {}
+Account::Account(util::Logger *logger) : logger_(logger), balance_(0) {}
 
 Account::Account(Account &&other) noexcept
     : txs_(std::move(other.txs_)), logger_(std::move(other.logger_)) {}
@@ -23,47 +25,54 @@ Account &Account::operator=(Account &&other) noexcept {
 }
 
 void Account::deposit(double amount) {
-  txs_.emplace_back(tx::Deposit{amount, &pool_});
+  balance_ = amount;
+  txs_.emplace_back(tx::Deposit{amount});
   logger_->log("successfully made deposit", util::level::INFO,
                util::field("amount", amount));
 }
 
 void Account::withdraw(double amount) {
-  int curBalance = getBalance();
-  if (curBalance < amount) {
+  if (balance_ < amount) {
     logger_->log("failed to withdraw because insufficient funds",
                  util::level::ERROR, util::field("withdraw amount", amount),
-                 util::field("current balance", curBalance));
+                 util::field("current balance", balance_));
     throw std::invalid_argument("Not enough money on account");
   }
-  txs_.emplace_back(tx::Deposit{amount, &pool_});
+  balance_ = -amount;
+  txs_.emplace_back(tx::Deposit{amount});
 }
 
 void Account::printTransactionHistory() const {
+  std::cout << "TRANSACTION HISTORY:" << std::endl;
   std::for_each(txs_.begin(), txs_.end(), [](const txVariant &txV) {
+    std::visit([](const auto &tx) { std::cout << tx.toString() << std::endl; },
+               txV);
+  });
+}
+
+void Account::generateBankStatement() {
+  auto now = std::chrono::system_clock::now();
+  std::string nowStr =
+      std::format("../statements/{:%Y-%m-%d-%H:%M:%S}-BANK-STATEMENT", now);
+  std::ofstream file;
+  file.open(nowStr);
+  std::array<std::byte, 1024> buf;
+  std::pmr::monotonic_buffer_resource mbr{buf.data(), buf.size()};
+
+  std::lock_guard<std::mutex> lock(mtx_);
+  std::for_each(txs_.begin(), txs_.end(), [&](const txVariant &txV) {
     std::visit(
-        [](const auto &tx) {
-          // static_assert(util::toStringable<std::decay_t<decltype(tx)>>::value);
-          std::cout << tx.toString() << std::endl;
+        [&](const auto &tx) {
+          std::pmr::string txStr{tx.toString() + "\n", &mbr};
+          file << txStr;
+          mbr.release();
         },
         txV);
   });
 }
-
-// template <typename T>
-// concept totalField = requires(T t) {
-//   { t.total } -> std::same_as<double>;
-// };
-int Account::getBalance() const {
-  int res = std::accumulate(txs_.begin(), txs_.end(), 0,
-                            [](double acc, const txVariant &txV) {
-                              return acc + std::visit(
-                                               [](const auto &tx) {
-                                                 // static_assert(totalField<std::decay_t<decltype(tx)>>);
-                                                 return tx.total;
-                                               },
-                                               txV);
-                            });
-  return res;
+double Account::getBalance() const { return balance_; }
+void Account::addTransaction(txVariant &&tx) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  txs_.push_back(std::move(tx));
 }
 } // namespace bank

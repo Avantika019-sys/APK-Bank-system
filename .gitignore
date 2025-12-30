@@ -6,4 +6,6 @@ launch.json
 compile_commands.json
 build
 .obsidian
+statements
+logs
 

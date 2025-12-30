@@ -6,7 +6,7 @@
 #include <string>
 namespace util {
 Logger::Logger(std::string id) {
-  const std::string fileName = id + ".txt";
+  const std::string fileName = "../logs/" + id + ".txt";
   fptrLogs_ = std::fopen(fileName.c_str(), "w");
   if (fptrLogs_ == NULL) {
     throw std::invalid_argument("Could not open log file");

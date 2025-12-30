@@ -1,3 +1,0 @@
-[INFO][2025-12-30 13:16:12.126371911] successfully made deposit, (amount:50000)
-[INFO][2025-12-30 13:16:12.561136906] successfully made deposit, (amount:50000)
-[INFO][2025-12-30 13:17:30.778382923] successfully made deposit, (amount:50000)

@@ -1,9 +1,11 @@
 #include "Calculator.h"
 #include "MessageQueue.h"
 #include "asset/messages/Stop.h"
+#include "asset/traits/Print.h"
 #include "asset/traits/Server.h"
 #include "types/Crypto.h"
 #include "types/Stock.h"
+#include "util/Logger.h"
 #include <boost/signals2/signal.hpp>
 #include <memory>
 #include <random>
@@ -26,7 +28,9 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server() : msgQueue_(traits::Server<T>::QueueCapacity()) {
+  Server()
+      : msgQueue_(traits::Server<T>::QueueCapacity()),
+        logger(traits::Print<T>::Header() + "-server") {
 
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
@@ -87,12 +91,15 @@ private:
       std::string assetName, int qty, int totalNoOfAssetForSale,
       int totalNoOfAssetDemand, double price, bool isBuy)>>
       OrderEventCbs;
+  util::Logger logger;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(messages::OrderRequest<T> &o) {
+    serv.logger.log("Received order request", util::level::INFO,
+                    util::field("Order", o));
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
     for (auto cb : serv.OrderEventCbs) {
@@ -100,9 +107,11 @@ template <typename T> struct MessageVisitor {
     }
   }
   void operator()(messages::InfoRequest<T> &i) {
+    serv.logger.log("Received info request", util::level::INFO,
+                    util::field(traits::Print<T>::Header(), i.assetName));
     auto asset = serv.assets_.at(i.assetName).first;
     auto trend = calculateTrendForIndividualAsset<T>(asset);
-    int price = serv.assets_[i.assetName].first.priceOverTime.back();
+    double price = serv.assets_[i.assetName].first.priceOverTime.back();
     i.prom.set_value(messages::InfoResponse<T>{price, trend});
   }
   void operator()(messages::PortfolioTrendRequest<T> &p) {

@@ -5,7 +5,7 @@
 #include <future>
 namespace asset::messages {
 template <typename T> struct InfoResponse {
-  int currentPrice;
+  double currentPrice;
   traits::Calculator<T>::AccT trend;
 };
 template <typename T> struct InfoRequest {

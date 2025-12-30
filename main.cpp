@@ -5,22 +5,24 @@
 #include "asset/types/Crypto.h"
 #include "bank/Bank.h"
 #include "bank/User.h"
+#include "util/Literals.h"
 #include <stdexcept>
 
 int main() {
   asset::Server<asset::types::Stock> stockServ;
-  stockServ.addAsset("APPL", asset::types::Stock{"Apple", {1231}});
-  stockServ.addAsset("TSLA", asset::types::Stock{"Tesla technologies", {2322}});
-  stockServ.addAsset("MSFT", asset::types::Stock{"Microsoft", {2342}});
-  stockServ.addAsset("NVDA", asset::types::Stock{"Nvidia", {234234}});
+  stockServ.addAsset("APPL", asset::types::Stock{"Apple", {1.23_K}});
+  stockServ.addAsset("TSLA",
+                     asset::types::Stock{"Tesla technologies", {2.322_K}});
+  stockServ.addAsset("MSFT", asset::types::Stock{"Microsoft", {2.342_K}});
+  stockServ.addAsset("NVDA", asset::types::Stock{"Nvidia", {2.34234_K}});
   stockServ.pushMsg(asset::messages::OrderEvent<asset::types::Stock>{
       asset::CalculateDemandStatistics<asset::types::Stock>});
 
   asset::Server<asset::types::Crypto> cryptoServ;
-  cryptoServ.addAsset("BTC", asset::types::Crypto{"Bitcoin", {32423}});
-  cryptoServ.addAsset("ETH", asset::types::Crypto{"Etherium", {32423}});
-  cryptoServ.addAsset("DOGE", asset::types::Crypto{"Doge coin", {324}});
-  cryptoServ.addAsset("SOL", asset::types::Crypto{"Solana", {23423}});
+  cryptoServ.addAsset("BTC", asset::types::Crypto{"Bitcoin", {0.532_Million}});
+  cryptoServ.addAsset("ETH", asset::types::Crypto{"Etherium", {32.423_K}});
+  cryptoServ.addAsset("DOGE", asset::types::Crypto{"Doge coin", {32.4_K}});
+  cryptoServ.addAsset("SOL", asset::types::Crypto{"Solana", {23.423_K}});
   cryptoServ.pushMsg(asset::messages::OrderEvent<asset::types::Crypto>{
       asset::CalculateDemandStatistics<asset::types::Crypto>});
   asset::bots::Crypto bot;
@@ -40,21 +42,20 @@ int main() {
 
   {
     auto &user = b2.getUserByCpr("1235638135");
-    user.account->deposit(50000);
-    user.account->deposit(50000);
-    user.account->deposit(50000);
-    user.account->printTransactionHistory();
+    user.account->deposit(50.0_K);
     try {
-      user.cryptoManager->buyAsset("BTC", 1);
-      user.stockManager->buyAsset("APPL", 5);
+      user.cryptoManager->purchaseAsset("SOL", 1);
+      user.stockManager->purchaseAsset("APPL", 5);
 
-      user.cryptoManager->addStopLossRule("BTC", 32000);
+      user.cryptoManager->addStopLossRule("BTC", 32.0_K);
       user.stockManager->sellAsset("APPL", 3);
     } catch (std::invalid_argument e) {
       std::cout << "Error: " << e.what() << std::endl;
     }
     user.account->getBalance();
+    user.account->printTransactionHistory();
     user.cryptoManager->printPortfolio();
     user.stockManager->printPortfolio();
+    user.account->generateBankStatement();
   }
 }

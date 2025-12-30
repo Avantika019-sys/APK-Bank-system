@@ -25,20 +25,18 @@ public:
 
   void printTransactionHistory() const;
 
-  int getBalance() const;
-  template <typename... Args> void addTransaction(Args &&...args) {
-    std::lock_guard<std::mutex> lock(mtx_);
-    txs_.emplace_back(std::forward<Args>(args)..., &pool_);
-  }
+  double getBalance() const;
+  void addTransaction(txVariant &&tx);
 
+  void generateBankStatement();
   Account(Account &&other) noexcept;
   Account &operator=(Account &&other) noexcept;
 
 private:
-  std::pmr::vector<txVariant> txs_{&pool_};
-  std::pmr::unsynchronized_pool_resource pool_;
+  std::vector<txVariant> txs_;
   util::Logger *logger_;
   std::mutex mtx_;
+  double balance_;
 };
 } // namespace bank
 #endif // BANK_ACCOUNT_H
