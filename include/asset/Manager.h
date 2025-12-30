@@ -16,7 +16,7 @@
 #define BANK_ASSETMANAGER_H
 namespace asset {
 struct ownedAsset {
-  double NoOfStocksOwned;
+  double qtyOwned;
   std::optional<double> stopLossRule;
   boost::signals2::connection conn;
 };
@@ -60,9 +60,9 @@ public:
         tx::asset::Purchase{name, qty, infoResp.currentPrice, totalPrice});
     std::lock_guard<std::mutex> lock(mtx_);
     if (portfolio_.contains(name)) {
-      portfolio_[name].NoOfStocksOwned += qty;
+      portfolio_[name].qtyOwned += qty;
     } else {
-      portfolio_[name].NoOfStocksOwned = qty;
+      portfolio_[name].qtyOwned = qty;
     }
   }
   void sellAsset(std::string name, double qty) {
@@ -71,7 +71,7 @@ public:
     if (it == portfolio_.end()) {
       throw std::invalid_argument("you do not own this stock");
     }
-    if (it->second.NoOfStocksOwned < qty) {
+    if (it->second.qtyOwned < qty) {
       throw std::invalid_argument(
           "you do not own enough of this stock too sell that amount");
     }
@@ -118,11 +118,10 @@ public:
       serv->pushMsg(Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
-      int totalValue = infoResp.currentPrice * ownedStock.NoOfStocksOwned;
+      int totalValue = infoResp.currentPrice * ownedStock.qtyOwned;
       sum += totalValue;
       std::cout << traits::Print<T>::Header() << ": " << assetName
-                << " Amount of " + assetName + " owned: "
-                << ownedStock.NoOfStocksOwned
+                << " Amount of " + assetName + " owned: " << ownedStock.qtyOwned
                 << " Price per stock: " << infoResp.currentPrice
                 << " Total value: " << totalValue << std::endl;
     }
@@ -186,7 +185,7 @@ private:
       return;
     }
     if (updatedPrice <= it->second.stopLossRule.value()) {
-      messages::OrderRequest<T> o(stockName, it->second.NoOfStocksOwned,
+      messages::OrderRequest<T> o(stockName, it->second.qtyOwned,
                                   messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
       serv->pushMsg(Message<T>(std::move(o)));
@@ -195,9 +194,9 @@ private:
       if (!orderFut.get().isSucceded) {
         throw std::invalid_argument("server failed to process sale");
       }
-      auto total = it->second.NoOfStocksOwned + updatedPrice;
-      acc->addTransaction(tx::asset::Sale{stockName, it->second.NoOfStocksOwned,
-                                          updatedPrice, total});
+      auto total = it->second.qtyOwned + updatedPrice;
+      acc->addTransaction(
+          tx::asset::Sale{stockName, it->second.qtyOwned, updatedPrice, total});
       logger->log("automatically sold asset because of stop loss limit",
                   util::level::INFO,
                   util::field("stop loss value limit",
