@@ -40,6 +40,8 @@ public:
   }
 
   void purchaseAsset(std::string symbol, double amountInDKK) {
+    std::cout << "---------------------------" << std::endl;
+    std::cout << "Started purchase of " << symbol << std::endl;
     auto infoResp = getInfo(symbol);
 
     typedef typename traits::Precision<T>::PrecisionT PrecisionT;
@@ -148,7 +150,6 @@ public:
                 << std::endl;
     }
     std::cout << "Total value of portfolio: " << sum << std::endl;
-    std::cout << "---------------------------" << std::endl;
   }
 
   void addStopLossRule(std::string symbol, int limit) {

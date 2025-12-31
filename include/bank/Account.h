@@ -25,14 +25,16 @@ public:
   double getBalance() const;
   void addTransaction(txVariant &&tx);
 
-  void generateBankStatement();
+  void generateBankStatement() const;
   Account(Account &&other) noexcept;
   Account &operator=(Account &&other) noexcept;
+  Account(const Account &other) = delete;
+  Account &operator=(const Account &other) = delete;
 
 private:
   std::vector<txVariant> txs_;
   util::Logger *logger_;
-  std::mutex mtx_;
+  mutable std::mutex mtx_;
   double balance_;
 };
 } // namespace bank

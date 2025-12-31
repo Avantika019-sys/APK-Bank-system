@@ -5,26 +5,27 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #ifndef BANK_USER_H
 #define BANK_USER_H
+using namespace std;
+using namespace asset;
+using namespace asset::types;
 namespace bank {
 class User {
 public:
-  User(std::string name, std::string cpr,
-       ::asset::Server<asset::types::Crypto> *cryptoServ,
-       asset::Server<asset::types::Stock> *stockServ);
-  User(std::string name, std::string cpr);
-  User(std::string name, std::string cpr,
-       asset::Server<asset::types::Crypto> *cryptoServ);
-  User(std::string name, std::string cpr,
-       asset::Server<asset::types::Stock> *stockServ);
+  User(string name, string cpr, Server<Crypto> *cryptoServ,
+       Server<Stock> *stockServ);
+  User(string name, string cpr);
+  User(string name, string cpr, Server<Crypto> *cryptoServ);
+  User(string name, string cpr, Server<Stock> *stockServ);
+
   boost::shared_ptr<Account> account;
-  asset::Manager<asset::types::Stock> *stockManager;
-  asset::Manager<asset::types::Crypto> *cryptoManager;
-  std::string getCpr() const;
+  Manager<Stock> *stockManager;
+  Manager<Crypto> *cryptoManager;
+  string getCpr() const;
 
 private:
-  std::string cpr_;
-  util::Logger logger;
-  std::string name_;
+  string cpr_;
+  util::Logger logger_;
+  string name_;
 };
 } // namespace bank
 #endif // BANK_USER_H

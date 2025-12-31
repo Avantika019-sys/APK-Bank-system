@@ -25,6 +25,7 @@ Account &Account::operator=(Account &&other) noexcept {
 }
 
 void Account::deposit(double amount) {
+  std::lock_guard<std::mutex> lock(mtx_);
   balance_ = amount;
   txs_.emplace_back(tx::Deposit{amount});
   logger_->log("successfully made deposit", util::level::INFO,
@@ -32,6 +33,7 @@ void Account::deposit(double amount) {
 }
 
 void Account::withdraw(double amount) {
+  std::lock_guard<std::mutex> lock(mtx_);
   if (balance_ < amount) {
     logger_->log("failed to withdraw because insufficient funds",
                  util::level::ERROR, util::field("withdraw amount", amount),
@@ -45,15 +47,15 @@ void Account::withdraw(double amount) {
 void Account::printTransactionHistory() const {
   std::cout << "---------------------------" << std::endl;
   std::cout << "TRANSACTION HISTORY:\n" << std::endl;
+  std::lock_guard<std::mutex> lock(mtx_);
   std::for_each(txs_.begin(), txs_.end(), [](const txVariant &txV) {
     std::visit([](const auto &tx) { std::cout << tx.toString() << std::endl; },
                txV);
     std::cout << "\n";
   });
-  std::cout << "---------------------------" << std::endl;
 }
 
-void Account::generateBankStatement() {
+void Account::generateBankStatement() const {
   auto now = std::chrono::system_clock::now();
   std::string nowStr =
       std::format("../statements/{:%Y-%m-%d-%H:%M:%S}-BANK-STATEMENT", now);
