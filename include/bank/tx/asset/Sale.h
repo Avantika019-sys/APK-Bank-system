@@ -6,7 +6,8 @@
 #define BANK_TXASSETSELL_H
 namespace tx::asset {
 struct Sale {
-  std::string assetName_;
+  std::string assetSymbol_;
+  std::string assetHeader_;
   double qty_;
   double pricePerAsset_;
   double total;
@@ -14,12 +15,11 @@ struct Sale {
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
   std::string toString() const {
-    return "Transaction type: asset sale\nPrice per asset: " +
-           std::to_string(pricePerAsset_) +
-           "\nAmount of asset sold: " + std::to_string(pricePerAsset_) +
-           "\nStock name: " + assetName_;
+    return "Transaction type: " + assetHeader_ +
+           " sale\nSymbol: " + assetSymbol_ +
+           "\nPrice per asset:" + std::to_string(pricePerAsset_) +
+           "\nQuantity sold: " + std::to_string(qty_);
   }
 };
 } // namespace tx::asset
-  // Tx(details d, std::pmr::memory_resource *memRes);
 #endif // BANK_TXASSETPURCHASE_H

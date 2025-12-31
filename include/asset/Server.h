@@ -29,7 +29,7 @@ template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
   Server()
-      : msgQueue_(traits::Server<T>::QueueCapacity()),
+      : msgQueue_(traits::MessageQueue<T>::QueueCapacity()),
         logger(traits::Print<T>::Header() + "-server") {
 
     simulatorThread =

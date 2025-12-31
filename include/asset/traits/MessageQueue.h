@@ -20,6 +20,7 @@ public:
       std::variant<messages::OrderRequest<T>, messages::InfoRequest<T>,
                    messages::PortfolioTrendRequest<T>, messages::OrderEvent<T>,
                    messages::Stop>;
+  static int QueueCapacity() { return 100; }
 };
 
 template <> struct MessageQueue<types::Crypto> {
@@ -28,6 +29,7 @@ template <> struct MessageQueue<types::Crypto> {
                                messages::PortfolioTrendRequest<types::Crypto>,
                                messages::OrderEvent<types::Crypto>,
                                messages::Stop, messages::crypto::MineEvent>;
+  static int QueueCapacity() { return 80; }
 };
 } // namespace asset::traits
 #endif // BANK_ASSETTRAITSMESSAGE_H

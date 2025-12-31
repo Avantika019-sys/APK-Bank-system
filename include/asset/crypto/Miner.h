@@ -1,8 +1,8 @@
 
 #include "asset/Server.h"
-#include "asset/messages/Info.h"
 #include <thread>
 
+using namespace std::chrono_literals;
 namespace asset::crypto {
 class Miner {
 
@@ -23,7 +23,7 @@ private:
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(0.005, 0.012);
     while (run) {
-      std::this_thread::sleep_for(std::chrono::seconds(5));
+      std::this_thread::sleep_for(5s);
       serv->pushMsg(messages::crypto::MineEvent{crypto, distrib(gen)});
     }
   }

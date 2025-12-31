@@ -9,11 +9,11 @@ namespace asset::traits {
 template <typename T> class Calculator;
 
 template <> struct Calculator<types::Crypto> {
-  typedef long double AccT;
+  typedef long double PrecisionT;
   static int LookBackPeriod() { return 15; }
 };
 template <> struct Calculator<types::Stock> {
-  typedef double AccT;
+  typedef double PrecisionT;
   static int LookBackPeriod() { return 150; }
 };
 } // namespace asset::traits

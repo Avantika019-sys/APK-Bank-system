@@ -43,11 +43,14 @@ void Account::withdraw(double amount) {
 }
 
 void Account::printTransactionHistory() const {
-  std::cout << "TRANSACTION HISTORY:" << std::endl;
+  std::cout << "---------------------------" << std::endl;
+  std::cout << "TRANSACTION HISTORY:\n" << std::endl;
   std::for_each(txs_.begin(), txs_.end(), [](const txVariant &txV) {
     std::visit([](const auto &tx) { std::cout << tx.toString() << std::endl; },
                txV);
+    std::cout << "\n";
   });
+  std::cout << "---------------------------" << std::endl;
 }
 
 void Account::generateBankStatement() {

@@ -48,7 +48,7 @@ int main() {
       user.cryptoManager->purchaseAsset("SOL", 1);
       user.stockManager->purchaseAsset("APPL", 5);
 
-      user.cryptoManager->addStopLossRule("BTC", 32.0_K);
+      user.cryptoManager->addStopLossRule("SOL", 20.0_K);
       user.stockManager->sellAsset("APPL", 3);
     } catch (std::invalid_argument e) {
       std::cout << "Error: " << e.what() << std::endl;
