@@ -45,11 +45,11 @@ int main() {
     auto &user = b2.getUserByCpr("1235638135");
     user.account->deposit(50.0_K);
     try {
-      user.cryptoManager->purchaseAsset("SOL", 1);
-      user.stockManager->purchaseAsset("APPL", 5);
+      user.cryptoManager->purchaseAsset("SOL", 1.0_K);
+      user.stockManager->purchaseAsset("APPL", 0.5_K);
 
-      user.cryptoManager->addStopLossRule("SOL", 20.0_K);
-      user.stockManager->sellAsset("APPL", 3);
+      user.cryptoManager->addStopLossRule("SOL", 0.532_K);
+      user.stockManager->sellAsset("APPL", 273);
     } catch (std::invalid_argument e) {
       std::cout << "Error: " << e.what() << std::endl;
     }

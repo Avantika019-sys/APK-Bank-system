@@ -19,7 +19,7 @@
 using namespace std::chrono_literals;
 namespace asset {
 template <typename T> struct ownedAsset {
-  traits::Calculator<T>::PrecisionT qty;
+  traits::Precision<T>::PrecisionT qty;
   std::optional<double> stopLossRule;
   boost::signals2::connection conn;
 };
@@ -28,22 +28,25 @@ public:
   Manager(Server<T> *serv, boost::shared_ptr<bank::Account> acc,
           util::Logger *logger)
       : serv(serv), acc(acc), logger(logger) {}
-  void purchaseAsset(std::string name, double qty) {
-    messages::InfoRequest<T> i{name};
+  asset::messages::InfoResponse<T> getInfo(std::string symbol) {
+    messages::InfoRequest<T> i{symbol};
     auto infoF = i.prom.get_future();
     serv->pushMsg(Message<T>(std::move(i)));
 
     while (infoF.wait_for(10ms) != std::future_status::ready) {
-      util::spin("Getting the current price for " + name);
+      util::spin("Getting the current info for " + symbol);
     }
+    return infoF.get();
+  }
 
-    auto infoResp = infoF.get();
-    double totalPrice = infoResp.currentPrice * qty;
+  void purchaseAsset(std::string symbol, double amountInDKK) {
+    auto infoResp = getInfo(symbol);
+
+    typedef typename traits::Precision<T>::PrecisionT PrecisionT;
+    PrecisionT qtyPurchaseable = amountInDKK / infoResp.currentPrice;
     auto balance = acc->getBalance();
-    if (balance < totalPrice) {
-      throw std::invalid_argument("you dont have enough money to buy stock");
-    }
-    std::cout << "Total price: " << totalPrice << " DKK"
+    std::cout << "Quantity you can get for " << amountInDKK
+              << "DKK: " << qtyPurchaseable
               << "\nPlease confirm purchase by pressing y: ";
     char inp;
     std::cin >> inp;
@@ -52,7 +55,7 @@ public:
       return;
     }
 
-    messages::OrderRequest<T> o{name, qty, messages::OrderType::BUY};
+    messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::BUY};
     auto orderF = o.prom.get_future();
     serv->pushMsg(Message<T>(std::move(o)));
 
@@ -65,39 +68,35 @@ public:
       throw std::invalid_argument(
           "server failed to process purchase please try later");
     }
-    acc->addTransaction(tx::asset::Purchase{name, traits::Print<T>::Header(),
-                                            qty, infoResp.currentPrice,
-                                            totalPrice});
+    int precision = traits::Precision<T>::PrecisionFormat();
+    acc->addTransaction(tx::asset::Purchase{
+        symbol,
+        traits::Print<T>::Header(),
+        std::format("{:.{}f}", qtyPurchaseable, precision),
+        infoResp.currentPrice,
+        amountInDKK,
+    });
     std::lock_guard<std::mutex> lock(mtx_);
-    if (portfolio_.contains(name)) {
-      portfolio_[name].qty += qty;
+    if (portfolio_.contains(symbol)) {
+      portfolio_[symbol].qty += qtyPurchaseable;
     } else {
-      portfolio_[name].qty = qty;
+      portfolio_[symbol].qty = qtyPurchaseable;
     }
   }
-  void sellAsset(std::string name, double qty) {
+  void sellAsset(std::string symbol, double amountInDKK) {
     std::lock_guard<std::mutex> lock(mtx_);
-    auto it = portfolio_.find(name);
+    auto it = portfolio_.find(symbol);
     if (it == portfolio_.end()) {
       throw std::invalid_argument("you do not own this stock");
     }
-    if (it->second.qty < qty) {
+    if (it->second.qty < amountInDKK) {
       throw std::invalid_argument(
           "you do not own enough of this stock too sell that amount");
     }
-    messages::InfoRequest<T> i{name};
-    auto f = i.prom.get_future();
-    serv->pushMsg(Message<T>(std::move(i)));
+    auto infoResp = getInfo(symbol);
+    auto qtyToSell = amountInDKK / infoResp.currentPrice;
 
-    while (f.wait_for(10ms) != std::future_status::ready) {
-      util::spin("Getting the current price for " + name);
-    }
-    auto infoResp = f.get();
-    int totalSellValue = infoResp.currentPrice * qty;
-
-    std::cout << "Confirm you would like to sell " +
-                     traits::Print<T>::Header() + ", you will get : "
-              << totalSellValue << " DKK"
+    std::cout << "Confirm you would like to sell " << qtyToSell << " " << symbol
               << "\nPlease confirm sale by pressing y: ";
     char inp;
     std::cin >> inp;
@@ -105,7 +104,7 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    messages::OrderRequest<T> o{name, qty, messages::OrderType::SELL};
+    messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::SELL};
     auto orderFut = o.prom.get_future();
     serv->pushMsg(Message<T>(std::move(o)));
 
@@ -114,8 +113,11 @@ public:
     }
     orderFut.wait();
     if (orderFut.get().isSucceded) {
-      acc->addTransaction(::tx::asset::Sale{name, traits::Print<T>::Header(),
-                                            qty, infoResp.currentPrice});
+      int precision = traits::Precision<T>::PrecisionFormat();
+      acc->addTransaction(
+          ::tx::asset::Sale{symbol, traits::Print<T>::Header(),
+                            std::format("{:.{}f}", amountInDKK, precision),
+                            infoResp.currentPrice});
     }
   }
   void printPortfolioTrend() {
@@ -198,9 +200,9 @@ public:
   }
 
 private:
-  void onAssetUpdate(std::string stockName, double updatedPrice) {
+  void onAssetUpdate(std::string symbol, double updatedPrice) {
     std::lock_guard<std::mutex> lock(mtx_);
-    auto it = portfolio_.find(stockName);
+    auto it = portfolio_.find(symbol);
     if (it == portfolio_.end()) {
       return;
     }
@@ -208,7 +210,7 @@ private:
       return;
     }
     if (updatedPrice <= it->second.stopLossRule.value()) {
-      messages::OrderRequest<T> o(stockName, it->second.qty,
+      messages::OrderRequest<T> o(symbol, it->second.qty,
                                   messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
       serv->pushMsg(Message<T>(std::move(o)));
@@ -217,16 +219,20 @@ private:
       if (!orderFut.get().isSucceded) {
         throw std::invalid_argument("server failed to process sale");
       }
-      auto total = it->second.qty + updatedPrice;
-      acc->addTransaction(tx::asset::Sale{stockName, traits::Print<T>::Header(),
-                                          it->second.qty, updatedPrice, total});
-      logger->log("automatically sold asset because of stop loss limit",
+      auto total = it->second.qty * updatedPrice;
+      int precision = traits::Precision<T>::PrecisionFormat();
+      acc->addTransaction(
+          tx::asset::Sale{symbol, traits::Print<T>::Header(),
+                          std::format("{:.{}f}", it->second.qty, precision),
+                          updatedPrice, total});
+      logger->log("automatically sold " + symbol +
+                      " because of stop loss limit",
                   util::level::INFO,
                   util::field("stop loss value limit",
                               it->second.stopLossRule.value()));
     }
   }
-  std::map<std::string, ownedAsset> portfolio_;
+  std::map<std::string, ownedAsset<T>> portfolio_;
   std::mutex mtx_;
   Server<T> *serv;
   boost::shared_ptr<bank::Account> acc;

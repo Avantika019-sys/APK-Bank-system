@@ -9,7 +9,7 @@ namespace tx::asset {
 struct Purchase {
   std::string assetName_;
   std::string assetHeader_;
-  double qty_;
+  std::string qty_;
   double pricePerAsset_;
   double total;
   std::pmr::memory_resource *memRes_;
@@ -19,7 +19,7 @@ struct Purchase {
     return "Transaction type: " + assetHeader_ + " purchase" +
            "\nSymbol: " + assetName_ +
            "\nPrice per asset: " + std::to_string(pricePerAsset_) +
-           "\nquantity purchased: " + std::to_string(qty_);
+           "\nquantity purchased: " + qty_;
   }
 };
 } // namespace tx::asset

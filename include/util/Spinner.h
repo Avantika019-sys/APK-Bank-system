@@ -9,8 +9,8 @@ using namespace std::chrono_literals;
 namespace util {
 inline void spin(std::string msg) {
   std::vector<char> chars{'-', '\\', '|', '/'};
-  int i = 0;
-  std::cout << chars[i] << " " << msg << std::flush;
+  static int i = 0;
+  std::cout << "\r" << chars[i] << " " << msg << std::flush;
   i++;
   i = i % 4;
 }

@@ -1,5 +1,5 @@
 
-#include "asset/traits/Calculator.h"
+#include "asset/traits/Precision.h"
 #include "asset/traits/Server.h"
 #ifndef BANK_ASSETMESSAGESCRYPTOMINEEVENT_H
 #define BANK_ASSETMESSAGESCRYPTOMINEEVENT_H

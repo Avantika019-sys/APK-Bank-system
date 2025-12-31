@@ -8,9 +8,9 @@ namespace tx::asset {
 struct Sale {
   std::string assetSymbol_;
   std::string assetHeader_;
-  double qty_;
+  std::string qty_;
   double pricePerAsset_;
-  double total;
+  long double total;
   std::pmr::memory_resource *memRes_;
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
@@ -18,7 +18,7 @@ struct Sale {
     return "Transaction type: " + assetHeader_ +
            " sale\nSymbol: " + assetSymbol_ +
            "\nPrice per asset:" + std::to_string(pricePerAsset_) +
-           "\nQuantity sold: " + std::to_string(qty_);
+           "\nQuantity sold: " + qty_;
   }
 };
 } // namespace tx::asset

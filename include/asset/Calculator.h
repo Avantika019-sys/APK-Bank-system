@@ -1,21 +1,22 @@
-#include "asset/traits/Calculator.h"
+#include "asset/traits/Precision.h"
+#include "asset/traits/Trend.h"
 #include <future>
 #include <iostream>
 #include <vector>
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
 namespace asset {
-template <typename T> auto calculateTrendForIndividualAsset(const T asset) {
-  typedef typename traits::Calculator<T>::AccT AccT;
+template <typename T> double calculateTrendForIndividualAsset(const T asset) {
+  typedef typename traits::Precision<T>::PrecisionT PrecisionT;
   auto &vec = asset.priceOverTime;
   if (vec.size() == 1) {
-    return AccT(0);
+    return PrecisionT(0);
   }
-  AccT sumX = 0;
-  AccT sumY = 0;
-  AccT sumXY = 0;
-  AccT sumX2 = 0;
-  if (traits::Calculator<T>::LookBackPeriod() > vec.size()) {
+  PrecisionT sumX = 0;
+  PrecisionT sumY = 0;
+  PrecisionT sumXY = 0;
+  PrecisionT sumX2 = 0;
+  if (traits::Trend<T>::LookBackPeriod() > vec.size()) {
     for (int i = 0; i < vec.size(); i++) {
       int price = vec[i];
       sumX += i;
@@ -25,7 +26,7 @@ template <typename T> auto calculateTrendForIndividualAsset(const T asset) {
     }
   } else {
     for (int i = vec.size() - 1;
-         i > vec.size() - traits::Calculator<T>::LookBackPeriod(); i--) {
+         i > vec.size() - traits::Trend<T>::LookBackPeriod(); i--) {
       int price = vec[i];
       sumX += i;
       sumY += price;
@@ -33,11 +34,11 @@ template <typename T> auto calculateTrendForIndividualAsset(const T asset) {
       sumX2 += (i * i);
     }
   }
-  AccT numerator = (vec.size() * sumXY) - (sumX * sumY);
-  AccT denominator = (vec.size() * sumX2) - (sumX * sumX);
-  AccT m = numerator / denominator;
-  AccT b = (sumY - m * sumX) / vec.size();
-  AccT totalChange = m * (vec.size() - 1);
+  PrecisionT numerator = (vec.size() * sumXY) - (sumX * sumY);
+  PrecisionT denominator = (vec.size() * sumX2) - (sumX * sumX);
+  PrecisionT m = numerator / denominator;
+  PrecisionT b = (sumY - m * sumX) / vec.size();
+  PrecisionT totalChange = m * (vec.size() - 1);
   return (totalChange / b) * 100;
 }
 struct parallel {};
@@ -73,7 +74,7 @@ void CalculateDemandStatistics(std::string assetName, int qty,
                                bool isBuy) {
   auto percentageOfMarketDemand = (qty / totalNoOfAssetDemand) * 100;
   auto percentageOfSale = (qty / totalNoOfAssetForSale) * 100;
-  std::cout << percentageOfSale << percentageOfMarketDemand << std::endl;
+  // std::cout << percentageOfSale << percentageOfMarketDemand << std::endl;
 };
 } // namespace asset
 #endif // BANK_CALCULATOR_H

@@ -1,8 +1,9 @@
-#include "Calculator.h"
 #include "MessageQueue.h"
+#include "asset/Calculator.h"
 #include "asset/messages/Stop.h"
 #include "asset/traits/Print.h"
 #include "asset/traits/Server.h"
+#include "asset/traits/Trend.h"
 #include "types/Crypto.h"
 #include "types/Stock.h"
 #include "util/Logger.h"
@@ -121,9 +122,9 @@ template <typename T> struct MessageVisitor {
     for (auto assetName : p.ownedAsset) {
       assets.push_back(serv.assets_.at(assetName).first);
     }
-    typedef typename traits::Calculator<T>::AccT AccT;
-    AccT trend;
-    if (p.ownedAsset.size() * traits::Calculator<T>::LookBackPeriod() < 1000) {
+    typedef typename traits::Precision<T>::PrecisionT PrecisionT;
+    double trend;
+    if (p.ownedAsset.size() * traits::Trend<T>::LookBackPeriod() < 1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
       trend = CalculatePortfolioTrend(assets, parallel{});
@@ -163,10 +164,9 @@ template <> struct MessageVisitor<types::Crypto> {
     for (auto assetName : p.ownedAsset) {
       assets.push_back(serv.assets_.at(assetName).first);
     }
-    typedef typename traits::Calculator<types::Crypto>::PrecisionT AccT;
+    typedef typename traits::Precision<types::Crypto>::PrecisionT AccT;
     AccT trend;
-    if (p.ownedAsset.size() *
-            traits::Calculator<types::Crypto>::LookBackPeriod() <
+    if (p.ownedAsset.size() * traits::Trend<types::Crypto>::LookBackPeriod() <
         1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {

@@ -6,14 +6,12 @@
 #define BANK_ASSETTRAITSCALCULATOR_H
 
 namespace asset::traits {
-template <typename T> class Calculator;
+template <typename T> class Trend;
 
-template <> struct Calculator<types::Crypto> {
-  typedef long double PrecisionT;
+template <> struct Trend<types::Crypto> {
   static int LookBackPeriod() { return 15; }
 };
-template <> struct Calculator<types::Stock> {
-  typedef double PrecisionT;
+template <> struct Trend<types::Stock> {
   static int LookBackPeriod() { return 150; }
 };
 } // namespace asset::traits
