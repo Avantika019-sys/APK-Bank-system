@@ -163,7 +163,7 @@ template <> struct MessageVisitor<types::Crypto> {
     for (auto assetName : p.ownedAsset) {
       assets.push_back(serv.assets_.at(assetName).first);
     }
-    typedef typename traits::Calculator<types::Crypto>::AccT AccT;
+    typedef typename traits::Calculator<types::Crypto>::PrecisionT AccT;
     AccT trend;
     if (p.ownedAsset.size() *
             traits::Calculator<types::Crypto>::LookBackPeriod() <
