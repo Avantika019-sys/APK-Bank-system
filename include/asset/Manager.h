@@ -5,7 +5,6 @@
 #include "messages/Info.h"
 #include "messages/Order.h"
 #include "messages/PortfolioTrend.h"
-#include "util/Logger.h"
 #include "util/Spinner.h"
 #include <boost/signals2/connection.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -158,7 +157,7 @@ public:
     };
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
-    portfolio_[symbol].conn = serv_.getSignal(symbol).connect(handler);
+    portfolio_[symbol].conn = serv_.getSignal(symbol)->connect(handler);
   }
   void removeStopLossRule(std::string name, int limit) {
     portfolio_[name].conn.disconnect();

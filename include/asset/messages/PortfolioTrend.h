@@ -5,7 +5,7 @@
 #define BANK_PORTFOLIOTREND_H
 namespace asset::messages {
 template <typename T> struct PortfolioTrendRequest {
-  std::unordered_set<std::string> ownedAsset;
+  std::unordered_set<std::string> ownedAssets;
   std::promise<double> prom;
 };
 } // namespace asset::messages

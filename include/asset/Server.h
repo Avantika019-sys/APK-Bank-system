@@ -12,7 +12,6 @@
 #include <random>
 #include <stdexcept>
 #include <thread>
-#include <tuple>
 #include <type_traits>
 #include <utility>
 #ifndef BANK_STOCKSERVER_H
@@ -22,11 +21,8 @@ template <typename T, typename = void>
 struct hasPriceOverTime : std::false_type {};
 template <typename T>
 struct hasPriceOverTime<T,
-                        std::void_t<decltype(std::declval<T>().priceOverTime)>>
+                        std::void_t<decltype(std::declval<T>().priceOverTime_)>>
     : std::true_type {};
-typedef boost::signals2::signal<void(std::string assetName,
-                                     double UpdatedPrice)>
-    UpdateSignal;
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
@@ -40,14 +36,12 @@ public:
         std::thread([this]() { startMessageProccesor(); });
   }
 
-  void addAsset(std::string symbol, T asset) {
+  void addAsset(std::string &&symbol, T &&asset) {
     std::lock_guard<std::mutex> lock(mtx);
-    assets_.emplace(
-        std::piecewise_construct, std::forward_as_tuple(symbol),
-        std::forward_as_tuple(asset, std::make_shared<UpdateSignal>()));
+    assets_.try_emplace(std::move(symbol), std::move(asset));
   }
-  UpdateSignal &getSignal(std::string assetName) {
-    return *(assets_.at(assetName).second);
+  types::UpdateSignal *getSignal(std::string assetSymbol) {
+    return assets_.at(assetSymbol).sig_;
   }
   void startSimulatingAssetPriceUpdates() {
     std::random_device rd;
@@ -60,10 +54,9 @@ public:
       std::lock_guard<std::mutex> lock(mtx);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
-        double newPrice =
-            asset.first.priceOverTime.back() * (1 + percentChange);
-        asset.first.priceOverTime.push_back(newPrice);
-        (*asset.second)(symbol, newPrice);
+        double newPrice = asset.priceOverTime_.back() * (1 + percentChange);
+        asset.priceOverTime_.push_back(newPrice);
+        (*asset.sig_)(symbol, newPrice);
       }
     }
   }
@@ -89,7 +82,7 @@ public:
 private:
   friend struct MessageVisitor<T>;
   MessageQueue<T> msgQueue_;
-  std::map<std::string, std::pair<T, std::shared_ptr<UpdateSignal>>> assets_;
+  std::map<std::string, T> assets_;
   std::mutex mtx;
   std::atomic<bool> run{true};
   std::vector<std::function<void(
@@ -116,19 +109,19 @@ template <typename T> struct MessageVisitor {
   void operator()(messages::InfoRequest<T> &i) {
     serv.logger->log("Received info request", util::level::INFO,
                      util::field(traits::Print<T>::Header(), i.assetName));
-    auto asset = serv.assets_.at(i.assetName).first;
+    auto &asset = serv.assets_.at(i.assetName);
     auto trend = calculateTrendForIndividualAsset<T>(asset);
-    double price = serv.assets_[i.assetName].first.priceOverTime.back();
+    double price = serv.assets_.at(i.assetName).priceOverTime_.back();
     i.prom.set_value(messages::InfoResponse<T>{price, trend});
   }
   void operator()(messages::PortfolioTrendRequest<T> &p) {
-    std::vector<T> assets;
-    for (auto assetName : p.ownedAsset) {
-      assets.push_back(serv.assets_.at(assetName).first);
+    std::vector<T *> assets;
+    for (auto assetName : p.ownedAssets) {
+      assets.push_back(&serv.assets_.at(assetName));
     }
     typedef typename traits::Precision<T>::PrecisionT PrecisionT;
     double trend;
-    if (p.ownedAsset.size() * traits::Trend<T>::LookBackPeriod() < 1000) {
+    if (p.ownedAssets.size() * traits::Trend<T>::LookBackPeriod() < 1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
       trend = CalculatePortfolioTrend(assets, parallel{});
@@ -158,19 +151,19 @@ template <> struct MessageVisitor<types::Crypto> {
     serv.logger->log(
         "Received info request", util::level::INFO,
         util::field(traits::Print<types::Crypto>::Header(), i.assetName));
-    auto asset = serv.assets_.at(i.assetName).first;
+    auto &asset = serv.assets_.at(i.assetName);
     auto trend = calculateTrendForIndividualAsset<types::Crypto>(asset);
-    double price = serv.assets_[i.assetName].first.priceOverTime.back();
+    double price = asset.priceOverTime_.back();
     i.prom.set_value(messages::InfoResponse<types::Crypto>{price, trend});
   }
   void operator()(messages::PortfolioTrendRequest<types::Crypto> &p) {
-    std::vector<types::Crypto> assets;
-    for (auto assetName : p.ownedAsset) {
-      assets.push_back(serv.assets_.at(assetName).first);
+    std::vector<types::Crypto *> assets;
+    for (auto assetName : p.ownedAssets) {
+      assets.push_back(&serv.assets_.at(assetName));
     }
     typedef typename traits::Precision<types::Crypto>::PrecisionT AccT;
     AccT trend;
-    if (p.ownedAsset.size() * traits::Trend<types::Crypto>::LookBackPeriod() <
+    if (p.ownedAssets.size() * traits::Trend<types::Crypto>::LookBackPeriod() <
         1000) {
       trend = CalculatePortfolioTrend(assets, sequential{});
     } else {
@@ -181,10 +174,10 @@ template <> struct MessageVisitor<types::Crypto> {
   void operator()(messages::Stop &s) { serv.run = false; }
   void operator()(messages::crypto::MineEvent &m) {
     std::lock_guard<std::mutex> lock(serv.mtx);
-    auto crypto = serv.assets_[m.cryptoName].first;
+    auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;
-    double priceAffect = crypto.priceOverTime.back() * m.qty;
-    crypto.priceOverTime.push_back(crypto.priceOverTime.back() - priceAffect);
+    double priceAffect = crypto.priceOverTime_.back() * m.qty;
+    crypto.priceOverTime_.push_back(crypto.priceOverTime_.back() - priceAffect);
   }
   void operator()(messages::OrderEvent<types::Crypto> &o) {
     serv.OrderEventCbs.push_back(o.cb);

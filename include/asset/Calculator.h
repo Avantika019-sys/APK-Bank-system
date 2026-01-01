@@ -1,14 +1,13 @@
 #include "asset/traits/Precision.h"
 #include "asset/traits/Trend.h"
 #include <future>
-#include <iostream>
 #include <vector>
 #ifndef BANK_CALCULATOR_H
 #define BANK_CALCULATOR_H
 namespace asset {
-template <typename T> double calculateTrendForIndividualAsset(const T asset) {
+template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   typedef typename traits::Precision<T>::PrecisionT PrecisionT;
-  auto &vec = asset.priceOverTime;
+  auto &vec = asset.priceOverTime_;
   if (vec.size() == 1) {
     return PrecisionT(0);
   }
@@ -44,12 +43,12 @@ template <typename T> double calculateTrendForIndividualAsset(const T asset) {
 struct parallel {};
 struct sequential {};
 template <typename T>
-auto CalculatePortfolioTrend(std::vector<T> assets, parallel) {
-  using resType = decltype(calculateTrendForIndividualAsset<T>(assets[0]));
+auto CalculatePortfolioTrend(std::vector<T *> assets, parallel) {
+  using resType = decltype(calculateTrendForIndividualAsset<T>(*assets[0]));
   std::vector<std::future<resType>> futures;
   for (auto &asset : assets) {
     futures.push_back(std::async(std::launch::async, [asset]() {
-      return calculateTrendForIndividualAsset<T>(asset);
+      return calculateTrendForIndividualAsset<T>(*asset);
     }));
   }
   resType total = 0;
@@ -59,11 +58,11 @@ auto CalculatePortfolioTrend(std::vector<T> assets, parallel) {
   return total / futures.size();
 }
 template <typename T>
-auto CalculatePortfolioTrend(std::vector<T> assets, sequential) {
-  using resType = decltype(calculateTrendForIndividualAsset<T>(assets[0]));
+auto CalculatePortfolioTrend(std::vector<T *> assets, sequential) {
+  using resType = decltype(calculateTrendForIndividualAsset<T>(*assets[0]));
   resType total = 0;
-  for (auto &asset : assets) {
-    total += calculateTrendForIndividualAsset<T>(asset);
+  for (auto asset : assets) {
+    total += calculateTrendForIndividualAsset<T>(*asset);
   }
   return total / assets.size();
 }
