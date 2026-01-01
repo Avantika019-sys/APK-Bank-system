@@ -15,6 +15,7 @@
 #include <boost/signals2/signal.hpp>
 #include <memory>
 #include <random>
+#include <shared_mutex>
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
@@ -42,7 +43,7 @@ public:
   }
 
   void addAsset(std::string &&symbol, T &&asset) {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::lock_guard<std::shared_mutex> lock(mtx_);
     assets_.try_emplace(std::move(symbol), std::move(asset));
   }
   types::UpdateSignal *getSignal(std::string assetSymbol) {
@@ -56,7 +57,7 @@ public:
     while (run_) {
       std::this_thread::sleep_for(
           std::chrono::seconds(traits::Server<T>::UpdateRate()));
-      std::lock_guard<std::mutex> lock(mtx_);
+      std::lock_guard<std::shared_mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
         double newPrice = asset.priceOverTime_.back() * (1 + percentChange);
@@ -85,7 +86,7 @@ private:
   friend struct MessageVisitor<T>;
   message::Queue<T> msgQueue_;
   std::map<std::string, T> assets_;
-  std::mutex mtx_;
+  std::shared_mutex mtx_;
   std::atomic<bool> run_{true};
   std::vector<std::function<void(
       std::string assetName, int qty, int totalNoOfAssetForSale,

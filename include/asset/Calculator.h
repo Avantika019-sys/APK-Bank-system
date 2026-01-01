@@ -9,7 +9,7 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   typedef typename traits::Precision<T>::PrecisionT PrecisionT;
   auto &vec = asset.priceOverTime_;
   if (vec.size() == 1) {
-    return PrecisionT(0);
+    return PrecisionT{0};
   }
   PrecisionT sumX = 0;
   PrecisionT sumY = 0;
