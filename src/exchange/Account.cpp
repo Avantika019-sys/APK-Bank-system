@@ -10,15 +10,6 @@
 #include <variant>
 namespace exchange {
 
-Account::Account(Account &&other) noexcept : txs_(std::move(other.txs_)) {}
-
-Account &Account::operator=(Account &&other) noexcept {
-  if (this != &other) {
-    txs_ = std::move(other.txs_);
-  }
-  return *this;
-}
-
 void Account::deposit(double amount) {
   std::lock_guard<std::mutex> lock(mtx_);
   balance_ = amount;

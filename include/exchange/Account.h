@@ -20,8 +20,8 @@ public:
   void addTransaction(txVariant &&tx);
 
   void generateAccountStatement() const;
-  Account(Account &&other) noexcept;
-  Account &operator=(Account &&other) noexcept;
+  Account(Account &&other) = delete;
+  Account &operator=(Account &&other) = delete;
   Account(const Account &other) = delete;
   Account &operator=(const Account &other) = delete;
 
