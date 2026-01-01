@@ -44,5 +44,5 @@ int main() {
   acc->printTransactionHistory();
   cryptoMgr->printPortfolio();
   stockMgr->printPortfolio();
-  acc->generateBankStatement();
+  acc->generateAccountStatement();
 }

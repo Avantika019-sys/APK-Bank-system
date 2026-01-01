@@ -45,10 +45,10 @@ void Account::printTransactionHistory() const {
   });
 }
 
-void Account::generateBankStatement() const {
+void Account::generateAccountStatement() const {
   auto now = std::chrono::system_clock::now();
   std::string nowStr =
-      std::format("../statements/{:%Y-%m-%d-%H:%M:%S}-EXCHANGE-STATEMENT", now);
+      std::format("../statements/{:%Y-%m-%d-%H:%M:%S}-ACCOUNT-STATEMENT", now);
   std::ofstream file;
   file.open(nowStr);
   std::array<std::byte, 1024> buf;

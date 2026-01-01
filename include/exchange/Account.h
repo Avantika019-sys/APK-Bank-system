@@ -19,7 +19,7 @@ public:
   double getBalance() const;
   void addTransaction(txVariant &&tx);
 
-  void generateBankStatement() const;
+  void generateAccountStatement() const;
   Account(Account &&other) noexcept;
   Account &operator=(Account &&other) noexcept;
   Account(const Account &other) = delete;
