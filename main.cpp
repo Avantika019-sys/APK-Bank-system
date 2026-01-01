@@ -1,44 +1,33 @@
 
-#include "asset/Manager.h"
-#include "asset/Server.h"
-#include "asset/bots/Crypto.h"
-#include "asset/crypto/Miner.h"
-#include "asset/message/types/Info.h"
-#include "asset/types/Crypto.h"
-#include "bank/Bank.h"
-#include "bank/User.h"
-#include "util/Literals.h"
-#include "util/Logger.h"
+#include "Miner.h"
+#include "Server.h"
+#include "asset/Crypto.h"
+#include "exchange/Manager.h"
+#include "exchange/util.hpp"
+#include "message.hpp"
 #include <boost/smart_ptr/make_shared_array.hpp>
 #include <memory>
 #include <stdexcept>
 
-using namespace asset::types;
+using namespace exchange;
+using namespace exchange::util;
+using namespace exchange::asset;
 using namespace std::placeholders;
 
 int main() {
-  auto stockServ =
-      asset::Server<Stock>(std::make_unique<util::Logger>("stockServer"));
-  stockServ.addAsset("APPL", Stock{"Apple", {1.23_K}});
-  stockServ.addAsset("TSLA", Stock{"Tesla technologies", {2.322_K}});
-  stockServ.addAsset("NVDA", Stock{"Nvidia", {2.34234_K}});
-  stockServ.pushMsg(asset::message::types::OrderEvent<Stock>{
-      asset::CalculateDemandStatistics<Stock>});
+  auto stockServ = Server<Stock>(std::make_unique<util::Logger>("stockServer"));
+  stockServ.addAsset("APPL", Stock("Apple", {1.23_K}));
+  stockServ.addAsset("TSLA", Stock("Tesla technologies", {2.322_K}));
+  stockServ.addAsset("NVDA", Stock("Nvidia", {2.34234_K}));
 
   auto cryptoServ =
-      asset::Server<Crypto>(std::make_unique<util::Logger>("cryptoServer"));
-  cryptoServ.addAsset("BTC", Crypto{"Bitcoin", {0.532_Million}});
-  cryptoServ.addAsset("ETH", Crypto{"Etherium", {32.423_K}});
-  cryptoServ.addAsset("SOL", Crypto{"Solana", {23.423_K}});
-  cryptoServ.pushMsg(asset::message::types::OrderEvent<Crypto>{
-      asset::CalculateDemandStatistics<Crypto>});
-  asset::bots::Crypto bot;
-  auto handler =
-      std::bind(&asset::bots::Crypto::OnNewOrder, &bot, _1, _2, _3, _4, _5, _6);
-  cryptoServ.pushMsg(asset::message::types::OrderEvent<Crypto>{handler});
-  asset::crypto::Miner miner("BTC", cryptoServ);
+      Server<Crypto>(std::make_unique<util::Logger>("cryptoServer"));
+  cryptoServ.addAsset("BTC", Crypto("Bitcoin", {0.532_Million}));
+  cryptoServ.addAsset("ETH", Crypto("Etherium", {32.423_K}));
+  cryptoServ.addAsset("SOL", Crypto("Solana", {23.423_K}));
+  Miner miner("BTC", cryptoServ);
 
-  auto acc = boost::make_shared<bank::Account>();
+  auto acc = boost::make_shared<Account>();
   auto cryptoMgr = createManager<Crypto>(cryptoServ, acc, "456");
   auto stockMgr = createManager<Stock>(stockServ, acc, "123");
   acc->deposit(50.0_K);

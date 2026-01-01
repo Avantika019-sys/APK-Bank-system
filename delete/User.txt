@@ -1,0 +1,29 @@
+#include "asset/Manager.h"
+#include "tx/Account.h"
+#include "util/Logger.h"
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <memory>
+#ifndef ASSETEXCHANGE_USER_H
+#define ASSETEXCHANGE_USER_H
+using namespace std;
+using namespace exchange;
+using namespace exchange::types;
+namespace exchange {
+class User {
+public:
+  User(string name, string cpr, boost::shared_ptr<Account> account,
+       std::unique_ptr<Manager<Crypto>> cryptoManager,
+       std::unique_ptr<Manager<Stock>> stockManager)
+      : name_(name), cpr_(cpr), account(account), cryptoManager(cryptoManager),
+        stockManager(stockManager) {}
+  boost::shared_ptr<Account> account;
+  std::unique_ptr<Manager<Crypto>> &cryptoManager;
+  std::unique_ptr<Manager<Stock>> &stockManager;
+  string getCpr() const { return cpr_; };
+
+private:
+  string cpr_;
+  string name_;
+};
+} // namespace exchange
+#endif // ASSETEXCHANGE_USER_H

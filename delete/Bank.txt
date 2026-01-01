@@ -1,0 +1,29 @@
+#include "asset/Manager.h"
+#include "tx/Account.h"
+#include "tx/User.h"
+#include <string>
+#include <utility>
+#include <vector>
+
+#ifndef ASSETEXCHANGE_ASSETEXCHANGE_H
+#define ASSETEXCHANGE_ASSETEXCHANGE_H
+namespace exchange {
+class Bank {
+public:
+  template <typename... Args> void addUser(Args &&...args) {
+    users_.emplace_back(std::forward<Args>(args)...);
+  }
+  bank::User &getUserByCpr(std::string cpr) {
+    auto it = std::find_if(users_.begin(), users_.end(),
+                           [&](const User &u) { return u.getCpr() == cpr; });
+    if (it == users_.end()) {
+      throw std::invalid_argument("Account not found in bank");
+    }
+    return *it;
+  }
+
+private:
+  std::list<User> users_;
+};
+} // namespace exchange
+#endif // ASSETEXCHANGE_ASSETEXCHANGE_H
