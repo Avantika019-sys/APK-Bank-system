@@ -108,7 +108,7 @@ public:
     }
     message::types::OrderRequest<T> o{symbol, managerId_, amountInDKK,
                                       message::types::OrderType::SELL};
-    auto orderFut = o.prom.ge::typest_future();
+    auto orderFut = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
 
     while (orderFut.wait_for(10ms) != std::future_status::ready) {
@@ -130,8 +130,8 @@ public:
     }
     message::types::PortfolioTrendRequest<T> p{ownedAssets};
     serv_.pushMsg(p);
-    auto f = p.prom.ge::typest_future();
-    std::cout << "Portfolio Trend: " << f.ge::typest();
+    auto f = p.prom.get_future();
+    std::cout << "Portfolio Trend: " << f.get();
   }
   void printPortfolio() {
     double sum = 0;
@@ -139,7 +139,7 @@ public:
     std::cout << traits::Print<T>::Header() + " PORTFOLIO:\n" << std::endl;
     for (auto &[symbol, ownedAsset] : portfolio_) {
       message::types::InfoRequest<T> i{symbol};
-      auto f = i.prom.ge::typest_future();
+      auto f = i.prom.get_future();
       serv_.pushMsg(message::Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();

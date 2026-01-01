@@ -9,7 +9,7 @@ namespace asset::traits {
 template <typename T> class Trend;
 
 template <> struct Trend<types::Crypto> {
-  static int LookBackPeriod() { return 15; }
+  static int LookBackPeriod() { return 80; }
 };
 template <> struct Trend<types::Stock> {
   static int LookBackPeriod() { return 150; }

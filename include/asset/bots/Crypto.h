@@ -2,6 +2,8 @@
 
 #include <map>
 #include <string>
+#ifndef BANK_CRYPTOBOT_H
+#define BANK_CRYPTOBOT_H
 namespace asset::bots {
 class Crypto {
 public:
@@ -14,3 +16,4 @@ private:
   std::map<std::string, double> popularOrders;
 };
 } // namespace asset::bots
+#endif // BANK_CRYPTOBOT_H

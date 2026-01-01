@@ -2,6 +2,8 @@
 #include "asset/Server.h"
 #include <thread>
 
+#ifndef BANK_CRYPTOMINER_H
+#define BANK_CRYPTOMINER_H
 using namespace std::chrono_literals;
 namespace asset::crypto {
 class Miner {
@@ -32,3 +34,4 @@ private:
   std::thread minerThread;
 };
 } // namespace asset::crypto
+#endif // BANK_CRYPTOMINER_H
