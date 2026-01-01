@@ -13,6 +13,7 @@ struct OrderResponse {
 };
 template <typename T> struct OrderRequest {
   std::string assetName;
+  std::string managerId;
   double qty;
   OrderType type;
   std::promise<OrderResponse> prom;

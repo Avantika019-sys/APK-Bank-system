@@ -24,8 +24,9 @@ template <typename T> struct ownedAsset {
 };
 template <typename T> class Manager {
 public:
-  Manager(Server<T> &serv, boost::shared_ptr<bank::Account> acc, std::string id)
-      : serv_(serv), acc(acc), traderId_(id) {}
+  Manager(Server<T> &serv, boost::shared_ptr<bank::Account> acc,
+          std::string managerId)
+      : serv_(serv), acc(acc), managerId_(managerId) {}
   asset::messages::InfoResponse<T> getInfo(std::string symbol) {
     messages::InfoRequest<T> i{symbol};
     auto infoF = i.prom.get_future();
@@ -55,7 +56,8 @@ public:
       return;
     }
 
-    messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::BUY};
+    messages::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+                                messages::OrderType::BUY};
     auto orderF = o.prom.get_future();
     serv_.pushMsg(Message<T>(std::move(o)));
 
@@ -104,7 +106,8 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::SELL};
+    messages::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+                                messages::OrderType::SELL};
     auto orderFut = o.prom.get_future();
     serv_.pushMsg(Message<T>(std::move(o)));
 
@@ -178,7 +181,7 @@ private:
       return;
     }
     if (updatedPrice <= it->second.stopLossRule.value()) {
-      messages::OrderRequest<T> o(symbol, it->second.qty,
+      messages::OrderRequest<T> o(symbol, managerId_, it->second.qty,
                                   messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
       serv_.pushMsg(Message<T>(std::move(o)));
@@ -204,7 +207,7 @@ private:
   std::mutex mtx_;
   Server<T> &serv_;
   boost::shared_ptr<bank::Account> acc;
-  std::string traderId_;
+  std::string managerId_;
 };
 template <typename T, typename... Args>
 std::unique_ptr<Manager<T>> createManager(Args &&...args) {

@@ -28,7 +28,7 @@ template <typename T> class Server {
 public:
   Server(std::unique_ptr<util::Logger> logger)
       : msgQueue_(traits::MessageQueue<T>::QueueCapacity()),
-        logger(std::move(logger)) {
+        logger_(std::move(logger)) {
 
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
@@ -37,7 +37,7 @@ public:
   }
 
   void addAsset(std::string &&symbol, T &&asset) {
-    std::lock_guard<std::mutex> lock(mtx);
+    std::lock_guard<std::mutex> lock(mtx_);
     assets_.try_emplace(std::move(symbol), std::move(asset));
   }
   types::UpdateSignal *getSignal(std::string assetSymbol) {
@@ -48,10 +48,10 @@ public:
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(-0.005, 0.005);
     static_assert(hasPriceOverTime<T>::value);
-    while (run) {
+    while (run_) {
       std::this_thread::sleep_for(
           std::chrono::seconds(traits::Server<T>::UpdateRate()));
-      std::lock_guard<std::mutex> lock(mtx);
+      std::lock_guard<std::mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
         double newPrice = asset.priceOverTime_.back() * (1 + percentChange);
@@ -62,11 +62,8 @@ public:
   }
 
   void startMessageProccesor() {
-    while (run) {
+    while (run_) {
       auto msg = msgQueue_.pop();
-      if (msg.valueless_by_exception()) {
-        throw std::invalid_argument("hejj");
-      }
       std::visit(MessageVisitor<T>{*this}, msg);
     }
   }
@@ -83,23 +80,24 @@ private:
   friend struct MessageVisitor<T>;
   MessageQueue<T> msgQueue_;
   std::map<std::string, T> assets_;
-  std::mutex mtx;
-  std::atomic<bool> run{true};
+  std::mutex mtx_;
+  std::atomic<bool> run_{true};
   std::vector<std::function<void(
       std::string assetName, int qty, int totalNoOfAssetForSale,
       int totalNoOfAssetDemand, double price, bool isBuy)>>
       OrderEventCbs;
-  std::unique_ptr<util::Logger> logger;
+  std::unique_ptr<util::Logger> logger_;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(messages::OrderRequest<T> &o) {
-    serv.logger->log("Received order request", util::level::INFO,
-                     util::field{"Quantity", o.qty},
-                     util::field{traits::Print<T>::Header(), o.assetName},
-                     util::field{"Type", o.getTypeStr()});
+    serv.logger_->log("Received order request", util::level::INFO,
+                      util::field{"Quantity", o.qty},
+                      util::field{traits::Print<T>::Header(), o.assetName},
+                      util::field{"Type", o.getTypeStr()},
+                      util::field{"manager id", o.managerId});
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
     for (auto cb : serv.OrderEventCbs) {
@@ -107,8 +105,8 @@ template <typename T> struct MessageVisitor {
     }
   }
   void operator()(messages::InfoRequest<T> &i) {
-    serv.logger->log("Received info request", util::level::INFO,
-                     util::field(traits::Print<T>::Header(), i.assetName));
+    serv.logger_->log("Received info request", util::level::INFO,
+                      util::field(traits::Print<T>::Header(), i.assetName));
     auto &asset = serv.assets_.at(i.assetName);
     auto trend = calculateTrendForIndividualAsset<T>(asset);
     double price = serv.assets_.at(i.assetName).priceOverTime_.back();
@@ -128,7 +126,7 @@ template <typename T> struct MessageVisitor {
     }
     p.prom.set_value(trend);
   }
-  void operator()(messages::Stop &s) { serv.run = false; }
+  void operator()(messages::Stop &s) { serv.run_ = false; }
   void operator()(messages::OrderEvent<T> &o) {
     serv.OrderEventCbs.push_back(o.cb);
   }
@@ -136,7 +134,7 @@ template <typename T> struct MessageVisitor {
 template <> struct MessageVisitor<types::Crypto> {
   Server<types::Crypto> &serv;
   void operator()(messages::OrderRequest<types::Crypto> &o) {
-    serv.logger->log(
+    serv.logger_->log(
         "Received order request", util::level::INFO,
         util::field{"Quantity", o.qty},
         util::field{traits::Print<types::Crypto>::Header(), o.assetName},
@@ -148,7 +146,7 @@ template <> struct MessageVisitor<types::Crypto> {
     }
   }
   void operator()(messages::InfoRequest<types::Crypto> &i) {
-    serv.logger->log(
+    serv.logger_->log(
         "Received info request", util::level::INFO,
         util::field(traits::Print<types::Crypto>::Header(), i.assetName));
     auto &asset = serv.assets_.at(i.assetName);
@@ -171,9 +169,9 @@ template <> struct MessageVisitor<types::Crypto> {
     }
     p.prom.set_value(trend);
   }
-  void operator()(messages::Stop &s) { serv.run = false; }
+  void operator()(messages::Stop &s) { serv.run_ = false; }
   void operator()(messages::crypto::MineEvent &m) {
-    std::lock_guard<std::mutex> lock(serv.mtx);
+    std::lock_guard<std::mutex> lock(serv.mtx_);
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;
     double priceAffect = crypto.priceOverTime_.back() * m.qty;
