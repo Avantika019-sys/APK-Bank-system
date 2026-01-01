@@ -1,6 +1,5 @@
-#include "MessageQueue.h"
 #include "asset/Calculator.h"
-#include "asset/messages/Stop.h"
+#include "asset/message/Queue.h"
 #include "asset/traits/Print.h"
 #include "asset/traits/Server.h"
 #include "asset/traits/Trend.h"
@@ -67,9 +66,9 @@ public:
       std::visit(MessageVisitor<T>{*this}, msg);
     }
   }
-  void pushMsg(Message<T> &&msg) { msgQueue_.push(std::move(msg)); }
+  void pushMsg(message::Message<T> &&msg) { msgQueue_.push(std::move(msg)); }
   ~Server() {
-    pushMsg(messages::Stop());
+    pushMsg(message::types::Stop());
     if (simulatorThread.joinable())
       simulatorThread.join();
     if (messageProccessorThread.joinable())
@@ -78,7 +77,7 @@ public:
 
 private:
   friend struct MessageVisitor<T>;
-  MessageQueue<T> msgQueue_;
+  message::Queue<T> msgQueue_;
   std::map<std::string, T> assets_;
   std::mutex mtx_;
   std::atomic<bool> run_{true};
@@ -89,97 +88,6 @@ private:
   std::unique_ptr<util::Logger> logger_;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
-};
-template <typename T> struct MessageVisitor {
-  Server<T> &serv;
-  void operator()(messages::OrderRequest<T> &o) {
-    serv.logger_->log("Received order request", util::level::INFO,
-                      util::field{"Quantity", o.qty},
-                      util::field{traits::Print<T>::Header(), o.assetName},
-                      util::field{"Type", o.getTypeStr()},
-                      util::field{"manager id", o.managerId});
-    messages::OrderResponse resp(true);
-    o.prom.set_value(resp);
-    for (auto cb : serv.OrderEventCbs) {
-      cb(o.assetName, o.qty, 100, 100, 102, true);
-    }
-  }
-  void operator()(messages::InfoRequest<T> &i) {
-    serv.logger_->log("Received info request", util::level::INFO,
-                      util::field(traits::Print<T>::Header(), i.assetName));
-    auto &asset = serv.assets_.at(i.assetName);
-    auto trend = calculateTrendForIndividualAsset<T>(asset);
-    double price = serv.assets_.at(i.assetName).priceOverTime_.back();
-    i.prom.set_value(messages::InfoResponse<T>{price, trend});
-  }
-  void operator()(messages::PortfolioTrendRequest<T> &p) {
-    std::vector<T *> assets;
-    for (auto assetName : p.ownedAssets) {
-      assets.push_back(&serv.assets_.at(assetName));
-    }
-    typedef typename traits::Precision<T>::PrecisionT PrecisionT;
-    double trend;
-    if (p.ownedAssets.size() * traits::Trend<T>::LookBackPeriod() < 1000) {
-      trend = CalculatePortfolioTrend(assets, sequential{});
-    } else {
-      trend = CalculatePortfolioTrend(assets, parallel{});
-    }
-    p.prom.set_value(trend);
-  }
-  void operator()(messages::Stop &s) { serv.run_ = false; }
-  void operator()(messages::OrderEvent<T> &o) {
-    serv.OrderEventCbs.push_back(o.cb);
-  }
-};
-template <> struct MessageVisitor<types::Crypto> {
-  Server<types::Crypto> &serv;
-  void operator()(messages::OrderRequest<types::Crypto> &o) {
-    serv.logger_->log(
-        "Received order request", util::level::INFO,
-        util::field{"Quantity", o.qty},
-        util::field{traits::Print<types::Crypto>::Header(), o.assetName},
-        util::field{"Type", o.getTypeStr()});
-    messages::OrderResponse resp(true);
-    o.prom.set_value(resp);
-    for (auto cb : serv.OrderEventCbs) {
-      cb(o.assetName, o.qty, 100, 100, 102, true);
-    }
-  }
-  void operator()(messages::InfoRequest<types::Crypto> &i) {
-    serv.logger_->log(
-        "Received info request", util::level::INFO,
-        util::field(traits::Print<types::Crypto>::Header(), i.assetName));
-    auto &asset = serv.assets_.at(i.assetName);
-    auto trend = calculateTrendForIndividualAsset<types::Crypto>(asset);
-    double price = asset.priceOverTime_.back();
-    i.prom.set_value(messages::InfoResponse<types::Crypto>{price, trend});
-  }
-  void operator()(messages::PortfolioTrendRequest<types::Crypto> &p) {
-    std::vector<types::Crypto *> assets;
-    for (auto assetName : p.ownedAssets) {
-      assets.push_back(&serv.assets_.at(assetName));
-    }
-    typedef typename traits::Precision<types::Crypto>::PrecisionT AccT;
-    AccT trend;
-    if (p.ownedAssets.size() * traits::Trend<types::Crypto>::LookBackPeriod() <
-        1000) {
-      trend = CalculatePortfolioTrend(assets, sequential{});
-    } else {
-      trend = CalculatePortfolioTrend(assets, parallel{});
-    }
-    p.prom.set_value(trend);
-  }
-  void operator()(messages::Stop &s) { serv.run_ = false; }
-  void operator()(messages::crypto::MineEvent &m) {
-    std::lock_guard<std::mutex> lock(serv.mtx_);
-    auto &crypto = serv.assets_.at(m.cryptoName);
-    crypto.totalCoinsOnMarket += m.qty;
-    double priceAffect = crypto.priceOverTime_.back() * m.qty;
-    crypto.priceOverTime_.push_back(crypto.priceOverTime_.back() - priceAffect);
-  }
-  void operator()(messages::OrderEvent<types::Crypto> &o) {
-    serv.OrderEventCbs.push_back(o.cb);
-  }
 };
 } // namespace asset
 

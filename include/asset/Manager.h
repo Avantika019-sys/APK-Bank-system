@@ -1,10 +1,10 @@
-#include "MessageQueue.h"
-#include "Server.h"
+#include "asset/Server.h"
+#include "asset/message/Queue.h"
 #include "asset/traits/Print.h"
 #include "bank/Account.h"
-#include "messages/Info.h"
-#include "messages/Order.h"
-#include "messages/PortfolioTrend.h"
+#include "message/types/Info.h"
+#include "message/types/Order.h"
+#include "message/types/PortfolioTrend.h"
 #include "util/Spinner.h"
 #include <boost/signals2/connection.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
@@ -27,10 +27,10 @@ public:
   Manager(Server<T> &serv, boost::shared_ptr<bank::Account> acc,
           std::string managerId)
       : serv_(serv), acc(acc), managerId_(managerId) {}
-  asset::messages::InfoResponse<T> getInfo(std::string symbol) {
-    messages::InfoRequest<T> i{symbol};
+  asset::message::types::InfoResponse<T> getInfo(std::string symbol) {
+    message::types::InfoRequest<T> i{symbol};
     auto infoF = i.prom.get_future();
-    serv_.pushMsg(Message<T>(std::move(i)));
+    serv_.pushMsg(message::Message<T>(std::move(i)));
 
     while (infoF.wait_for(10ms) != std::future_status::ready) {
       util::spin("Getting the current info for " + symbol);
@@ -56,10 +56,10 @@ public:
       return;
     }
 
-    messages::OrderRequest<T> o{symbol, managerId_, amountInDKK,
-                                messages::OrderType::BUY};
+    message::types::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+                                      message::types::OrderType::BUY};
     auto orderF = o.prom.get_future();
-    serv_.pushMsg(Message<T>(std::move(o)));
+    serv_.pushMsg(message::Message<T>(std::move(o)));
 
     while (orderF.wait_for(10ms) != std::future_status::ready) {
       util::spin("waiting for server to process purchase order");
@@ -106,10 +106,10 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    messages::OrderRequest<T> o{symbol, managerId_, amountInDKK,
-                                messages::OrderType::SELL};
-    auto orderFut = o.prom.get_future();
-    serv_.pushMsg(Message<T>(std::move(o)));
+    message::types::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+                                      message::types::OrderType::SELL};
+    auto orderFut = o.prom.ge::typest_future();
+    serv_.pushMsg(message::Message<T>(std::move(o)));
 
     while (orderFut.wait_for(10ms) != std::future_status::ready) {
       util::spin("waiting for server to process sale order");
@@ -128,19 +128,19 @@ public:
     for (auto &[assetName, _] : portfolio_) {
       ownedAssets.insert(assetName);
     }
-    messages::PortfolioTrendRequest<T> p{ownedAssets};
+    message::types::PortfolioTrendRequest<T> p{ownedAssets};
     serv_.pushMsg(p);
-    auto f = p.prom.get_future();
-    std::cout << "Portfolio Trend: " << f.get();
+    auto f = p.prom.ge::typest_future();
+    std::cout << "Portfolio Trend: " << f.ge::typest();
   }
   void printPortfolio() {
     double sum = 0;
     std::cout << "---------------------------" << std::endl;
     std::cout << traits::Print<T>::Header() + " PORTFOLIO:\n" << std::endl;
     for (auto &[symbol, ownedAsset] : portfolio_) {
-      messages::InfoRequest<T> i{symbol};
-      auto f = i.prom.get_future();
-      serv_.pushMsg(Message<T>(std::move(i)));
+      message::types::InfoRequest<T> i{symbol};
+      auto f = i.prom.ge::typest_future();
+      serv_.pushMsg(message::Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       double totalValue = infoResp.currentPrice * ownedAsset.qty;
@@ -181,10 +181,10 @@ private:
       return;
     }
     if (updatedPrice <= it->second.stopLossRule.value()) {
-      messages::OrderRequest<T> o(symbol, managerId_, it->second.qty,
-                                  messages::OrderType::SELL);
+      message::types::OrderRequest<T> o(symbol, managerId_, it->second.qty,
+                                        message::types::OrderType::SELL);
       auto orderFut = o.prom.get_future();
-      serv_.pushMsg(Message<T>(std::move(o)));
+      serv_.pushMsg(message::Message<T>(std::move(o)));
 
       orderFut.wait();
       if (!orderFut.get().isSucceded) {

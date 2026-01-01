@@ -3,7 +3,7 @@
 #include <future>
 #ifndef BANK_ORDER_H
 #define BANK_ORDER_H
-namespace asset::messages {
+namespace asset::message::types {
 enum class OrderType {
   BUY,
   SELL,
@@ -25,5 +25,5 @@ template <typename T> struct OrderRequest {
     return typeStr;
   }
 };
-} // namespace asset::messages
+} // namespace asset::message::types
 #endif // BANK_ORDER_H

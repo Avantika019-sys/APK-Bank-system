@@ -1,8 +1,9 @@
 
+#include "asset/Manager.h"
 #include "asset/Server.h"
 #include "asset/bots/Crypto.h"
 #include "asset/crypto/Miner.h"
-#include "asset/messages/Info.h"
+#include "asset/message/types/Info.h"
 #include "asset/types/Crypto.h"
 #include "bank/Bank.h"
 #include "bank/User.h"
@@ -21,7 +22,7 @@ int main() {
   stockServ.addAsset("APPL", Stock{"Apple", {1.23_K}});
   stockServ.addAsset("TSLA", Stock{"Tesla technologies", {2.322_K}});
   stockServ.addAsset("NVDA", Stock{"Nvidia", {2.34234_K}});
-  stockServ.pushMsg(asset::messages::OrderEvent<Stock>{
+  stockServ.pushMsg(asset::message::types::OrderEvent<Stock>{
       asset::CalculateDemandStatistics<Stock>});
 
   auto cryptoServ =
@@ -29,12 +30,12 @@ int main() {
   cryptoServ.addAsset("BTC", Crypto{"Bitcoin", {0.532_Million}});
   cryptoServ.addAsset("ETH", Crypto{"Etherium", {32.423_K}});
   cryptoServ.addAsset("SOL", Crypto{"Solana", {23.423_K}});
-  cryptoServ.pushMsg(asset::messages::OrderEvent<Crypto>{
+  cryptoServ.pushMsg(asset::message::types::OrderEvent<Crypto>{
       asset::CalculateDemandStatistics<Crypto>});
   asset::bots::Crypto bot;
   auto handler =
       std::bind(&asset::bots::Crypto::OnNewOrder, &bot, _1, _2, _3, _4, _5, _6);
-  cryptoServ.pushMsg(asset::messages::OrderEvent<Crypto>{handler});
+  cryptoServ.pushMsg(asset::message::types::OrderEvent<Crypto>{handler});
   asset::crypto::Miner miner("BTC", cryptoServ);
 
   auto acc = boost::make_shared<bank::Account>();
