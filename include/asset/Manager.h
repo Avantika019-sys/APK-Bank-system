@@ -25,13 +25,12 @@ template <typename T> struct ownedAsset {
 };
 template <typename T> class Manager {
 public:
-  Manager(Server<T> *serv, boost::shared_ptr<bank::Account> acc,
-          util::Logger *logger)
-      : serv(serv), acc(acc), logger(logger) {}
+  Manager(Server<T> &serv, boost::shared_ptr<bank::Account> acc, std::string id)
+      : serv_(serv), acc(acc), traderId_(id) {}
   asset::messages::InfoResponse<T> getInfo(std::string symbol) {
     messages::InfoRequest<T> i{symbol};
     auto infoF = i.prom.get_future();
-    serv->pushMsg(Message<T>(std::move(i)));
+    serv_.pushMsg(Message<T>(std::move(i)));
 
     while (infoF.wait_for(10ms) != std::future_status::ready) {
       util::spin("Getting the current info for " + symbol);
@@ -59,7 +58,7 @@ public:
 
     messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::BUY};
     auto orderF = o.prom.get_future();
-    serv->pushMsg(Message<T>(std::move(o)));
+    serv_.pushMsg(Message<T>(std::move(o)));
 
     while (orderF.wait_for(10ms) != std::future_status::ready) {
       util::spin("waiting for server to process purchase order");
@@ -108,7 +107,7 @@ public:
     }
     messages::OrderRequest<T> o{symbol, amountInDKK, messages::OrderType::SELL};
     auto orderFut = o.prom.get_future();
-    serv->pushMsg(Message<T>(std::move(o)));
+    serv_.pushMsg(Message<T>(std::move(o)));
 
     while (orderFut.wait_for(10ms) != std::future_status::ready) {
       util::spin("waiting for server to process sale order");
@@ -128,6 +127,7 @@ public:
       ownedAssets.insert(assetName);
     }
     messages::PortfolioTrendRequest<T> p{ownedAssets};
+    serv_.pushMsg(p);
     auto f = p.prom.get_future();
     std::cout << "Portfolio Trend: " << f.get();
   }
@@ -138,7 +138,7 @@ public:
     for (auto &[symbol, ownedAsset] : portfolio_) {
       messages::InfoRequest<T> i{symbol};
       auto f = i.prom.get_future();
-      serv->pushMsg(Message<T>(std::move(i)));
+      serv_.pushMsg(Message<T>(std::move(i)));
       f.wait();
       auto infoResp = f.get();
       double totalValue = infoResp.currentPrice * ownedAsset.qty;
@@ -158,47 +158,15 @@ public:
     };
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
                              std::placeholders::_1, std::placeholders::_2);
-    portfolio_[symbol].conn = serv->getSignal(symbol).connect(handler);
+    portfolio_[symbol].conn = serv_.getSignal(symbol).connect(handler);
   }
   void removeStopLossRule(std::string name, int limit) {
     portfolio_[name].conn.disconnect();
   }
   Manager(const Manager &) = delete;
   Manager &operator=(const Manager &) = delete;
-
-  Manager(Manager &&other) noexcept {
-    for (auto &[name, asset] : other.portfolio_) {
-      if (asset.conn.connected()) {
-        asset.conn.disconnect();
-      }
-    }
-    portfolio_ = std::move(other.portfolio_);
-    auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
-                             std::placeholders::_1, std::placeholders::_2);
-    for (auto &[name, asset] : portfolio_) {
-      if (asset.stopLossRule.has_value()) {
-        asset.conn = serv().getSignal(name).connect(handler);
-      }
-    }
-  }
-  Manager &operator=(Manager &&other) noexcept {
-    if (this != &other) {
-      for (auto &[name, asset] : other.portfolio_) {
-        if (asset.conn.connected()) {
-          asset.conn.disconnect();
-        }
-      }
-      portfolio_ = std::move(other.portfolio_);
-      auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
-                               std::placeholders::_1, std::placeholders::_2);
-      for (auto &[name, asset] : portfolio_) {
-        if (asset.stopLossRule.has_value()) {
-          asset.conn = serv().getSignal(name).connect(handler);
-        }
-      }
-    }
-    return *this;
-  }
+  Manager(Manager &&other) = delete;
+  Manager &operator=(Manager &&other) = delete;
 
 private:
   void onAssetUpdate(std::string symbol, double updatedPrice) {
@@ -214,7 +182,7 @@ private:
       messages::OrderRequest<T> o(symbol, it->second.qty,
                                   messages::OrderType::SELL);
       auto orderFut = o.prom.get_future();
-      serv->pushMsg(Message<T>(std::move(o)));
+      serv_.pushMsg(Message<T>(std::move(o)));
 
       orderFut.wait();
       if (!orderFut.get().isSucceded) {
@@ -226,18 +194,22 @@ private:
           tx::asset::Sale{symbol, traits::Print<T>::Header(),
                           std::format("{:.{}f}", it->second.qty, precision),
                           updatedPrice, total});
-      logger->log("automatically sold " + symbol +
-                      " because of stop loss limit",
-                  util::level::INFO,
-                  util::field("stop loss value limit",
-                              it->second.stopLossRule.value()));
+      // logger->log("automatically sold " + symbol +
+      //                 " because of stop loss limit",
+      //             util::level::INFO,
+      //             util::field("stop loss value limit",
+      //                         it->second.stopLossRule.value()));
     }
   }
   std::map<std::string, ownedAsset<T>> portfolio_;
   std::mutex mtx_;
-  Server<T> *serv;
+  Server<T> &serv_;
   boost::shared_ptr<bank::Account> acc;
-  util::Logger *logger;
+  std::string traderId_;
 };
+template <typename T, typename... Args>
+std::unique_ptr<Manager<T>> createManager(Args &&...args) {
+  return std::make_unique<Manager<T>>(std::forward<Args>(args)...);
+}
 } // namespace asset
 #endif // BANK_ASSETACCOUNT_H

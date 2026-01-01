@@ -10,6 +10,7 @@
 #include <boost/signals2/signal.hpp>
 #include <memory>
 #include <random>
+#include <stdexcept>
 #include <thread>
 #include <tuple>
 #include <type_traits>
@@ -29,9 +30,9 @@ typedef boost::signals2::signal<void(std::string assetName,
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server()
+  Server(std::unique_ptr<util::Logger> logger)
       : msgQueue_(traits::MessageQueue<T>::QueueCapacity()),
-        logger(traits::Print<T>::Header() + "-server") {
+        logger(std::move(logger)) {
 
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
@@ -70,6 +71,9 @@ public:
   void startMessageProccesor() {
     while (run) {
       auto msg = msgQueue_.pop();
+      if (msg.valueless_by_exception()) {
+        throw std::invalid_argument("hejj");
+      }
       std::visit(MessageVisitor<T>{*this}, msg);
     }
   }
@@ -92,17 +96,17 @@ private:
       std::string assetName, int qty, int totalNoOfAssetForSale,
       int totalNoOfAssetDemand, double price, bool isBuy)>>
       OrderEventCbs;
-  util::Logger logger;
+  std::unique_ptr<util::Logger> logger;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(messages::OrderRequest<T> &o) {
-    serv.logger.log("Received order request", util::level::INFO,
-                    util::field{"Quantity", o.qty},
-                    util::field{traits::Print<T>::Header(), o.assetName},
-                    util::field{"Type", o.getTypeStr()});
+    serv.logger->log("Received order request", util::level::INFO,
+                     util::field{"Quantity", o.qty},
+                     util::field{traits::Print<T>::Header(), o.assetName},
+                     util::field{"Type", o.getTypeStr()});
     messages::OrderResponse resp(true);
     o.prom.set_value(resp);
     for (auto cb : serv.OrderEventCbs) {
@@ -110,8 +114,8 @@ template <typename T> struct MessageVisitor {
     }
   }
   void operator()(messages::InfoRequest<T> &i) {
-    serv.logger.log("Received info request", util::level::INFO,
-                    util::field(traits::Print<T>::Header(), i.assetName));
+    serv.logger->log("Received info request", util::level::INFO,
+                     util::field(traits::Print<T>::Header(), i.assetName));
     auto asset = serv.assets_.at(i.assetName).first;
     auto trend = calculateTrendForIndividualAsset<T>(asset);
     double price = serv.assets_[i.assetName].first.priceOverTime.back();
@@ -139,7 +143,7 @@ template <typename T> struct MessageVisitor {
 template <> struct MessageVisitor<types::Crypto> {
   Server<types::Crypto> &serv;
   void operator()(messages::OrderRequest<types::Crypto> &o) {
-    serv.logger.log(
+    serv.logger->log(
         "Received order request", util::level::INFO,
         util::field{"Quantity", o.qty},
         util::field{traits::Print<types::Crypto>::Header(), o.assetName},
@@ -151,7 +155,7 @@ template <> struct MessageVisitor<types::Crypto> {
     }
   }
   void operator()(messages::InfoRequest<types::Crypto> &i) {
-    serv.logger.log(
+    serv.logger->log(
         "Received info request", util::level::INFO,
         util::field(traits::Print<types::Crypto>::Header(), i.assetName));
     auto asset = serv.assets_.at(i.assetName).first;

@@ -7,7 +7,7 @@ namespace asset::crypto {
 class Miner {
 
 public:
-  Miner(std::string crypto, Server<types::Crypto> *serv)
+  Miner(std::string crypto, Server<types::Crypto> &serv)
       : crypto(crypto), serv(serv),
         minerThread(std::thread([this]() { startMining(); })) {}
   ~Miner() {
@@ -24,10 +24,10 @@ private:
     std::uniform_real_distribution<double> distrib(0.005, 0.012);
     while (run) {
       std::this_thread::sleep_for(5s);
-      serv->pushMsg(messages::crypto::MineEvent{crypto, distrib(gen)});
+      serv.pushMsg(messages::crypto::MineEvent{crypto, distrib(gen)});
     }
   }
-  Server<types::Crypto> *serv;
+  Server<types::Crypto> &serv;
   std::string crypto;
   std::thread minerThread;
 };

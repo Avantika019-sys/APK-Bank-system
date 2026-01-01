@@ -1,21 +1,16 @@
 #include "bank/Account.h"
-#include "util/Logger.h"
 #include <algorithm>
 #include <format>
 #include <fstream>
 #include <iostream>
 #include <mutex>
-#include <numeric>
 #include <string>
 #include <sys/types.h>
-#include <type_traits>
 #include <utility>
 #include <variant>
 namespace bank {
-Account::Account(util::Logger *logger) : logger_(logger), balance_(0) {}
 
-Account::Account(Account &&other) noexcept
-    : txs_(std::move(other.txs_)), logger_(std::move(other.logger_)) {}
+Account::Account(Account &&other) noexcept : txs_(std::move(other.txs_)) {}
 
 Account &Account::operator=(Account &&other) noexcept {
   if (this != &other) {
@@ -28,16 +23,11 @@ void Account::deposit(double amount) {
   std::lock_guard<std::mutex> lock(mtx_);
   balance_ = amount;
   txs_.emplace_back(tx::Deposit{amount});
-  logger_->log("successfully made deposit", util::level::INFO,
-               util::field("amount", amount));
 }
 
 void Account::withdraw(double amount) {
   std::lock_guard<std::mutex> lock(mtx_);
   if (balance_ < amount) {
-    logger_->log("failed to withdraw because insufficient funds",
-                 util::level::ERROR, util::field("withdraw amount", amount),
-                 util::field("current balance", balance_));
     throw std::invalid_argument("Not enough money on account");
   }
   balance_ = -amount;

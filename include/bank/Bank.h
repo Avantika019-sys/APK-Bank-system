@@ -23,7 +23,7 @@ public:
   }
 
 private:
-  std::vector<User> users_;
+  std::list<User> users_;
 };
 } // namespace bank
 #endif // BANK_BANK_H

@@ -2,7 +2,6 @@
 #include "bank/tx/Withdraw.h"
 #include "bank/tx/asset/Purchase.h"
 #include "bank/tx/asset/Sale.h"
-#include "util/Logger.h"
 #include <sys/types.h>
 #include <variant>
 #include <vector>
@@ -14,8 +13,7 @@ typedef std::variant<tx::Deposit, tx::Withdraw, tx::asset::Purchase,
     txVariant;
 class Account {
 public:
-  Account(util::Logger *logger);
-
+  Account() = default;
   void deposit(double amount);
 
   void withdraw(double amount);
@@ -33,9 +31,8 @@ public:
 
 private:
   std::vector<txVariant> txs_;
-  util::Logger *logger_;
   mutable std::mutex mtx_;
-  double balance_;
+  double balance_ = 0;
 };
 } // namespace bank
 #endif // BANK_ACCOUNT_H

@@ -30,7 +30,12 @@ template <typename T> struct field {
 };
 class Logger {
 public:
-  Logger(std::string id);
+  Logger(std::string fileName) {
+    fptrLogs_ = std::fopen(fileName.c_str(), "w");
+    if (fptrLogs_ == NULL) {
+      throw std::invalid_argument("Could not open log file");
+    }
+  }
   void log(std::string msg, level l) {
     std::string levelStr = levelToString(l);
     auto now = std::chrono::system_clock::now();
@@ -62,14 +67,36 @@ public:
     msg += std::format(", ({}:{})", field.name, field.value.toString());
     log(msg, l, args...);
   }
-  ~Logger();
-  Logger(Logger &&other) noexcept;
-  Logger &operator=(Logger &&other) noexcept;
+  Logger() {
+    if (fptrLogs_ != nullptr) {
+      std::fclose(fptrLogs_);
+    }
+  }
+  Logger(Logger &&other) noexcept : fptrLogs_(other.fptrLogs_) {
+    other.fptrLogs_ = nullptr;
+  }
+  Logger &operator=(Logger &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    if (fptrLogs_ != nullptr) {
+      fclose(fptrLogs_);
+    }
+    fptrLogs_ = other.fptrLogs_;
+    other.fptrLogs_ = nullptr;
+    return *this;
+  }
 
 private:
-  Logger(const Logger &other);
-  Logger &operator=(const Logger &other);
-  std::string levelToString(level l);
+  std::string levelToString(level l) {
+    if (l == level::INFO) {
+      return "INFO";
+    }
+    if (l == level::DEBUG) {
+      return "DEBUG";
+    }
+    return "ERROR";
+  }
   FILE *fptrLogs_;
 };
 } // namespace util

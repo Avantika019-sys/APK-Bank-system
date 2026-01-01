@@ -1,8 +1,8 @@
 #include "asset/Manager.h"
-#include "asset/Server.h"
 #include "bank/Account.h"
 #include "util/Logger.h"
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <memory>
 #ifndef BANK_USER_H
 #define BANK_USER_H
 using namespace std;
@@ -11,20 +11,18 @@ using namespace asset::types;
 namespace bank {
 class User {
 public:
-  User(string name, string cpr, Server<Crypto> *cryptoServ,
-       Server<Stock> *stockServ);
-  User(string name, string cpr);
-  User(string name, string cpr, Server<Crypto> *cryptoServ);
-  User(string name, string cpr, Server<Stock> *stockServ);
-
+  User(string name, string cpr, boost::shared_ptr<Account> account,
+       std::unique_ptr<Manager<Crypto>> cryptoManager,
+       std::unique_ptr<Manager<Stock>> stockManager)
+      : name_(name), cpr_(cpr), account(account), cryptoManager(cryptoManager),
+        stockManager(stockManager) {}
   boost::shared_ptr<Account> account;
-  Manager<Stock> *stockManager;
-  Manager<Crypto> *cryptoManager;
-  string getCpr() const;
+  std::unique_ptr<Manager<Crypto>> &cryptoManager;
+  std::unique_ptr<Manager<Stock>> &stockManager;
+  string getCpr() const { return cpr_; };
 
 private:
   string cpr_;
-  util::Logger logger_;
   string name_;
 };
 } // namespace bank
