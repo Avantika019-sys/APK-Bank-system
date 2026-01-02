@@ -44,10 +44,10 @@ struct parallel {};
 struct sequential {};
 template <typename T>
 std::map<std::string, double>
-CalculatePortfolioTrend(const std::map<std::string, T> &assets,
-                        const std::vector<std::string> &ownedAssets, parallel) {
+CalculateTrends(const std::map<std::string, T> &assets,
+                const std::vector<std::string> &ownedAssets, parallel) {
   std::map<std::string, double> trends;
-  double trendSum = 0;
+  // double trendSum = 0;
   std::vector<std::future<double>> futures;
   for (const auto &[symbol, asset] : assets) {
     auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
@@ -60,27 +60,26 @@ CalculatePortfolioTrend(const std::map<std::string, T> &assets,
   for (int i = 0; i < futures.size(); i++) {
     double trend = futures[i].get();
     trends[ownedAssets[i]] = trend;
-    trendSum += trend;
+    // trendSum += trend;
   }
-  trends["Total Trend"] = trendSum / ownedAssets.size();
+  // trends["Total Trend"] = trendSum / ownedAssets.size();
   return trends;
 }
 template <typename T>
 std::map<std::string, double>
-CalculatePortfolioTrend(const std::map<std::string, T> &assets,
-                        const std::vector<std::string> &ownedAssets,
-                        sequential) {
+CalculateTrends(const std::map<std::string, T> &assets,
+                const std::vector<std::string> &ownedAssets, sequential) {
   std::map<std::string, double> trends;
-  double trendSum = 0;
+  // double trendSum = 0;
   for (const auto &[symbol, asset] : assets) {
     auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
     if (it != ownedAssets.end()) {
       double trend = calculateTrendForIndividualAsset<T>(asset);
       trends[symbol] = trend;
-      trendSum += trend;
+      // trendSum += trend;
     }
   }
-  trends["Total Trend"] = trendSum / ownedAssets.size();
+  // trends["Total Trend"] = trendSum / ownedAssets.size();
   return trends;
 }
 // template <typename T>

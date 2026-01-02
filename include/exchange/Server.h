@@ -1,5 +1,6 @@
 #include "Calculator.h"
 #include "asset.hpp"
+#include "exchange/message/Info.h"
 #include "message.hpp"
 #include "trait.hpp"
 #include "util/Logger.h"
@@ -99,25 +100,24 @@ template <typename T> struct MessageVisitor {
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
   }
-  void operator()(message::InfoRequest<T> &i) {
-    serv.logger_->log("Received info request", level::INFO,
-                      field(trait::Print<T>::Header(), i.assetName));
-    auto &asset = serv.assets_.at(i.assetName);
-    auto trend = calculateTrendForIndividualAsset<T>(asset);
-    double price = serv.assets_.at(i.assetName).priceOverTime_.back();
-    i.prom.set_value(message::InfoResponse<T>{price, trend});
-  }
-  void operator()(message::PortfolioTrendRequest<T> &p) {
+
+  void operator()(message::InfoRequest &i) {
     std::map<std::string, double> trends;
+    int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
-    if (p.ownedAssets.size() * trait::Trend<asset::Crypto>::LookBackPeriod() <
-        1000) {
-      trends =
-          CalculatePortfolioTrend(serv.assets_, p.ownedAssets, sequential{});
+    if (i.assetSymbols.size() * lookBackPeriod < 1000) {
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
-      trends = CalculatePortfolioTrend(serv.assets_, p.ownedAssets, parallel{});
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
-    p.prom.set_value(trends);
+
+    message::InfoResponse resp;
+    for (auto symbol : i.assetSymbols) {
+      resp.assetInfos.emplace_back(
+          symbol, serv.assets_.at(symbol).priceOverTime_.back(),
+          trends[symbol]);
+    }
+    i.prom.set_value(resp);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };
@@ -133,27 +133,22 @@ template <> struct MessageVisitor<asset::Crypto> {
     o.prom.set_value(resp);
   }
   void operator()(message::InfoRequest &i) {
-    serv.logger_->log(
-        "Received info request", level::INFO,
-        field(trait::Print<asset::Crypto>::Header(), i.assetName));
-    std::lock_guard<std::mutex> lock(serv.mtx_);
-    auto &asset = serv.assets_.at(i.assetName);
-    auto trend = calculateTrendForIndividualAsset<asset::Crypto>(asset);
-    double price = asset.priceOverTime_.back();
-    i.prom.set_value(InfoResponse{price, trend});
-  }
-  void operator()(message::PortfolioTrendRequest<asset::Crypto> &p) {
     std::map<std::string, double> trends;
+    int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
-    if (p.ownedAssets.size() * trait::Trend<asset::Crypto>::LookBackPeriod() <
-        1000) {
-      trends =
-          CalculatePortfolioTrend(serv.assets_, p.ownedAssets, sequential{});
+    if (i.assetSymbols.size() * lookBackPeriod < 1000) {
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
-      trends = CalculatePortfolioTrend(serv.assets_, p.ownedAssets, parallel{});
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
-    std::this_thread::sleep_for(10s);
-    p.prom.set_value(trends);
+
+    message::InfoResponse resp;
+    for (auto symbol : i.assetSymbols) {
+      resp.assetInfos.emplace_back(
+          symbol, serv.assets_.at(symbol).priceOverTime_.back(),
+          trends[symbol]);
+    }
+    i.prom.set_value(resp);
   }
   void operator()(message::MineEvent &m) {
     std::lock_guard<std::mutex> lock(serv.mtx_);

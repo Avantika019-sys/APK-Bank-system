@@ -1,5 +1,6 @@
 #include "Account.h"
 #include "Server.h"
+#include "exchange/message/Info.h"
 #include "message.hpp"
 #include "trait.hpp"
 #include "tx.hpp"
@@ -9,7 +10,7 @@
 #include <iostream>
 #include <map>
 #include <stdexcept>
-#include <unordered_set>
+#include <vector>
 
 #ifndef EXCHANGE_ASSETMANAGER_H
 #define EXCHANGE_ASSETMANAGER_H
@@ -25,13 +26,13 @@ public:
   Manager(Server<T> &serv, boost::shared_ptr<Account> acc,
           std::string managerId)
       : serv_(serv), acc(acc), managerId_(managerId) {}
-  message::InfoResponse<T> getInfo(std::string symbol) {
-    message::InfoRequest<T> i{symbol};
+  message::InfoResponse getInfo(std::vector<std::string> symbol) {
+    message::InfoRequest i{{symbol}};
     auto infoF = i.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(i)));
 
     while (infoF.wait_for(100ms) != std::future_status::ready) {
-      util::spin("Getting the current info for " + symbol);
+      util::spin("Getting info");
     }
     std::cout << std::endl;
     return infoF.get();
@@ -40,13 +41,16 @@ public:
   void purchaseAsset(std::string symbol, double amountInDKK) {
     std::cout << "---------------------------" << std::endl;
     std::cout << "Started purchase of " << symbol << std::endl;
-    auto infoResp = getInfo(symbol);
+    auto infoResp = getInfo({symbol});
 
+    auto assetInfo = infoResp.assetInfos[0];
     typedef typename trait::Precision<T>::PrecisionT PrecisionT;
-    PrecisionT qtyPurchaseable = amountInDKK / infoResp.currentPrice;
+    PrecisionT qtyPurchaseable =
+        (PrecisionT)amountInDKK / assetInfo.currentPrice;
     auto balance = acc->getBalance();
     std::cout << "Quantity you can get for " << amountInDKK
-              << " DKK: " << qtyPurchaseable
+              << " DKK: " << qtyPurchaseable << "\n"
+              << "Current trend: " << assetInfo.trend
               << "\nPlease confirm purchase by pressing y: ";
     char inp;
     std::cin >> inp;
@@ -75,7 +79,7 @@ public:
         symbol,
         trait::Print<T>::Header(),
         std::format("{:.{}f}", qtyPurchaseable, precision),
-        infoResp.currentPrice,
+        assetInfo.currentPrice,
         amountInDKK,
     });
     std::lock_guard<std::mutex> lock(mtx_);
@@ -95,8 +99,10 @@ public:
       throw std::invalid_argument(
           "you do not own enough of this stock too sell that amount");
     }
-    auto infoResp = getInfo(symbol);
-    auto qtyToSell = amountInDKK / infoResp.currentPrice;
+    auto infoResp = getInfo({symbol});
+    auto assetInfo = infoResp.assetInfos[0];
+    typedef typename trait::Precision<T>::PrecisionT PrecisionT;
+    PrecisionT qtyToSell = (PrecisionT)amountInDKK / assetInfo.currentPrice;
 
     std::cout << "Confirm you would like to sell " << qtyToSell << " " << symbol
               << "\nPlease confirm sale by pressing y: ";
@@ -121,47 +127,36 @@ public:
       acc->addTransaction(
           tx::Sale{symbol, trait::Print<T>::Header(),
                    std::format("{:.{}f}", amountInDKK, precision),
-                   infoResp.currentPrice});
+                   assetInfo.currentPrice});
     }
   }
-  void printPortfolioTrend() {
+  void printPortfolioStats() {
     std::cout << "---------------------------" << std::endl;
-    std::cout << trait::Print<T>::Header() + " PORTFOLIO trend:\n" << std::endl;
-    std::vector<std::string> ownedAssets;
+    std::cout << trait::Print<T>::Header() + " PORTFOLIO stats:\n" << std::endl;
+    std::vector<std::string> AssetSymbols;
     for (auto &[symbol, _] : portfolio_) {
-      ownedAssets.push_back(symbol);
+      AssetSymbols.push_back(symbol);
     }
-    message::PortfolioTrendRequest<T> p{ownedAssets};
-    auto f = p.prom.get_future();
-    serv_.pushMsg(message::Message<T>(std::move(p)));
-    while (f.wait_for(100ms) != std::future_status::ready) {
-      util::spin("Awaiting server response");
+    auto resp = getInfo(AssetSymbols);
+    double trendSum = 0;
+    double valueSum = 0;
+    for (const auto &[symbol, price, trend] : resp.assetInfos) {
+      auto qty = portfolio_[symbol].qty;
+      // clang-format off
+      std::cout << 
+        "Symbol: " << symbol << "\n" <<
+        "Quantity owned: " << qty << "\n" <<
+        "Price per unit: " << price << "\n" << 
+        "Total value: " << price*qty << "\n"<<
+        "Trend: " << trend<< "\n\n"
+      ;
+      // clang-format on
+      trendSum += trend;
+      valueSum += price * qty;
     }
-    std::cout << std::endl;
-    auto trends = f.get();
-    for (const auto &[symbol, trend] : trends) {
-      std::cout << symbol << ": " << trend << "%" << std::endl;
-    }
-  }
-  void printPortfolio() {
-    double sum = 0;
-    std::cout << "---------------------------" << std::endl;
-    std::cout << trait::Print<T>::Header() + " PORTFOLIO:\n" << std::endl;
-    for (auto &[symbol, ownedAsset] : portfolio_) {
-      message::InfoRequest<T> i{symbol};
-      auto f = i.prom.get_future();
-      serv_.pushMsg(message::Message<T>(std::move(i)));
-      f.wait();
-      auto infoResp = f.get();
-      double totalValue = infoResp.currentPrice * ownedAsset.qty;
-      sum += totalValue;
-      std::cout << "Symbol: " << symbol
-                << "\nQuantity owned: " << ownedAsset.qty
-                << "\nPrice per stock: " << infoResp.currentPrice
-                << "\nTotal value: " << totalValue << std::endl
-                << std::endl;
-    }
-    std::cout << "Total value of portfolio: " << sum << std::endl;
+    std::cout << "Portfolio Trend: " << trendSum / resp.assetInfos.size()
+              << std::endl;
+    std::cout << "Portfolio Value: " << valueSum << std::endl;
   }
 
   void addStopLossRule(std::string symbol, int limit) {
@@ -209,11 +204,6 @@ private:
           tx::Sale{symbol, trait::Print<T>::Header(),
                    std::format("{:.{}f}", it->second.qty, precision),
                    updatedPrice, total});
-      // logger->log("automatically sold " + symbol +
-      //                 " because of stop loss limit",
-      //             util::level::INFO,
-      //             util::field("stop loss value limit",
-      //                         it->second.stopLossRule.value()));
     }
   }
   std::map<std::string, ownedAsset<T>> portfolio_;

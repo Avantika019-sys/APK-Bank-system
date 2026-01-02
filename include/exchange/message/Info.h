@@ -2,14 +2,19 @@
 #define EXCHANGE_MESSAGE_INFO_H
 #include <future>
 #include <string>
+#include <vector>
 namespace exchange::message {
-template <typename T> struct InfoResponse {
+struct assetInfo {
+  std::string symbol;
   double currentPrice;
   double trend;
 };
-template <typename T> struct InfoRequest {
-  std::string assetName;
-  std::promise<InfoResponse<T>> prom;
+struct InfoResponse {
+  std::vector<assetInfo> assetInfos;
+};
+struct InfoRequest {
+  std::vector<std::string> assetSymbols;
+  std::promise<InfoResponse> prom;
 };
 } // namespace exchange::message
 #endif // EXCHANGE_MESSAGE_INFO_H
