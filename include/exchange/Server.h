@@ -21,7 +21,7 @@ template <typename T, typename = void>
 struct hasPriceOverTime : std::false_type {};
 template <typename T>
 struct hasPriceOverTime<T,
-                        std::void_t<decltype(std::declval<T>().priceOverTime_)>>
+                        std::void_t<decltype(std::declval<T>().unitPriceOverTime_)>>
     : std::true_type {};
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
@@ -68,8 +68,8 @@ private:
       std::lock_guard<std::mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
-        double newPrice = asset.priceOverTime_.back() * (1 + percentChange);
-        asset.priceOverTime_.push_back(newPrice);
+        double newPrice = asset.unitPriceOverTime_.back() * (1 + percentChange);
+        asset.unitPriceOverTime_.push_back(newPrice);
         (*asset.sig_)(symbol, newPrice);
       }
     }
@@ -114,7 +114,7 @@ template <typename T> struct MessageVisitor {
     message::InfoResponse resp;
     for (auto symbol : i.assetSymbols) {
       resp.assetInfos.emplace_back(
-          symbol, serv.assets_.at(symbol).priceOverTime_.back(),
+          symbol, serv.assets_.at(symbol).unitPriceOverTime_.back(),
           trends[symbol]);
     }
     i.prom.set_value(resp);
@@ -145,7 +145,7 @@ template <> struct MessageVisitor<asset::Crypto> {
     message::InfoResponse resp;
     for (auto symbol : i.assetSymbols) {
       resp.assetInfos.emplace_back(
-          symbol, serv.assets_.at(symbol).priceOverTime_.back(),
+          symbol, serv.assets_.at(symbol).unitPriceOverTime_.back(),
           trends[symbol]);
     }
     i.prom.set_value(resp);
@@ -154,8 +154,8 @@ template <> struct MessageVisitor<asset::Crypto> {
     std::lock_guard<std::mutex> lock(serv.mtx_);
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;
-    double priceAffect = crypto.priceOverTime_.back() * m.qty;
-    crypto.priceOverTime_.push_back(crypto.priceOverTime_.back() - priceAffect);
+    double priceAffect = crypto.unitPriceOverTime_.back() * m.qty;
+    crypto.unitPriceOverTime_.push_back(crypto.unitPriceOverTime_.back() - priceAffect);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };

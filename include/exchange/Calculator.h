@@ -7,7 +7,7 @@
 namespace exchange {
 template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   typedef typename trait::Precision<T>::PrecisionT PrecisionT;
-  const auto &vec = asset.priceOverTime_;
+  const auto &vec = asset.unitPriceOverTime_;
   if (vec.size() == 1) {
     return 0;
   }
