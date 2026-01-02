@@ -30,9 +30,10 @@ public:
     auto infoF = i.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(i)));
 
-    while (infoF.wait_for(10ms) != std::future_status::ready) {
+    while (infoF.wait_for(100ms) != std::future_status::ready) {
       util::spin("Getting the current info for " + symbol);
     }
+    std::cout << std::endl;
     return infoF.get();
   }
 
@@ -59,9 +60,10 @@ public:
     auto orderF = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
 
-    while (orderF.wait_for(10ms) != std::future_status::ready) {
+    while (orderF.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process purchase order");
     }
+    std::cout << std::endl;
 
     auto resp = orderF.get();
     if (!resp.isSucceded) {
@@ -109,9 +111,10 @@ public:
     auto orderFut = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
 
-    while (orderFut.wait_for(10ms) != std::future_status::ready) {
+    while (orderFut.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process sale order");
     }
+    std::cout << std::endl;
     orderFut.wait();
     if (orderFut.get().isSucceded) {
       int precision = trait::Precision<T>::PrecisionFormat();
@@ -122,14 +125,23 @@ public:
     }
   }
   void printPortfolioTrend() {
-    std::unordered_set<T> ownedAssets;
-    for (auto &[assetName, _] : portfolio_) {
-      ownedAssets.insert(assetName);
+    std::cout << "---------------------------" << std::endl;
+    std::cout << trait::Print<T>::Header() + " PORTFOLIO trend:\n" << std::endl;
+    std::vector<std::string> ownedAssets;
+    for (auto &[symbol, _] : portfolio_) {
+      ownedAssets.push_back(symbol);
     }
     message::PortfolioTrendRequest<T> p{ownedAssets};
-    serv_.pushMsg(p);
     auto f = p.prom.get_future();
-    std::cout << "Portfolio Trend: " << f.get();
+    serv_.pushMsg(message::Message<T>(std::move(p)));
+    while (f.wait_for(100ms) != std::future_status::ready) {
+      util::spin("Awaiting server response");
+    }
+    std::cout << std::endl;
+    auto trends = f.get();
+    for (const auto &[symbol, trend] : trends) {
+      std::cout << symbol << ": " << trend << "%" << std::endl;
+    }
   }
   void printPortfolio() {
     double sum = 0;

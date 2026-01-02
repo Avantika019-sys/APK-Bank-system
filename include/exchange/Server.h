@@ -13,6 +13,7 @@
 #include <utility>
 #ifndef EXCHANGE_STOCKSERVER_H
 #define EXCHANGE_STOCKSERVER_H
+using namespace std::chrono_literals;
 using namespace exchange::util;
 namespace exchange {
 template <typename T, typename = void>
@@ -107,18 +108,16 @@ template <typename T> struct MessageVisitor {
     i.prom.set_value(message::InfoResponse<T>{price, trend});
   }
   void operator()(message::PortfolioTrendRequest<T> &p) {
-    std::vector<T *> assets;
-    for (auto assetName : p.ownedAssets) {
-      assets.push_back(&serv.assets_.at(assetName));
-    }
-    typedef typename trait::Precision<T>::PrecisionT PrecisionT;
-    double trend;
-    if (p.ownedAssets.size() * trait::Trend<T>::LookBackPeriod() < 1000) {
-      trend = CalculatePortfolioTrend(assets, sequential{});
+    std::map<std::string, double> trends;
+    std::lock_guard<std::mutex> lock(serv.mtx_);
+    if (p.ownedAssets.size() * trait::Trend<asset::Crypto>::LookBackPeriod() <
+        1000) {
+      trends =
+          CalculatePortfolioTrend(serv.assets_, p.ownedAssets, sequential{});
     } else {
-      trend = CalculatePortfolioTrend(assets, parallel{});
+      trends = CalculatePortfolioTrend(serv.assets_, p.ownedAssets, parallel{});
     }
-    p.prom.set_value(trend);
+    p.prom.set_value(trends);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };
@@ -144,19 +143,17 @@ template <> struct MessageVisitor<asset::Crypto> {
     i.prom.set_value(InfoResponse<asset::Crypto>{price, trend});
   }
   void operator()(message::PortfolioTrendRequest<asset::Crypto> &p) {
-    std::vector<asset::Crypto *> assets;
+    std::map<std::string, double> trends;
     std::lock_guard<std::mutex> lock(serv.mtx_);
-    for (auto assetName : p.ownedAssets) {
-      assets.push_back(&serv.assets_.at(assetName));
-    }
-    double trend = 0;
     if (p.ownedAssets.size() * trait::Trend<asset::Crypto>::LookBackPeriod() <
         1000) {
-      trend = CalculatePortfolioTrend(assets, sequential{});
+      trends =
+          CalculatePortfolioTrend(serv.assets_, p.ownedAssets, sequential{});
     } else {
-      trend = CalculatePortfolioTrend(assets, parallel{});
+      trends = CalculatePortfolioTrend(serv.assets_, p.ownedAssets, parallel{});
     }
-    p.prom.set_value(trend);
+    std::this_thread::sleep_for(10s);
+    p.prom.set_value(trends);
   }
   void operator()(message::MineEvent &m) {
     std::lock_guard<std::mutex> lock(serv.mtx_);

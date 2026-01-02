@@ -43,6 +43,7 @@ int main() {
   acc->getBalance();
   acc->printTransactionHistory();
   cryptoMgr->printPortfolio();
+  cryptoMgr->printPortfolioTrend();
   stockMgr->printPortfolio();
   acc->generateAccountStatement();
 }

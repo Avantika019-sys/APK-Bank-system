@@ -1,12 +1,13 @@
 #include "trait.hpp"
 #include <future>
+#include <unordered_set>
 #include <vector>
 #ifndef EXCHANGE_CALCULATOR_H
 #define EXCHANGE_CALCULATOR_H
 namespace exchange {
 template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   typedef typename trait::Precision<T>::PrecisionT PrecisionT;
-  auto &vec = asset.priceOverTime_;
+  const auto &vec = asset.priceOverTime_;
   if (vec.size() == 1) {
     return 0;
   }
@@ -42,35 +43,54 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
 struct parallel {};
 struct sequential {};
 template <typename T>
-double CalculatePortfolioTrend(std::vector<T *> assets, parallel) {
+std::map<std::string, double>
+CalculatePortfolioTrend(const std::map<std::string, T> &assets,
+                        const std::vector<std::string> &ownedAssets, parallel) {
+  std::map<std::string, double> trends;
+  double trendSum = 0;
   std::vector<std::future<double>> futures;
-  for (auto &asset : assets) {
-    futures.push_back(std::async(std::launch::async, [asset]() {
-      return calculateTrendForIndividualAsset<T>(*asset);
-    }));
+  for (const auto &[symbol, asset] : assets) {
+    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
+    if (it != ownedAssets.end()) {
+      futures.push_back(std::async(std::launch::async, [&asset]() {
+        return calculateTrendForIndividualAsset<T>(asset);
+      }));
+    }
   }
-  double total = 0;
-  for (auto &f : futures) {
-    total += f.get();
+  for (int i = 0; i < futures.size(); i++) {
+    double trend = futures[i].get();
+    trends[ownedAssets[i]] = trend;
+    trendSum += trend;
   }
-  return total / futures.size();
+  trends["Total Trend"] = trendSum / ownedAssets.size();
+  return trends;
 }
 template <typename T>
-double CalculatePortfolioTrend(std::vector<T *> assets, sequential) {
-  double total = 0;
-  for (auto asset : assets) {
-    total += calculateTrendForIndividualAsset<T>(*asset);
+std::map<std::string, double>
+CalculatePortfolioTrend(const std::map<std::string, T> &assets,
+                        const std::vector<std::string> &ownedAssets,
+                        sequential) {
+  std::map<std::string, double> trends;
+  double trendSum = 0;
+  for (const auto &[symbol, asset] : assets) {
+    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
+    if (it != ownedAssets.end()) {
+      double trend = calculateTrendForIndividualAsset<T>(asset);
+      trends[symbol] = trend;
+      trendSum += trend;
+    }
   }
-  return total / assets.size();
+  trends["Total Trend"] = trendSum / ownedAssets.size();
+  return trends;
 }
-template <typename T>
-void CalculateDemandStatistics(std::string assetName, int qty,
-                               int totalNoOfAssetForSale,
-                               int totalNoOfAssetDemand, double price,
-                               bool isBuy) {
-  auto percentageOfMarketDemand = (qty / totalNoOfAssetDemand) * 100;
-  auto percentageOfSale = (qty / totalNoOfAssetForSale) * 100;
-  // std::cout << percentageOfSale << percentageOfMarketDemand << std::endl;
-};
+// template <typename T>
+// void CalculateDemandStatistics(std::string assetName, int qty,
+//                                int totalNoOfAssetForSale,
+//                                int totalNoOfAssetDemand, double price,
+//                                bool isBuy) {
+//   auto percentageOfMarketDemand = (qty / totalNoOfAssetDemand) * 100;
+//   auto percentageOfSale = (qty / totalNoOfAssetForSale) * 100;
+//   // std::cout << percentageOfSale << percentageOfMarketDemand << std::endl;
+// };
 } // namespace exchange
 #endif // EXCHANGE_CALCULATOR_H
