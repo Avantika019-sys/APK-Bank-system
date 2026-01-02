@@ -22,7 +22,7 @@ template <> struct MessageQueue<asset::Stock> {
 
 template <> struct MessageQueue<asset::Crypto> {
   using Variant =
-      std::variant<OrderRequest<asset::Crypto>, InfoRequest<asset::Crypto>,
+      std::variant<OrderRequest<asset::Crypto>, InfoRequest,
                    PortfolioTrendRequest<asset::Crypto>, Stop, MineEvent>;
   static int QueueCapacity() { return 80; }
 };

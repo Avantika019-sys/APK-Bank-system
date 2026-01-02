@@ -132,7 +132,7 @@ template <> struct MessageVisitor<asset::Crypto> {
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
   }
-  void operator()(message::InfoRequest<asset::Crypto> &i) {
+  void operator()(message::InfoRequest &i) {
     serv.logger_->log(
         "Received info request", level::INFO,
         field(trait::Print<asset::Crypto>::Header(), i.assetName));
@@ -140,7 +140,7 @@ template <> struct MessageVisitor<asset::Crypto> {
     auto &asset = serv.assets_.at(i.assetName);
     auto trend = calculateTrendForIndividualAsset<asset::Crypto>(asset);
     double price = asset.priceOverTime_.back();
-    i.prom.set_value(InfoResponse<asset::Crypto>{price, trend});
+    i.prom.set_value(InfoResponse{price, trend});
   }
   void operator()(message::PortfolioTrendRequest<asset::Crypto> &p) {
     std::map<std::string, double> trends;
