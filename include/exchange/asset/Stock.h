@@ -1,14 +1,15 @@
 
+#include "exchange/currency/DKK.h"
 #include <boost/signals2/signal.hpp>
 #include <string>
 #ifndef EXCHANGE_ASSET_STOCK_H
 #define EXCHANGE_ASSET_STOCK_H
 namespace exchange::asset {
 typedef boost::signals2::signal<void(std::string assetName,
-                                     double UpdatedPrice)>
+                                     currency::DKK UpdatedPrice)>
     UpdateSignal;
 struct Stock {
-  Stock(std::string name, std::vector<double> &&initUnitPrices)
+  Stock(std::string name, std::vector<currency::DKK> &&initUnitPrices)
       : name_(name), unitPriceOverTime_(std::move(initUnitPrices)),
         sig_(new UpdateSignal()) {}
 
@@ -33,7 +34,7 @@ struct Stock {
   }
   ~Stock() { delete sig_; }
   std::string name_;
-  std::vector<double> unitPriceOverTime_;
+  std::vector<currency::DKK> unitPriceOverTime_;
   UpdateSignal *sig_;
 };
 } // namespace exchange::asset

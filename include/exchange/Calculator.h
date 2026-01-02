@@ -17,19 +17,19 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   PrecisionT sumX2 = 0;
   if (trait::Trend<T>::LookBackPeriod() > vec.size()) {
     for (int i = 0; i < vec.size(); i++) {
-      int price = vec[i];
+      currency::DKK price = vec[i];
       sumX += i;
-      sumY += price;
-      sumXY += (i * price);
+      sumY += price.value();
+      sumXY += (i * price.value());
       sumX2 += (i * i);
     }
   } else {
     for (int i = vec.size() - 1;
          i > vec.size() - trait::Trend<T>::LookBackPeriod(); i--) {
-      int price = vec[i];
+      currency::DKK price = vec[i];
       sumX += i;
-      sumY += price;
-      sumXY += (i * price);
+      sumY += price.value();
+      sumXY += (i * price.value());
       sumX2 += (i * i);
     }
   }

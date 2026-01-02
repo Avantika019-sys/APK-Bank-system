@@ -12,6 +12,7 @@
 
 using namespace std::chrono_literals;
 using namespace exchange;
+using namespace exchange::currency;
 using namespace exchange::util;
 using namespace exchange::asset;
 using namespace std::placeholders;
@@ -34,11 +35,11 @@ int main() {
   auto stockMgr = createManager<Stock>(stockServ, acc, "123");
   acc->deposit(50.0_K);
   try {
-    cryptoMgr->purchaseAsset("SOL", 1.0_K);
-    stockMgr->purchaseAsset("APPL", 0.5_K);
+    cryptoMgr->purchaseAsset("SOL", DKK(1.0_K));
+    stockMgr->purchaseAsset("APPL", DKK(0.5_K));
 
-    cryptoMgr->addStopLossRule("SOL", 0.532_K);
-    stockMgr->sellAsset("APPL", 273);
+    cryptoMgr->addStopLossRule("SOL", DKK(0.532_K));
+    stockMgr->sellAsset("APPL", DKK(273));
   } catch (std::invalid_argument e) {
     std::cout << "Error: " << e.what() << std::endl;
   }
@@ -46,5 +47,5 @@ int main() {
   acc->printTransactionHistory();
   cryptoMgr->printPortfolioStats();
   stockMgr->printPortfolioStats();
-  acc->generateAccountStatement();
+  // acc->generateAccountStatement();
 }

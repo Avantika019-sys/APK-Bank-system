@@ -1,3 +1,4 @@
+#include "exchange/currency/DKK.h"
 #include "tx.hpp"
 #include <sys/types.h>
 #include <variant>
@@ -9,18 +10,18 @@ typedef std::variant<tx::Deposit, tx::Withdraw, tx::Purchase, tx::Sale>
     txVariant;
 class Account {
 public:
-  Account() = default;
-  void deposit(double amount);
+  Account();
+  void deposit(currency::DKK amount);
 
-  void withdraw(double amount);
+  void withdraw(currency::DKK amount);
 
   void printTransactionHistory() const;
 
-  double getBalance() const;
+  currency::DKK getBalance() const;
   void printBalance() const;
   void addTransaction(txVariant &&tx);
 
-  void generateAccountStatement() const;
+  // void generateAccountStatement() const;
   Account(Account &&other) = delete;
   Account &operator=(Account &&other) = delete;
   Account(const Account &other) = delete;
@@ -29,7 +30,7 @@ public:
 private:
   std::vector<txVariant> txs_;
   mutable std::mutex mtx_;
-  double balance_ = 0;
+  currency::DKK balance_;
 };
 } // namespace exchange
 #endif // EXCHANGE_ACCOUNT_H

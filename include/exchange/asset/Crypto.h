@@ -1,3 +1,4 @@
+#include "exchange/currency/DKK.h"
 #include <boost/signals2/signal.hpp>
 #include <string>
 #include <vector>
@@ -5,10 +6,10 @@
 #define EXCHANGE_ASSET_CRYPTO_H
 namespace exchange::asset {
 typedef boost::signals2::signal<void(std::string assetName,
-                                     double UpdatedPrice)>
+                                     currency::DKK UpdatedPrice)>
     UpdateSignal;
 struct Crypto {
-  Crypto(std::string name, std::vector<double> &&initUnitPrices)
+  Crypto(std::string name, std::vector<currency::DKK> &&initUnitPrices)
       : name_(name), unitPriceOverTime_(std::move(initUnitPrices)),
         sig_(new UpdateSignal()) {}
   Crypto(const Crypto &other) = delete;
@@ -34,7 +35,7 @@ struct Crypto {
   }
   ~Crypto() { delete sig_; }
   std::string name_;
-  std::vector<double> unitPriceOverTime_;
+  std::vector<currency::DKK> unitPriceOverTime_;
   double totalCoinsOnMarket;
   UpdateSignal *sig_;
 };

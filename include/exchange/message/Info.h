@@ -1,12 +1,13 @@
 #ifndef EXCHANGE_MESSAGE_INFO_H
 #define EXCHANGE_MESSAGE_INFO_H
+#include "exchange/currency/DKK.h"
 #include <future>
 #include <string>
 #include <vector>
 namespace exchange::message {
 struct assetInfo {
   std::string symbol;
-  double currentPrice;
+  currency::DKK currentPrice;
   double trend;
 };
 struct InfoResponse {

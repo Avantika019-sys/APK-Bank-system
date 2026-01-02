@@ -1,5 +1,6 @@
 #include "Calculator.h"
 #include "asset.hpp"
+#include "exchange/currency/DKK.h"
 #include "exchange/message/Info.h"
 #include "message.hpp"
 #include "trait.hpp"
@@ -43,7 +44,8 @@ public:
 
   boost::signals2::connection subscribeToPriceUpdates(
       std::string assetSymbol,
-      std::function<void(std::string assetName, double UpdatedPrice)> cb) {
+      std::function<void(std::string assetName, currency::DKK UpdatedPrice)>
+          cb) {
     return assets_.at(assetSymbol).sig_->connect(cb);
   }
 
@@ -68,7 +70,8 @@ private:
       std::lock_guard<std::mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
         double percentChange = distrib(gen);
-        double newPrice = asset.unitPriceOverTime_.back() * (1 + percentChange);
+        currency::DKK newPrice{asset.unitPriceOverTime_.back().value() *
+                               (1 + percentChange)};
         asset.unitPriceOverTime_.push_back(newPrice);
         (*asset.sig_)(symbol, newPrice);
       }
@@ -154,9 +157,9 @@ template <> struct MessageVisitor<asset::Crypto> {
     std::lock_guard<std::mutex> lock(serv.mtx_);
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;
-    double priceAffect = crypto.unitPriceOverTime_.back() * m.qty;
-    crypto.unitPriceOverTime_.push_back(crypto.unitPriceOverTime_.back() -
-                                        priceAffect);
+    double priceAffect = crypto.unitPriceOverTime_.back().value() * m.qty;
+    crypto.unitPriceOverTime_.push_back(
+        crypto.unitPriceOverTime_.back().value() - priceAffect);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };

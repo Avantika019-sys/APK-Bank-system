@@ -1,4 +1,5 @@
 
+#include "exchange/currency/DKK.h"
 #include <future>
 #ifndef EXCHANGE_MESSAGE_ORDER_H
 #define EXCHANGE_MESSAGE_ORDER_H
@@ -13,7 +14,7 @@ struct OrderResponse {
 struct OrderRequest {
   std::string assetName;
   std::string managerId;
-  double qty;
+  currency::DKK qty;
   OrderType type;
   std::promise<OrderResponse> prom;
   std::string getTypeStr() {

@@ -1,11 +1,12 @@
 
+#include "exchange/currency/DKK.h"
 #include <chrono>
 #include <memory_resource>
 #ifndef EXCHANGE_TX_WITHDRAW_H
 #define EXCHANGE_TX_WITHDRAW_H
 namespace exchange::tx {
 struct Withdraw {
-  double total;
+  currency::DKK total;
   std::pmr::memory_resource *memRes_;
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
@@ -14,7 +15,7 @@ struct Withdraw {
   }
   std::string toString() const {
     return "Transaction type: withdrawal\nAmount withdrawn: " +
-           std::to_string(total);
+           std::to_string(total.value());
   }
 };
 } // namespace exchange::tx
