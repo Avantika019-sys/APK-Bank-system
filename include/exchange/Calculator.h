@@ -8,7 +8,7 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
   typedef typename trait::Precision<T>::PrecisionT PrecisionT;
   auto &vec = asset.priceOverTime_;
   if (vec.size() == 1) {
-    return PrecisionT{0};
+    return 0;
   }
   PrecisionT sumX = 0;
   PrecisionT sumY = 0;
@@ -42,24 +42,22 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
 struct parallel {};
 struct sequential {};
 template <typename T>
-auto CalculatePortfolioTrend(std::vector<T *> assets, parallel) {
-  using resType = decltype(calculateTrendForIndividualAsset<T>(*assets[0]));
-  std::vector<std::future<resType>> futures;
+double CalculatePortfolioTrend(std::vector<T *> assets, parallel) {
+  std::vector<std::future<double>> futures;
   for (auto &asset : assets) {
     futures.push_back(std::async(std::launch::async, [asset]() {
       return calculateTrendForIndividualAsset<T>(*asset);
     }));
   }
-  resType total = 0;
+  double total = 0;
   for (auto &f : futures) {
     total += f.get();
   }
   return total / futures.size();
 }
 template <typename T>
-auto CalculatePortfolioTrend(std::vector<T *> assets, sequential) {
-  using resType = decltype(calculateTrendForIndividualAsset<T>(*assets[0]));
-  resType total = 0;
+double CalculatePortfolioTrend(std::vector<T *> assets, sequential) {
+  double total = 0;
   for (auto asset : assets) {
     total += calculateTrendForIndividualAsset<T>(*asset);
   }

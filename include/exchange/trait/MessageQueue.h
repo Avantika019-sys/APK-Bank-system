@@ -11,10 +11,12 @@
 
 using namespace exchange::message;
 namespace exchange::trait {
-template <typename T> class MessageQueue {
-public:
-  using Variant = std::variant<OrderRequest<T>, InfoRequest<T>,
-                               PortfolioTrendRequest<T>, Stop>;
+template <typename T> class MessageQueue;
+
+template <> struct MessageQueue<asset::Stock> {
+  using Variant =
+      std::variant<OrderRequest<asset::Stock>, InfoRequest<asset::Stock>,
+                   PortfolioTrendRequest<asset::Stock>, Stop>;
   static int QueueCapacity() { return 100; }
 };
 
