@@ -8,15 +8,17 @@ typedef boost::signals2::signal<void(std::string assetName,
                                      double UpdatedPrice)>
     UpdateSignal;
 struct Stock {
-  Stock(std::string name, double initPrice)
-      : name_(name), unitPriceOverTime_{initPrice}, sig_(new UpdateSignal()) {}
+  Stock(std::string name, std::vector<double> &&initUnitPrices)
+      : name_(name), unitPriceOverTime_(std::move(initUnitPrices)),
+        sig_(new UpdateSignal()) {}
 
   Stock(const Stock &other) = delete;
   Stock &operator=(const Stock &other) = delete;
 
   Stock(Stock &&other) noexcept
       : name_(std::move(other.name_)),
-        unitPriceOverTime_(std::move(other.unitPriceOverTime_)), sig_(other.sig_) {
+        unitPriceOverTime_(std::move(other.unitPriceOverTime_)),
+        sig_(other.sig_) {
     other.sig_ = nullptr;
   }
   Stock &operator=(Stock &&other) noexcept {

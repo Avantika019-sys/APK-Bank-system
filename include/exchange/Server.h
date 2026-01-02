@@ -20,8 +20,8 @@ namespace exchange {
 template <typename T, typename = void>
 struct hasPriceOverTime : std::false_type {};
 template <typename T>
-struct hasPriceOverTime<T,
-                        std::void_t<decltype(std::declval<T>().unitPriceOverTime_)>>
+struct hasPriceOverTime<
+    T, std::void_t<decltype(std::declval<T>().unitPriceOverTime_)>>
     : std::true_type {};
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
@@ -92,7 +92,7 @@ private:
 
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
-  void operator()(message::OrderRequest<T> &o) {
+  void operator()(message::OrderRequest &o) {
     serv.logger_->log(
         "Received order request", level::INFO, field{"Quantity", o.qty},
         field{trait::Print<T>::Header(), o.assetName},
@@ -124,7 +124,7 @@ template <typename T> struct MessageVisitor {
 
 template <> struct MessageVisitor<asset::Crypto> {
   Server<asset::Crypto> &serv;
-  void operator()(message::OrderRequest<asset::Crypto> &o) {
+  void operator()(message::OrderRequest &o) {
     serv.logger_->log("Received order request", level::INFO,
                       field{"Quantity", o.qty},
                       field{trait::Print<asset::Crypto>::Header(), o.assetName},
@@ -155,7 +155,8 @@ template <> struct MessageVisitor<asset::Crypto> {
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;
     double priceAffect = crypto.unitPriceOverTime_.back() * m.qty;
-    crypto.unitPriceOverTime_.push_back(crypto.unitPriceOverTime_.back() - priceAffect);
+    crypto.unitPriceOverTime_.push_back(crypto.unitPriceOverTime_.back() -
+                                        priceAffect);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };

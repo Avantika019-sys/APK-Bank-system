@@ -8,7 +8,9 @@
 #include <boost/smart_ptr/make_shared_array.hpp>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
+using namespace std::chrono_literals;
 using namespace exchange;
 using namespace exchange::util;
 using namespace exchange::asset;
@@ -16,15 +18,15 @@ using namespace std::placeholders;
 
 int main() {
   auto stockServ = Server<Stock>(std::make_unique<util::Logger>("stockServer"));
-  stockServ.addAsset("APPL", Stock("Apple", {1.23_K}));
-  stockServ.addAsset("TSLA", Stock("Tesla technologies", {2.322_K}));
-  stockServ.addAsset("NVDA", Stock("Nvidia", {2.34234_K}));
+  stockServ.addAsset("APPL", Stock("Apple", {1.23_K, 1.235_K}));
+  stockServ.addAsset("TSLA", Stock("Tesla technologies", {2.322_K, 2.529_K}));
+  stockServ.addAsset("NVDA", Stock("Nvidia", {2.34234_K, 2.34241_K}));
 
   auto cryptoServ =
       Server<Crypto>(std::make_unique<util::Logger>("cryptoServer"));
-  cryptoServ.addAsset("BTC", Crypto("Bitcoin", {0.532_Million}));
-  cryptoServ.addAsset("ETH", Crypto("Etherium", {32.423_K}));
-  cryptoServ.addAsset("SOL", Crypto("Solana", {23.423_K}));
+  cryptoServ.addAsset("BTC", Crypto("Bitcoin", {0.532_Million, 0.530_Million}));
+  cryptoServ.addAsset("ETH", Crypto("Etherium", {32.423_K, 32.451_K}));
+  cryptoServ.addAsset("SOL", Crypto("Solana", {23.423_K, 23.451_K}));
   Miner miner("BTC", cryptoServ);
 
   auto acc = boost::make_shared<Account>();

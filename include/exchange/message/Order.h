@@ -10,7 +10,7 @@ enum class OrderType {
 struct OrderResponse {
   bool isSucceded;
 };
-template <typename T> struct OrderRequest {
+struct OrderRequest {
   std::string assetName;
   std::string managerId;
   double qty;

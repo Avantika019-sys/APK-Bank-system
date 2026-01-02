@@ -8,8 +8,9 @@ typedef boost::signals2::signal<void(std::string assetName,
                                      double UpdatedPrice)>
     UpdateSignal;
 struct Crypto {
-  Crypto(std::string name, double initPrice)
-      : name_(name), unitPriceOverTime_{initPrice}, sig_(new UpdateSignal()) {}
+  Crypto(std::string name, std::vector<double> &&initUnitPrices)
+      : name_(name), unitPriceOverTime_(std::move(initUnitPrices)),
+        sig_(new UpdateSignal()) {}
   Crypto(const Crypto &other) = delete;
   Crypto &operator=(const Crypto &other) = delete;
 

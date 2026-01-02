@@ -39,7 +39,7 @@ public:
   }
 
   void purchaseAsset(std::string symbol, double amountInDKK) {
-    std::cout << "---------------------------" << std::endl;
+    std::cout << "-----------------------------------" << std::endl;
     std::cout << "Started purchase of " << symbol << std::endl;
     auto infoResp = getInfo({symbol});
 
@@ -59,7 +59,7 @@ public:
       return;
     }
 
-    message::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+    message::OrderRequest o{symbol, managerId_, amountInDKK,
                                message::OrderType::BUY};
     auto orderF = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
@@ -112,7 +112,7 @@ public:
       std::cout << "stock sell cancelled";
       return;
     }
-    message::OrderRequest<T> o{symbol, managerId_, amountInDKK,
+    message::OrderRequest o{symbol, managerId_, amountInDKK,
                                message::OrderType::SELL};
     auto orderFut = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
@@ -131,7 +131,7 @@ public:
     }
   }
   void printPortfolioStats() {
-    std::cout << "---------------------------" << std::endl;
+    std::cout << "-----------------------------------" << std::endl;
     std::cout << trait::Print<T>::Header() + " PORTFOLIO stats:\n" << std::endl;
     std::vector<std::string> AssetSymbols;
     for (auto &[symbol, _] : portfolio_) {
@@ -189,7 +189,7 @@ private:
     }
     auto limit = it->second.stopLossRule.value();
     if (updatedPrice <= limit) {
-      message::OrderRequest<T> o(symbol, managerId_, it->second.qty,
+      message::OrderRequest o(symbol, managerId_, it->second.qty,
                                  message::OrderType::SELL);
       auto orderFut = o.prom.get_future();
       serv_.pushMsg(message::Message<T>(std::move(o)));
