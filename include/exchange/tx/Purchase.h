@@ -18,7 +18,7 @@ struct Purchase {
   std::string toString() const {
     return "Transaction type: " + assetHeader_ + " purchase" +
            "\nSymbol: " + assetName_ +
-           "\nPrice per asset: " + std::to_string(pricePerAsset_.value()) +
+           "\nPrice per unit: " + std::to_string(pricePerAsset_.value()) +
            "\nquantity purchased: " + qty_;
   }
 };

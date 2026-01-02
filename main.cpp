@@ -1,11 +1,12 @@
-
 #include "Miner.h"
 #include "Server.h"
 #include "asset/Crypto.h"
 #include "exchange/Manager.h"
+#include "exchange/dashboard.h"
 #include "exchange/util.hpp"
 #include "message.hpp"
 #include <boost/smart_ptr/make_shared_array.hpp>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <thread>
@@ -33,6 +34,13 @@ int main() {
   auto acc = boost::make_shared<Account>();
   auto cryptoMgr = createManager<Crypto>(cryptoServ, acc, "456");
   auto stockMgr = createManager<Stock>(stockServ, acc, "123");
+
+  std::cout << "Subscribing to BTC price updates" << std::endl;
+  auto conn = cryptoServ.subscribeToPriceUpdates("BTC", printDatapoint);
+  std::this_thread::sleep_for(5s);
+  std::cout << "Unsubscribing... bye!" << std::endl;
+  conn.disconnect();
+
   acc->deposit(50.0_K);
   try {
     cryptoMgr->purchaseAsset("SOL", DKK(1.0_K));

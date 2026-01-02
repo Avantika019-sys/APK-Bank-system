@@ -13,8 +13,8 @@
 #include <thread>
 #include <type_traits>
 #include <utility>
-#ifndef EXCHANGE_STOCKSERVER_H
-#define EXCHANGE_STOCKSERVER_H
+#ifndef EXCHANGE_SERVER_H
+#define EXCHANGE_SERVER_H
 using namespace std::chrono_literals;
 using namespace exchange::util;
 namespace exchange {
@@ -165,4 +165,4 @@ template <> struct MessageVisitor<asset::Crypto> {
 };
 } // namespace exchange
 
-#endif // EXCHANGE_STOCKSERVER_H
+#endif // EXCHANGE_SERVER_H
