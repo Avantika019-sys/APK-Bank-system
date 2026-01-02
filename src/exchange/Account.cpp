@@ -57,6 +57,10 @@ void Account::generateAccountStatement() const {
   });
 }
 double Account::getBalance() const { return balance_; }
+void Account::printBalance() const {
+  std::cout << "---------------------------" << std::endl;
+  std::cout << "Current balance: " << balance_ << std::endl;
+}
 void Account::addTransaction(txVariant &&tx) {
   std::lock_guard<std::mutex> lock(mtx_);
   txs_.push_back(std::move(tx));

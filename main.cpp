@@ -40,7 +40,7 @@ int main() {
   } catch (std::invalid_argument e) {
     std::cout << "Error: " << e.what() << std::endl;
   }
-  acc->getBalance();
+  acc->printBalance();
   acc->printTransactionHistory();
   cryptoMgr->printPortfolioStats();
   stockMgr->printPortfolioStats();

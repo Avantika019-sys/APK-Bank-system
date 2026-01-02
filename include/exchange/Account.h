@@ -17,6 +17,7 @@ public:
   void printTransactionHistory() const;
 
   double getBalance() const;
+  void printBalance() const;
   void addTransaction(txVariant &&tx);
 
   void generateAccountStatement() const;
