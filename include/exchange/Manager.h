@@ -50,7 +50,7 @@ public:
     auto balance = acc->getBalance();
     std::cout << "Quantity you can get for " << amountInDKK
               << " DKK: " << qtyPurchaseable << "\n"
-              << "Current trend: " << assetInfo.trend
+              << "Current trend: " << assetInfo.trend << "%"
               << "\nPlease confirm purchase by pressing y: ";
     char inp;
     std::cin >> inp;
@@ -60,7 +60,7 @@ public:
     }
 
     message::OrderRequest o{symbol, managerId_, amountInDKK,
-                               message::OrderType::BUY};
+                            message::OrderType::BUY};
     auto orderF = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
 
@@ -113,7 +113,7 @@ public:
       return;
     }
     message::OrderRequest o{symbol, managerId_, amountInDKK,
-                               message::OrderType::SELL};
+                            message::OrderType::SELL};
     auto orderFut = o.prom.get_future();
     serv_.pushMsg(message::Message<T>(std::move(o)));
 
@@ -148,13 +148,13 @@ public:
         "Quantity owned: " << qty << "\n" <<
         "Price per unit: " << price << "\n" << 
         "Total value: " << price*qty << "\n"<<
-        "Trend: " << trend<< "\n\n"
+        "Trend: " << trend<< "%\n\n"
       ;
       // clang-format on
       trendSum += trend;
       valueSum += price * qty;
     }
-    std::cout << "Portfolio Trend: " << trendSum / resp.assetInfos.size()
+    std::cout << "Portfolio Trend: " << trendSum / resp.assetInfos.size() << "%"
               << std::endl;
     std::cout << "Portfolio Value: " << valueSum << std::endl;
   }
@@ -190,7 +190,7 @@ private:
     auto limit = it->second.stopLossRule.value();
     if (updatedPrice <= limit) {
       message::OrderRequest o(symbol, managerId_, it->second.qty,
-                                 message::OrderType::SELL);
+                              message::OrderType::SELL);
       auto orderFut = o.prom.get_future();
       serv_.pushMsg(message::Message<T>(std::move(o)));
 
