@@ -11,15 +11,12 @@
 #include <type_traits>
 namespace exchange::util::observability {
 
-template <typename T, typename = void> struct streamable : std::false_type {};
-template <typename T>
-struct streamable<T, std::void_t<decltype(std::declval<std::ostream &>()
-                                          << std::declval<T>())>>
-    : std::true_type {};
 template <typename T>
 concept toStringable = requires(T t) {
   { t.toString() } -> std::same_as<std::string>;
 };
+template <typename T>
+concept isLoggable = (std::formattable<T, char> || toStringable<T>);
 enum class level {
   INFO,
   DEBUG,
@@ -43,25 +40,14 @@ public:
     fflush(fptrLogs_);
   }
   template <typename T, typename... Args>
-  std::enable_if<streamable<T>::value>::type log(std::string msg, level l,
-                                                 field<T> field, Args... args) {
-    std::stringstream ss;
-    ss << field.value;
-    msg += std::format(", ({}:{})", field.name, ss.str());
-    log(msg, l, args...);
-  }
-  template <typename T, typename... Args>
   void log(std::string msg, level l, field<T> field, Args... args)
-    requires std::formattable<T, char>
+    requires isLoggable<T>
   {
-    msg += std::format(", ({}:{})", field.name, field.value);
-    log(msg, l, args...);
-  }
-  template <typename T, typename... Args>
-  void log(std::string msg, level l, field<T> field, Args... args)
-    requires toStringable<T>
-  {
-    msg += std::format(", ({}:{})", field.name, field.value.toString());
+    if constexpr (std::formattable<T, char>) {
+      msg += std::format(", ({}:{})", field.name, field.value);
+    } else {
+      msg += std::format(", ({}:{})", field.name, field.value.toString());
+    }
     log(msg, l, args...);
   }
   ~Logger() {

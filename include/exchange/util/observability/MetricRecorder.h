@@ -26,15 +26,15 @@ public:
 private:
   template <typename T> std::string getFieldValueStr(field<T> field) {
     std::string fieldValStr = "";
-    if constexpr (std::formattable<T, char>) {
-      fieldValStr = std::format("{}", field.value);
-    } else if constexpr (streamable<T>::value) {
-      std::stringstream ss;
-      ss << field.value;
-      fieldValStr = std::format(", ({}:{})", field.name, ss.str());
-    } else if constexpr (toStringable<T>) {
-      fieldValStr = field.value.toString();
-    }
+    // if constexpr (std::formattable<T, char>) {
+    //   fieldValStr = std::format("{}", field.value);
+    // } else if constexpr (streamable<T>::value) {
+    //   std::stringstream ss;
+    //   ss << field.value;
+    //   fieldValStr = std::format(", ({}:{})", field.name, ss.str());
+    // } else if constexpr (toStringable<T>) {
+    //   fieldValStr = field.value.toString();
+    // }
     return fieldValStr;
   }
   std::mutex mtx_;

@@ -291,27 +291,111 @@ The **calculateTrendForIndividualAsset** is the function doing the actual calcul
 
 ### Logger
 
-We made a custom logger for the server. This logger writes to a file using a FILE pointer.
-We use RAII, by opening a file in the logger constructor, and closing the file in the destructor, this ensures that we dont forget to close the file.  
-Also we deleted the copy constructor and copy assignment operator, since copying the FILE pointer is dangerous and can lead to undefined behaviour, such as double freeing in destructor. Additionally we implemented move semantics for the logger.
-The logger makes use of variadics, to accept a variable amount of arguments of different type.
+We made a custom logger for the server. This logger writes to a file.
+The logger makes use of variadics, to accept a variable amount of arguments of type field.
 
 ```cpp
   template <typename T> struct field {
    std::string name;
    T value;
   };
+```
 
+This allows the including metadata when logging.
+Not every type is loggable, so we defined concepts, this will improve the error messages if someone passes a type which is not loggable.
+
+```cpp
+  template <typename T>
+  concept toStringable = requires(T t) {
+    { t.toString() } -> std::same_as<std::string>;
+  };
+
+  template <typename T>
+  concept isLoggable = (std::formattable<T, char> || toStringable<T>);
+```
+
+Either a type needs to have a toString method or should be formattable.
+
+```cpp
   template <typename T, typename... Args>
   void log(std::string msg, level l, field<T> field, Args... args)
-    requires std::formattable<T, char>
+    requires isLoggable<T>
   {
-    msg += std::format(", ({}:{})", field.name, field.value);
+    if constexpr (std::formattable<T, char>) {
+      msg += std::format(", ({}:{})", field.name, field.value);
+    } else {
+      msg += std::format(", ({}:{})", field.name, field.value.toString());
+    }
     log(msg, l, args...);
   }
 ```
 
-This allows the including metadata when logging. In each recursive call handles on field, and and appends it to the msg, and then makes a recursive call. The end marker then takes this final message and prepends the level and a timestamp to it, and writes to a file. Additionally we make use of concepts, to ensure the type T fulfills certain requirements, so it can be converted to a string.
+Each recursive call handles one field, and appends it to the msg, and then makes a recursive call. The end marker then takes this final message and prepends the log level and a timestamp to it, and writes to a file. We also use compile-time-if, this allows the compiler to evaluate the condition at compile time and remove the not taken path.
+
+The Logger uses FILE pointer to write the logs to a file, this is a special resource that cant be copied, therefore we deleted the copy constructor and copy assignment operator, if copied then it could lead to double freeing the FILE pointer which can crash the program. This triggers the **RULE OF 5** so we also implemented move semantics, which allows ownership change of FILE pointer.
+
+## Manager
+
+The manager communicates with the server through the message queue, it does not have its own message queue, but it still needs a response from the server for these message types:
+
+- InfoRequest
+- OrderRequest
+For this we use std::promise, both of the messages have a promise field, which the manager gets a future for before pushing the message to the server message queue. Then we wait for a response, while also showing a terminal spinner to keep the UI active.
+
+```cpp
+    OrderRequest o{...};
+    auto orderFut = o.prom.get_future();
+    serv_->pushMsg(Message<T>(std::move(o)));
+
+    while (orderFut.wait_for(100ms) != std::future_status::ready) {
+      util::spin("waiting for server to process sale order");
+    }
+```
+
+The use of promise allows the server thread to transfer the response data to the manager thread(main thread)
+
+Another feature was the user being able to configure stop loss rules for a owned asset automatically, meaning if a asset goes below a certain price, then it should automatically sell all of the asset to prevent further loss. For this we need the signals which was defined in the asset classes. The server provides a subscribe function that does not expose the signal to a client, this prevents a evil client for falsely triggering the signal.
+
+```cpp
+  // Server function
+  boost::signals2::connection
+  subscribeToPriceUpdates(std::string assetSymbol,
+                          std::function<void(currency::DKK UpdatedPrice)> cb) {
+    return assets_.at(assetSymbol).sig_->connect(cb);
+  }
+```
+
+Here it accepts the asset symbol that a subscriber is interested in, and the callback to call when price updates. We use std::function for increased flexibility, now it can accept a functor, free function or member function callback.
+
+The manager defines a slot as a member function, with the following signature:
+
+```cpp
+  void onAssetUpdate(std::string symbol, currency::DKK updatedPrice) 
+
+```
+
+But it does not match the signal signature which is the following:
+
+```cpp
+boost::signals2::signal<void(currency::DKK UpdatedPrice)>
+```
+
+The signal does not adapt to the managers handler signature, because it expects that a subscriber already knows which signal they are subscribing to, and not that they need to be reminded every price update. But the manager can configure a price update for each of the owned assets it manages, so it needs to know which asset is having a price update and compare against the stop loss limit, which is why is needs a parameter to tell it which asset symbol the price update is for. To handle this mismatch in signature we use std::bind
+
+```cpp
+  // Manager function
+  void addStopLossRule(std::string symbol, currency::DKK limit) {
+    if (!portfolio_.contains(symbol)) {
+      throw std::invalid_argument("U dont own this asset");
+    };
+    auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
+    auto conn = serv_->subscribeToPriceUpdates(symbol, handler);
+    portfolio_[symbol].stopLossRule.emplace(limit);
+    portfolio_[symbol].conn = conn;
+  }
+```
+
+When adding a stop loss limit for an asset, then we can define
 
 ## Meta programming
 
