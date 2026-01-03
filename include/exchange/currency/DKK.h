@@ -21,7 +21,7 @@ public:
     return *this;
   }
   DKK &operator-=(const DKK &other) {
-    amount_ += other.amount_;
+    amount_ -= other.amount_;
     return *this;
   }
 
