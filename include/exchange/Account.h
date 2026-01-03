@@ -21,7 +21,6 @@ public:
   void printBalance() const;
   void addTransaction(txVariant &&tx);
 
-  // void generateAccountStatement() const;
   Account(Account &&other) = delete;
   Account &operator=(Account &&other) = delete;
   Account(const Account &other) = delete;

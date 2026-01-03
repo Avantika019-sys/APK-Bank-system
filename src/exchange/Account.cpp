@@ -38,34 +38,18 @@ void Account::printTransactionHistory() const {
   });
 }
 
-// void Account::generateAccountStatement() const {
-//   auto now = std::chrono::system_clock::now();
-//   std::string nowStr =
-//       std::format("../statements/{:%Y-%m-%d-%H:%M:%S}-ACCOUNT-STATEMENT",
-//       now);
-//   std::ofstream file;
-//   file.open(nowStr);
-//   std::array<std::byte, 1024> buf;
-//   std::pmr::monotonic_buffer_resource mbr{buf.data(), buf.size()};
-//
-//   std::lock_guard<std::mutex> lock(mtx_);
-//   std::for_each(txs_.begin(), txs_.end(), [&](const txVariant &txV) {
-//     std::visit(
-//         [&](const auto &tx) {
-//           std::pmr::string txStr{tx.toString() + "\n", &mbr};
-//           file << txStr;
-//           mbr.release();
-//         },
-//         txV);
-//   });
-// }
-currency::DKK Account::getBalance() const { return balance_; }
+currency::DKK Account::getBalance() const {
+  std::lock_guard<std::mutex> lock(mtx_);
+  return balance_;
+}
 void Account::printBalance() const {
   std::cout << "---------------------------" << std::endl;
   std::cout << "Current balance: " << balance_ << std::endl;
 }
-void Account::addTransaction(txVariant &&tx) {
+void Account::addTransaction(txVariant &&txV) {
   std::lock_guard<std::mutex> lock(mtx_);
-  txs_.push_back(std::move(tx));
+  txs_.push_back(std::move(txV));
+  auto total = std::visit([](const auto &tx) { return tx.total; }, txV);
+  balance_ += total;
 }
 } // namespace exchange

@@ -17,6 +17,10 @@ struct OrderRequest {
   currency::DKK qty;
   OrderType type;
   std::promise<OrderResponse> prom;
+  std::string toString() {
+    return "Asset Name: " + assetName + " Manager Id:" + managerId +
+           " Quantity:" + qty.toString() + " Type:" + getTypeStr();
+  }
   std::string getTypeStr() {
     std::string typeStr = "BUY";
     if (type == OrderType::SELL) {

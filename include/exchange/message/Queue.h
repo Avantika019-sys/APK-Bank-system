@@ -30,6 +30,10 @@ public:
     cv_not_full.notify_one();
     return msg;
   }
+  int getQueueLoad() {
+    std::unique_lock<std::mutex> lock(mtx);
+    return queue.size();
+  }
 
 private:
   std::queue<message::Message<T>> queue;
