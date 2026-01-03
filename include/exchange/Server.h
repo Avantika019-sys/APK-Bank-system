@@ -1,11 +1,10 @@
 #include "Calculator.h"
 #include "asset.hpp"
-#include "exchange/MonitorResource.h"
 #include "exchange/currency/DKK.h"
 #include "exchange/message/Info.h"
+#include "exchange/util.hpp"
 #include "message.hpp"
 #include "trait.hpp"
-#include "util/Logger.h"
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <functional>
@@ -20,13 +19,16 @@
 using namespace std::chrono_literals;
 using namespace exchange::util;
 namespace exchange {
+
 template <typename T, typename = void>
 struct hasPriceOverTime : std::false_type {};
 template <typename T>
 struct hasPriceOverTime<
     T, std::void_t<decltype(std::declval<T>().unitPriceOverTime_)>>
     : std::true_type {};
+
 template <typename T> struct MessageVisitor;
+
 template <typename T> class Server {
 public:
   Server(std::unique_ptr<Logger> logger, MonitorResource *ms)

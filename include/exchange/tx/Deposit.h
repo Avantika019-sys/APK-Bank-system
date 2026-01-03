@@ -10,8 +10,7 @@ struct Deposit {
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
   std::string toString() const {
-    return "Transaction type: deposit\nAmount depositted: " +
-           std::to_string(total.value());
+    return "Transaction type: deposit\nAmount depositted: " + total.toString();
   }
 };
 } // namespace exchange::tx

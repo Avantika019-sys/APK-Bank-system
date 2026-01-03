@@ -15,7 +15,7 @@ struct Withdraw {
   }
   std::string toString() const {
     return "Transaction type: withdrawal\nAmount withdrawn: " +
-           std::to_string(total.value());
+           total.toString();
   }
 };
 } // namespace exchange::tx

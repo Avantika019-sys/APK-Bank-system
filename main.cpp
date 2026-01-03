@@ -2,10 +2,8 @@
 #include "Server.h"
 #include "asset/Crypto.h"
 #include "exchange/Manager.h"
-#include "exchange/MonitorResource.h"
 #include "exchange/asset.hpp"
 #include "exchange/currency/DKK.h"
-#include "exchange/dashboard.h"
 #include "exchange/util.hpp"
 #include "message.hpp"
 #include <boost/smart_ptr/make_shared_array.hpp>
