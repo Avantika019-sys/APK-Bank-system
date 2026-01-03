@@ -8,25 +8,30 @@
 ## SWAPK
 
 # Introduction
-This report describes our chosen project, the asset exchange system for SWAPK which is implemented using the C++ concepts learned throughout the course. The system functions as a multi-threaded trading platform, simulating asset prices, processing asynchronous buy and sell, managing user portfolios and maintaing detailed transaction history. 
+This report describes our chosen project, the asset exchange system [can be changed] for SWAPK which is implemented using the C++ concepts learned throughout the course. The system functions as a multi-threaded trading platform, simulating asset prices, processing asynchronous buy and sell, managing user portfolios and maintaing detailed transaction history. 
 
 The primary goal of the project is to demonstrate how the C++ concepts taught in SWAPK can be incorporated into a coherent and well‑structured software solution. 
 
 # System description 
-The banking system has three main features where each feature have set of requirements that needs to be fullfiled. 
+The asset exchange system has 6 main features where each feature have set of requirements that needs to be fullfiled. 
 
 #### Features
 
-Feature 1: Account management 
-This feature allows users to create accounts and also manage their account. 
+Feature 1: Asset trading 
+Allows user to buy and sell stocks and crypto. Traede requests are send to server, processed and updated in the user´s porfolio and account balance. 
 
-Feature 2: Payment and transfer 
-This feature enables user to deposit, withdraw and track transaction in their accounts. It also allows the user to view their transaction history and account balance. 
+Feature 2: Asset price simulation 
 
-Feature 3: Investment management
-This allows the user to manage their invesments, including buying and selling stocks.  
+Feature 3: Portfolio management 
 
-#### Requirements
+Feature 4: Account management
+
+Feature 5: Logging 
+
+Feature 6: Asynchronous communication
+
+
+#### Requirements [needs to be changed]
 
 - F1.1: The system shall allow users to create an account
 
@@ -46,10 +51,9 @@ This allows the user to manage their invesments, including buying and selling st
 
 - F3.2: The system shall allow users to sell stocks
 
-# Architecture
-This is an overall class diagram which represents the main functional components for the portfolio system and their relationships without showing the helper class such as logger. The diagram shows that the system is designed for the user to one or multiple accounts, change betweeen currency and stocks. It illustrates the dependency of account on transaction. 
 
-NOTE!! need to change class diagram to component diagram
+# Architecture
+This component diagram illustrates a high-level architecture of the asset exchange system and how its main functional components interact. The system is divided into two packages trading and asset to categorize logic and assets seperately. The diagram also shows the relationships between each individual components within the system. 
 
 ```puml
 @startuml
