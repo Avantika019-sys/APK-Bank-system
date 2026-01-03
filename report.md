@@ -8,9 +8,9 @@
 ## SWAPK
 
 # Introduction
-This report describes our chosen project, the Portfolio System for SWAPK. The system is implemented using the C++ concepts learned throughout the course.
+This report describes our chosen project, the asset exchange system for SWAPK which is implemented using the C++ concepts learned throughout the course. The system functions as a multi-threaded trading platform, simulating asset prices, processing asynchronous buy and sell, managing user portfolios and maintaing detailed transaction history. 
 
-The portfolio system is designed to manage user accounts, perform financial transactions, and support stock investments within a banking context. The goal of the project is not only to create a functional system, but also to demonstrate how the C++ concepts taught in SWAPK can be incorporated into a coherent and well‑structured software solution.
+The primary goal of the project is to demonstrate how the C++ concepts taught in SWAPK can be incorporated into a coherent and well‑structured software solution. 
 
 # System description 
 The banking system has three main features where each feature have set of requirements that needs to be fullfiled. 
@@ -53,9 +53,34 @@ NOTE!! need to change class diagram to component diagram
 
 ```puml
 @startuml
-Bank *-- Account
-Bank *-- Server
-Account *-- Tx
+' Define components
+package "Trading" {
+    [Manager] 
+    [Account]
+    [Server]
+    [MessageQueue]
+    [Logger]
+    [Miner]
+}
+
+package "Assets" {
+    [Crypto]
+    [Stock]
+}
+
+' Define relationships
+Manager --> Server : sends OrderRequest/InfoRequest
+Manager --> Account : updates transactions
+Manager --> Crypto : subscribes to price updates
+Manager --> Stock : subscribes to price updates
+
+Server --> Crypto : updates prices
+Server --> Stock : updates prices
+Server --> MessageQueue : processes messages
+Server --> Logger
+
+Miner --> Server
+
 @enduml
 ```
 
