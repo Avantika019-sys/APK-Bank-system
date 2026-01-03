@@ -148,15 +148,11 @@ public:
     double valueSum = 0;
     for (const auto &[symbol, price, trend] : resp.assetInfos) {
       auto qty = portfolio_.at(symbol).qty;
-      // clang-format off
-      std::cout << 
-        "Symbol: " << symbol << "\n" <<
-        "Quantity owned: " << qty << "\n" <<
-        "Price per unit: " << price.toString() << "\n" << 
-        "Total value: " << price.value()*qty << "\n"<<
-        "Trend: " << trend<< "%\n\n"
-      ;
-      // clang-format on
+      std::cout << "Symbol: " << symbol << "\n"
+                << "Quantity owned: " << qty << "\n"
+                << "Price per unit: " << price.toString() << "\n"
+                << "Total value: " << price.value() * qty << "\n"
+                << "Trend: " << trend << "%\n\n";
       trendSum += trend;
       valueSum += price.value() * qty;
     }

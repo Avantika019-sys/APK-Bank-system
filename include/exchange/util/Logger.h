@@ -67,7 +67,7 @@ public:
     msg += std::format(", ({}:{})", field.name, field.value.toString());
     log(msg, l, args...);
   }
-  Logger() {
+  ~Logger() {
     if (fptrLogs_ != nullptr) {
       std::fclose(fptrLogs_);
     }
