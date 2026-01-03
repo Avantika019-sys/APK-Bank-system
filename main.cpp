@@ -2,6 +2,9 @@
 #include "Server.h"
 #include "asset/Crypto.h"
 #include "exchange/Manager.h"
+#include "exchange/MonitorResource.h"
+#include "exchange/asset.hpp"
+#include "exchange/currency/DKK.h"
 #include "exchange/dashboard.h"
 #include "exchange/util.hpp"
 #include "message.hpp"
@@ -10,6 +13,7 @@
 #include <memory>
 #include <stdexcept>
 #include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 using namespace exchange;
@@ -19,18 +23,33 @@ using namespace exchange::asset;
 using namespace std::placeholders;
 
 int main() {
-  auto stockServ = Server<Stock>(std::make_unique<util::Logger>("stockServer"));
-  stockServ.addAsset("APPL", Stock("Apple", {1.23_K, 1.235_K}));
-  stockServ.addAsset("TSLA", Stock("Tesla technologies", {2.322_K, 2.529_K}));
-  stockServ.addAsset("NVDA", Stock("Nvidia", {2.34234_K, 2.34241_K}));
+  MonitorResource cryptoMs;
+  Crypto c1("Bitcoin", &cryptoMs);
+  Crypto c2("Etherium", &cryptoMs);
+  c1.unitPriceOverTime_.emplace_back(0.531_Mil);
+  c1.unitPriceOverTime_.emplace_back(1.25_K);
 
-  auto cryptoServ =
-      Server<Crypto>(std::make_unique<util::Logger>("cryptoServer"));
-  cryptoServ.addAsset("BTC", Crypto("Bitcoin", {0.532_Million, 0.530_Million}));
-  cryptoServ.addAsset("ETH", Crypto("Etherium", {32.423_K, 32.451_K}));
-  cryptoServ.addAsset("SOL", Crypto("Solana", {23.423_K, 23.451_K}));
+  c2.unitPriceOverTime_.emplace_back(10.2_K);
+  c2.unitPriceOverTime_.emplace_back(13.2_K);
+
+  auto cryptoServ = Server<Crypto>(
+      std::make_unique<util::Logger>("cryptoServer.txt"), &cryptoMs);
+  cryptoServ.addAsset("BTC", std::move(c1));
+  cryptoServ.addAsset("ETH", std::move(c2));
   Miner miner("BTC", cryptoServ);
 
+  MonitorResource stockMs;
+  Stock s1("Apple", &stockMs);
+  Stock s2("Tesla motor technologies", &stockMs);
+  s1.unitPriceOverTime_.emplace_back(1.23_K);
+  s1.unitPriceOverTime_.emplace_back(1.25_K);
+
+  s2.unitPriceOverTime_.emplace_back(10.2_K);
+  s2.unitPriceOverTime_.emplace_back(13.2_K);
+  auto stockServ = Server<Stock>(
+      std::make_unique<util::Logger>("stockServer.txt"), &stockMs);
+  stockServ.addAsset("APPL", std::move(s1));
+  stockServ.addAsset("TSLA", std::move(s2));
   auto acc = boost::make_shared<Account>();
   auto cryptoMgr = createManager<Crypto>(cryptoServ, acc, "456");
   auto stockMgr = createManager<Stock>(stockServ, acc, "123");
@@ -43,10 +62,10 @@ int main() {
 
   acc->deposit(50.0_K);
   try {
-    cryptoMgr->purchaseAsset("SOL", DKK(1.0_K));
+    cryptoMgr->purchaseAsset("ETH", DKK(1.0_K));
     stockMgr->purchaseAsset("APPL", DKK(0.5_K));
 
-    cryptoMgr->addStopLossRule("SOL", DKK(0.532_K));
+    cryptoMgr->addStopLossRule("ETH", DKK(0.10_K));
     stockMgr->sellAsset("APPL", DKK(273));
   } catch (std::invalid_argument e) {
     std::cout << "Error: " << e.what() << std::endl;

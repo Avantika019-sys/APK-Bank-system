@@ -1,5 +1,6 @@
 #include "Calculator.h"
 #include "asset.hpp"
+#include "exchange/MonitorResource.h"
 #include "exchange/currency/DKK.h"
 #include "exchange/message/Info.h"
 #include "message.hpp"
@@ -8,6 +9,7 @@
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <thread>
@@ -27,10 +29,9 @@ struct hasPriceOverTime<
 template <typename T> struct MessageVisitor;
 template <typename T> class Server {
 public:
-  Server(std::unique_ptr<Logger> logger)
+  Server(std::unique_ptr<Logger> logger, MonitorResource *ms)
       : msgQueue_(trait::MessageQueue<T>::QueueCapacity()),
-        logger_(std::move(logger)) {
-
+        logger_(std::move(logger)), ms_(ms) {
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
     messageProccessorThread =
@@ -63,6 +64,7 @@ private:
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distrib(-0.005, 0.005);
+    std::bernoulli_distribution d(0.1);
     static_assert(hasPriceOverTime<T>::value);
     while (run_) {
       std::this_thread::sleep_for(
@@ -74,6 +76,10 @@ private:
                                (1 + percentChange)};
         asset.unitPriceOverTime_.push_back(newPrice);
         (*asset.sig_)(symbol, newPrice);
+      }
+      if (d(gen)) {
+        logger_->log("memory usage", util::level::INFO,
+                     util::field("bytes", ms_->getbytesalloc()));
       }
     }
   }
@@ -89,6 +95,7 @@ private:
   std::mutex mtx_;
   std::atomic<bool> run_{true};
   std::unique_ptr<Logger> logger_;
+  MonitorResource *ms_;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };

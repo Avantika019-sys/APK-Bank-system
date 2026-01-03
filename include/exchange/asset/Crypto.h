@@ -1,3 +1,4 @@
+#include "exchange/MonitorResource.h"
 #include "exchange/currency/DKK.h"
 #include <boost/signals2/signal.hpp>
 #include <string>
@@ -9,9 +10,8 @@ typedef boost::signals2::signal<void(std::string assetName,
                                      currency::DKK UpdatedPrice)>
     UpdateSignal;
 struct Crypto {
-  Crypto(std::string name, std::vector<currency::DKK> &&initUnitPrices)
-      : name_(name), unitPriceOverTime_(std::move(initUnitPrices)),
-        sig_(new UpdateSignal()) {}
+  Crypto(std::string name, MonitorResource *s)
+      : name_(name), sig_(new UpdateSignal()), unitPriceOverTime_(s) {}
   Crypto(const Crypto &other) = delete;
   Crypto &operator=(const Crypto &other) = delete;
 
@@ -35,7 +35,7 @@ struct Crypto {
   }
   ~Crypto() { delete sig_; }
   std::string name_;
-  std::vector<currency::DKK> unitPriceOverTime_;
+  std::pmr::vector<currency::DKK> unitPriceOverTime_;
   double totalCoinsOnMarket;
   UpdateSignal *sig_;
 };

@@ -82,7 +82,7 @@ public:
         trait::Print<T>::Header(),
         std::format("{:.{}f}", qtyPurchaseable, precision),
         assetInfo.currentPrice,
-        amountInDKK,
+        currency::DKK(-amountInDKK.value()),
     });
     std::lock_guard<std::mutex> lock(mtx_);
     portfolio_[symbol].qty += qtyPurchaseable;
