@@ -31,9 +31,9 @@ template <typename T> struct MessageVisitor;
 
 template <typename T> class Server {
 public:
-  Server(Logger logger, const MonitorResource *ms, MetricRecorder &recorder)
+  Server(Logger logger, const MonitorResource *ms)
       : msgQueue_(trait::MessageQueue<T>::QueueCapacity()),
-        logger_(std::move(logger)), ms_(ms), recorder_(recorder) {
+        logger_(std::move(logger)), ms_(ms) {
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
     messageProccessorThread =
@@ -98,7 +98,6 @@ private:
   std::mutex mtx_;
   std::atomic<bool> run_{true};
   Logger logger_;
-  MetricRecorder &recorder_;
   const MonitorResource *ms_;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
@@ -111,8 +110,6 @@ boost::shared_ptr<Server<T>> createServer(Args &&...args) {
 template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(message::OrderRequest &o) {
-    serv.recorder_.incrementMetric("order-requests", 1,
-                                   field{"order-type", o.getTypeStr()});
     serv.logger_.log("Received order request", level::INFO,
                      field{trait::Print<T>::Header(), o.assetName},
                      field{"Order-type", o.getTypeStr()});
@@ -121,23 +118,12 @@ template <typename T> struct MessageVisitor {
   }
 
   void operator()(message::InfoRequest &i) {
-    serv.recorder_.incrementMetric(
-        "info-requests", 1,
-        util::observability::field{"assetSymbolsQty", i.assetSymbols.size()});
     std::map<std::string, double> trends;
     int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
-      serv.recorder_.incrementMetric(
-          "sequential-calculations", 1,
-          util::observability::field{"asset-symbols-size",
-                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
-      serv.recorder_.incrementMetric(
-          "parallel-calculations", 1,
-          util::observability::field{"asset-symbols-size",
-                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
 
@@ -155,8 +141,6 @@ template <typename T> struct MessageVisitor {
 template <> struct MessageVisitor<asset::Crypto> {
   Server<asset::Crypto> &serv;
   void operator()(message::OrderRequest &o) {
-    serv.recorder_.incrementMetric("order-requests", 1,
-                                   field{"order-type", o.getTypeStr()});
     serv.logger_.log("Received order request", level::INFO,
                      field{trait::Print<asset::Crypto>::Header(), o.assetName},
                      field{"Order-type", o.getTypeStr()});
@@ -164,23 +148,12 @@ template <> struct MessageVisitor<asset::Crypto> {
     o.prom.set_value(resp);
   }
   void operator()(message::InfoRequest &i) {
-    serv.recorder_.incrementMetric(
-        "info-requests", 1,
-        util::observability::field{"assetSymbolsQty", i.assetSymbols.size()});
     std::map<std::string, double> trends;
     int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
-      serv.recorder_.incrementMetric(
-          "sequential-calculations", 1,
-          util::observability::field{"asset-symbols-size",
-                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
-      serv.recorder_.incrementMetric(
-          "parallel-calculations", 1,
-          util::observability::field{"asset-symbols-size",
-                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
 
@@ -193,9 +166,6 @@ template <> struct MessageVisitor<asset::Crypto> {
     i.prom.set_value(resp);
   }
   void operator()(message::MineEvent &m) {
-    serv.recorder_.incrementMetric(
-        "mine-event", 1, util::observability::field{"miner-id", m.MinerId},
-        util::observability::field{"quantity", m.qty});
     std::lock_guard<std::mutex> lock(serv.mtx_);
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;

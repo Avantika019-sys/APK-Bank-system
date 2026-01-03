@@ -22,29 +22,25 @@ using namespace std::placeholders;
 
 int main() {
   MonitorResource cryptoMs;
-  MetricRecorder cryptoRecorder;
   Crypto c1("Bitcoin", &cryptoMs);
   Crypto c2("Etherium", &cryptoMs);
   c1.unitPriceOverTime_.emplace_back(0.531_Mil);
   c1.unitPriceOverTime_.emplace_back(1.25_K);
   c2.unitPriceOverTime_.emplace_back(10.2_K);
   c2.unitPriceOverTime_.emplace_back(13.2_K);
-  auto cryptoServ = createServer<Crypto>(Logger("cryptoServer.txt"), &cryptoMs,
-                                         cryptoRecorder);
+  auto cryptoServ = createServer<Crypto>(Logger("cryptoServer.txt"), &cryptoMs);
   cryptoServ->addAsset("BTC", std::move(c1));
   cryptoServ->addAsset("ETH", std::move(c2));
   Miner miner("BTC", cryptoServ);
 
   MonitorResource stockMs;
-  MetricRecorder stockRecorder;
   Stock s1("Apple", &stockMs);
   Stock s2("Tesla motor technologies", &stockMs);
   s1.unitPriceOverTime_.emplace_back(1.23_K);
   s1.unitPriceOverTime_.emplace_back(1.25_K);
   s2.unitPriceOverTime_.emplace_back(10.2_K);
   s2.unitPriceOverTime_.emplace_back(13.2_K);
-  auto stockServ =
-      createServer<Stock>(Logger("stockServer.txt"), &stockMs, stockRecorder);
+  auto stockServ = createServer<Stock>(Logger("stockServer.txt"), &stockMs);
   stockServ->addAsset("APPL", std::move(s1));
   stockServ->addAsset("TSLA", std::move(s2));
 
