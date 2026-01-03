@@ -287,11 +287,32 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
 
 The **calculateTrendForIndividualAsset** is the function doing the actual calculation, here we use the PrecisionT fixed trait. The idea is that crypto requires larger decimal precision compared to stocks. Maybe a crypto has 18 decimals, while stock can have maximal 10. This also means that a crypto can have a money value which has alot of decimals, and therefore requires high precision when calculating the trend.
 
-## Logger
+## observability
 
-Each account has its own logger which logs to a file, which belongs to a account, The logger uses a **\*FILE**  pointer to write and read to files. The class uses RAII, when constructing the logger it aquires a file descriptor in the constructor and the destructor releases the file descriptor. This class has explicitly deleted the copy constructor and assignment operator, since we cant have 2 objects using the pointer, if one of the objects are destructed which closes the file descriptor and later the other object then tries write it will be an issue. Therefore we implemented the rule of 5, by implementing move semantics. now the FILE pointer can be moved from object to object.
+### Logger
+
+We made a custom logger for the server. This logger writes to a file using a FILE pointer.
+We use RAII, by opening a file in the logger constructor, and closing the file in the destructor, this ensures that we dont forget to close the file.  
+Also we deleted the copy constructor and copy assignment operator, since copying the FILE pointer is dangerous and can lead to undefined behaviour, such as double freeing in destructor. Additionally we implemented move semantics for the logger.
+The logger makes use of variadics, to accept a variable amount of arguments of different type.
+
+```cpp
+  template <typename T> struct field {
+   std::string name;
+   T value;
+  };
+
+  template <typename T, typename... Args>
+  void log(std::string msg, level l, field<T> field, Args... args)
+    requires std::formattable<T, char>
+  {
+    msg += std::format(", ({}:{})", field.name, field.value);
+    log(msg, l, args...);
+  }
+```
+
+This allows the including metadata when logging. In each recursive call handles on field, and and appends it to the msg, and then makes a recursive call. The end marker then takes this final message and prepends the level and a timestamp to it, and writes to a file. Additionally we make use of concepts, to ensure the type T fulfills certain requirements, so it can be converted to a string.
 
 ## Meta programming
 
 # Conclusion
-
