@@ -1,6 +1,6 @@
 #include "exchange/asset/Stock.h"
 namespace exchange::asset {
-Stock::Stock(std::string name, util::MonitorResource *s)
+Stock::Stock(std::string name, util::observability::MonitorResource *s)
     : name_(name), unitPriceOverTime_(s), sig_(new UpdateSignal()) {}
 
 Stock::Stock(Stock &&other) noexcept

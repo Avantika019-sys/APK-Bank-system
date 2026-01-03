@@ -6,6 +6,7 @@ namespace exchange::message {
 struct MineEvent {
   std::string cryptoName;
   double qty;
+  std::string MinerId;
 };
 } // namespace exchange::message
 #endif // EXCHANGE_MESSAGE_MINEEVENT_H

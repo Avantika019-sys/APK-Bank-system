@@ -1,5 +1,6 @@
 
 #include "Server.h"
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <thread>
 
 #ifndef EXCHANGE_CRYPTOMINER_H
@@ -9,13 +10,13 @@ namespace exchange {
 class Miner {
 
 public:
-  Miner(std::string crypto, Server<asset::Crypto> &serv);
+  Miner(std::string crypto, boost::shared_ptr<Server<asset::Crypto>> serv);
   ~Miner();
 
 private:
   std::atomic<bool> run{true};
   void startMining();
-  Server<asset::Crypto> &serv;
+  boost::shared_ptr<Server<asset::Crypto>> serv;
   std::string crypto;
   std::thread minerThread;
 };

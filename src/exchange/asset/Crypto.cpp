@@ -1,6 +1,6 @@
 #include "exchange/asset/Crypto.h"
 namespace exchange::asset {
-Crypto::Crypto(std::string name, util::MonitorResource *s)
+Crypto::Crypto(std::string name, util::observability::MonitorResource *s)
     : name_(name), sig_(new UpdateSignal()), unitPriceOverTime_(s) {}
 
 Crypto::Crypto(Crypto &&other) noexcept

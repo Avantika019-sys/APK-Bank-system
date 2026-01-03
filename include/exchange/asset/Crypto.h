@@ -1,5 +1,5 @@
 #include "exchange/currency/DKK.h"
-#include "exchange/util/MonitorResource.h"
+#include "exchange/util/observability/MonitorResource.h"
 #include <boost/signals2/signal.hpp>
 #include <string>
 #include <vector>
@@ -9,7 +9,7 @@ namespace exchange::asset {
 typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 class Crypto {
 public:
-  Crypto(std::string name, util::MonitorResource *s);
+  Crypto(std::string name, util::observability::MonitorResource *s);
   Crypto(const Crypto &other) = delete;
   Crypto &operator=(const Crypto &other) = delete;
 

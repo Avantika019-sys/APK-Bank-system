@@ -1,7 +1,7 @@
 #include "exchange/Miner.h"
 namespace exchange {
 
-Miner::Miner(std::string crypto, Server<asset::Crypto> &serv)
+Miner::Miner(std::string crypto, boost::shared_ptr<Server<asset::Crypto>> serv)
     : crypto(crypto), serv(serv),
       minerThread(std::thread([this]() { startMining(); })) {}
 Miner::~Miner() {
@@ -16,7 +16,7 @@ void Miner::startMining() {
   std::uniform_real_distribution<double> distrib(0.005, 0.012);
   while (run) {
     std::this_thread::sleep_for(5s);
-    serv.pushMsg(message::MineEvent{crypto, distrib(gen)});
+    serv->pushMsg(message::MineEvent{crypto, distrib(gen)});
   }
 }
 } // namespace exchange

@@ -26,13 +26,13 @@ template <typename T> struct ownedAsset {
 };
 template <typename T> class Manager {
 public:
-  Manager(Server<T> &serv, boost::shared_ptr<Account> acc,
+  Manager(boost::shared_ptr<Server<T>> serv, boost::shared_ptr<Account> acc,
           std::string managerId)
       : serv_(serv), acc(acc), managerId_(managerId) {}
   message::InfoResponse getInfo(std::vector<std::string> symbol) const {
     message::InfoRequest i{{symbol}};
     auto infoF = i.prom.get_future();
-    serv_.pushMsg(message::Message<T>(std::move(i)));
+    serv_->pushMsg(message::Message<T>(std::move(i)));
 
     while (infoF.wait_for(100ms) != std::future_status::ready) {
       util::spin("Getting info");
@@ -65,7 +65,7 @@ public:
     message::OrderRequest o{symbol, managerId_, amountInDKK,
                             message::OrderType::BUY};
     auto orderF = o.prom.get_future();
-    serv_.pushMsg(message::Message<T>(std::move(o)));
+    serv_->pushMsg(message::Message<T>(std::move(o)));
 
     while (orderF.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process purchase order");
@@ -120,7 +120,7 @@ public:
     message::OrderRequest o{symbol, managerId_, amountInDKK,
                             message::OrderType::SELL};
     auto orderFut = o.prom.get_future();
-    serv_.pushMsg(message::Message<T>(std::move(o)));
+    serv_->pushMsg(message::Message<T>(std::move(o)));
 
     while (orderFut.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process sale order");
@@ -166,7 +166,7 @@ public:
       throw std::invalid_argument("U dont own this asset");
     };
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
-    auto conn = serv_.subscribeToPriceUpdates(symbol, handler);
+    auto conn = serv_->subscribeToPriceUpdates(symbol, handler);
     portfolio_[symbol].stopLossRule.emplace(limit);
     portfolio_[symbol].conn = conn;
   }
@@ -193,7 +193,7 @@ private:
       message::OrderRequest o(symbol, managerId_, it->second.qty,
                               message::OrderType::SELL);
       auto orderFut = o.prom.get_future();
-      serv_.pushMsg(message::Message<T>(std::move(o)));
+      serv_->pushMsg(message::Message<T>(std::move(o)));
 
       orderFut.wait();
       if (!orderFut.get().isSucceded) {
@@ -209,13 +209,13 @@ private:
   }
   std::map<std::string, ownedAsset<T>> portfolio_;
   std::mutex mtx_;
-  Server<T> &serv_;
+  boost::shared_ptr<Server<T>> serv_;
   boost::shared_ptr<Account> acc;
   std::string managerId_;
 };
-template <typename T, typename... Args>
-std::unique_ptr<Manager<T>> createManager(Args &&...args) {
-  return std::make_unique<Manager<T>>(std::forward<Args>(args)...);
-}
+// template <typename T, typename... Args>
+// std::unique_ptr<Manager<T>> createManager(Args &&...args) {
+//   return std::make_unique<Manager<T>>(std::forward<Args>(args)...);
+// }
 } // namespace exchange
 #endif // EXCHANGE_ASSETACCOUNT_H

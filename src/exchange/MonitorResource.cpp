@@ -1,12 +1,12 @@
 
-#include "exchange/util/MonitorResource.h"
+#include "exchange/util/observability/MonitorResource.h"
 #include <memory_resource>
-namespace exchange::util {
+namespace exchange::util::observability {
 
 MonitorResource::MonitorResource(std::pmr::memory_resource *parent)
     : parent_(parent) {}
 
-int32_t MonitorResource::getbytesalloc() { return bytesAlloc_; }
+int32_t MonitorResource::getbytesalloc() const { return bytesAlloc_; }
 
 void *MonitorResource::do_allocate(size_t bytes, size_t align) {
   bytesAlloc_ += bytes;
@@ -20,4 +20,4 @@ bool MonitorResource::do_is_equal(
     std::pmr::memory_resource const &other) const noexcept {
   return parent_->is_equal(other);
 }
-}; // namespace exchange::util
+}; // namespace exchange::util::observability

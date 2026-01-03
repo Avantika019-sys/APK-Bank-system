@@ -1,6 +1,6 @@
 
 #include "exchange/currency/DKK.h"
-#include "exchange/util/MonitorResource.h"
+#include "exchange/util/observability/MonitorResource.h"
 #include <boost/signals2/signal.hpp>
 #include <string>
 #ifndef EXCHANGE_ASSET_STOCK_H
@@ -9,7 +9,7 @@ namespace exchange::asset {
 typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 class Stock {
 public:
-  Stock(std::string name, util::MonitorResource *s);
+  Stock(std::string name, util::observability::MonitorResource *s);
 
   Stock(const Stock &other) = delete;
   Stock &operator=(const Stock &other) = delete;

@@ -1,6 +1,7 @@
 
-#ifndef EXCHANGE_UTIL_LOGGER_H
-#define EXCHANGE_UTIL_LOGGER_H
+#ifndef EXCHANGE_UTIL_OBSERVABILITY_LOGGER_H
+#define EXCHANGE_UTIL_OBSERVABILITY_LOGGER_H
+#include "Field.h"
 #include <chrono>
 #include <concepts>
 #include <format>
@@ -8,7 +9,7 @@
 #include <stdio.h>
 #include <string>
 #include <type_traits>
-namespace exchange::util {
+namespace exchange::util::observability {
 
 template <typename T, typename = void> struct streamable : std::false_type {};
 template <typename T>
@@ -23,10 +24,6 @@ enum class level {
   INFO,
   DEBUG,
   ERROR,
-};
-template <typename T> struct field {
-  std::string name;
-  T value;
 };
 class Logger {
 public:
@@ -99,5 +96,5 @@ private:
   }
   FILE *fptrLogs_;
 };
-} // namespace exchange::util
-#endif // EXCHANGE_UTIL_LOGGER_H
+} // namespace exchange::util::observability
+#endif // EXCHANGE_UTIL_OBSERVABILITY_LOGGER_H
