@@ -13,7 +13,7 @@ This report describes our chosen project, the asset exchange system [can be chan
 The primary goal of the project is to demonstrate how the C++ concepts taught in SWAPK can be incorporated into a coherent and well‑structured software solution. 
 
 # System description 
-The asset exchange system has 6 main features where each feature have set of requirements that needs to be fullfiled. 
+The asset exchange system has 6 main features where each feature have set of requirements that needs to be fullfiled.
 
 #### Features
 
