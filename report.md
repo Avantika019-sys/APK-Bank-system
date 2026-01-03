@@ -69,21 +69,35 @@ Each server-node has a message queue, where it can receive the following types o
 
 A manager can request information about a collection of assets, this is used for displaying portfolio stats and to display information about an asset to the user before the user authorizes the purchase or sale.
 
-**Parameters**: Collection of asset symbols(e.g. BTC)
+**Parameters**:
 
-**Response**: Trend and current price for each asset
+- Collection of asset symbols(e.g. BTC)
+
+**Response**:
+
+- Trend and current price for each asset
 
 #### OrderRequest
 
 If authorized by the user, then a manager places an order, which the server needs to confirm
 
-**Parameters**: One asset symbol, type(either sale or purchase), quantity in DKK
+**Parameters**:
 
-**Response**: Confirmation of order
+- One asset symbol
+- Type(either sale or purchase)
+- Quantity in DKK
+
+**Response**:
+
+- Confirmation of order
 
 #### MineEvent
 
 Miners mine for crypto currencies, and when they succesfully mine a quantity of a crypto, then they emit events, which the server uses to adjust the total quantity of a crypto, for example there is around 19 million bitcoins, and if someone mines 100 bitcoins, then the server needs to know so it can update the total quantity and adjust the unit price.
+
+**Parameters**:
+
+**Response**:
 
 #### Stop
 
@@ -113,14 +127,71 @@ The account class stores a collection of transactions, a transaction can have on
 
 # Implementation
 
-## Event-driven server
+## Asset classes
 
-To implement the event driven server, we defined a **MessageQueue** class with pop and push methods, this will ensure that pushing to a queue which is full blocks, and popping from and empty queue also blocks. This is achieved with condition variables and a mutex.
-Then on the Server class we can define a special while loop, which pops from the **Message Queue** in each iteration and then dispatches the message to the **MessageVisitor** struct which has a overload for each type of message. Since the thread that pushes the message to the server is not even driven, we cant just push the response to a message queue. For this we use std::promise to set a response value.
-Finally the Server also needs to publish when a asset price changes. For this we use boost::signals, each asset has its own signal, this allows the asset account for granular subscription.  
-// add communication diagram here
+The asset classes consist of 2 classes:
 
-Each asset has defined asset traits, here we defined a accumulator type, for example for crypto assets then having a high decimal precision is important, if we  just use a double then som decimals will be discarded which underestimates the value of a accounts assets, while a stock does not require the same precision.
+- Stock
+- Crypto
+
+These classes store a vector of unit prices over time, the back of the vector is the latest price.
+Additionally the Asset classes uses boost signals2, whenever a new price is added by the server, then the signal is triggered.
+
+```cpp
+typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
+```
+
+## Message Queue
+
+The Message Queue class is the primary interface to the server, its a template class which requires a Asset class as template type.
+For the message queue we define the types of messages it can accept based on the template type
+
+```cpp
+template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
+```
+
+With the use of traits we can define which messages are possible based on the asset type, this is a fixed trait
+
+```cpp
+template <typename T> class MessageQueue;
+
+template <> struct MessageQueue<asset::Stock> {
+  using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
+  static int QueueCapacity() { return 100; }
+};
+
+template <> struct MessageQueue<asset::Crypto> {
+  using Variant = std::variant<OrderRequest, InfoRequest, Stop, MineEvent>;
+  static int QueueCapacity() { return 80; }
+};
+```
+
+We use std::variant to be able to define a set of types, this allows the queue to accept different types of messages, and based on the template asset type the set of messages can change. Overall this makes the queue very flexible.
+Here we can see that the Crypto type has the additional MineEvent message type.
+
+Additionally there is a value trait, the QueueCapacity() adds value information, based on the type of asset the server has different traffic, and requires the queue to have a certain capacity.
+
+The queue is essentially the interface between a server thread and client threads. Therefore protection and synchronization mechanisms is important.
+If a message producer tries to push a message to a full queue, then it should block the thread until there is space in the queue again.
+If the server thread tries to pop a message, and the queue is empty, then it should be blocked until there is a message in the queue.
+// NOTE husk at initalisere queue med queuecapacity
+To achieve this we use a mutex and 2 condition variables
+
+```cpp
+  std::mutex mtx;
+  std::condition_variable cv_not_empty;
+  std::condition_variable cv_not_full;
+```
+
+## Server
+
+The server is multi-threaded, it operates 2 threads:
+
+#### Simulator thread
+
+This thread regurlary iterates through assets, and generates a new price, within a percentage range of the current, and adds it to the assets unit price vector.
+
+#### Message proccesor thread
 
 ## Account
 
