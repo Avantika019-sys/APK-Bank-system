@@ -384,19 +384,20 @@ The signal does not adapt to the managers handler signature, because it expects 
 
 ```cpp
   // Manager function
-  void addStopLossRule(std::string symbol, currency::DKK limit) {
-    if (!portfolio_.contains(symbol)) {
-      throw std::invalid_argument("U dont own this asset");
-    };
+  void addStopLossRule(std::string symbol, DKK limit) {
+    ...
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
     auto conn = serv_->subscribeToPriceUpdates(symbol, handler);
-    portfolio_[symbol].stopLossRule.emplace(limit);
-    portfolio_[symbol].conn = conn;
+    ...
   }
 ```
 
-When adding a stop loss limit for an asset, then we can define
+When adding a stop loss limit for an asset, then we can pass the symbol as the first parameter of onAssetUpdate, and then the argument the signal is called with is given as the second argument for the onAssetUpdate handler, which allows the handler to know which asset the price update is for.
 
-## Meta programming
+## PMR
+
+## Meta Programming
 
 # Conclusion
+
+The purpose of this system was to allow us to make use of the concepts taught in the course SWAPK, throughout working on the system we constantly tried to come up with features, that would allow us to make use of as many concepts in a way that utilized the strength of these concepts.
