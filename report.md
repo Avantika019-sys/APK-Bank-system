@@ -166,42 +166,126 @@ template <> struct MessageQueue<asset::Crypto> {
 };
 ```
 
-We use std::variant to be able to define a set of types, this allows the queue to accept different types of messages, and based on the template asset type the set of messages can change. Overall this makes the queue very flexible.
+We use std::variant to be able to define a set of types, this allows the queue to store the variant as queue elements, and based on the template asset type the set of messages can change. Overall this makes the queue very flexible.
 Here we can see that the Crypto type has the additional MineEvent message type.
 
 Additionally there is a value trait, the QueueCapacity() adds value information, based on the type of asset the server has different traffic, and requires the queue to have a certain capacity.
 
 The queue is essentially the interface between a server thread and client threads. Therefore protection and synchronization mechanisms is important.
-If a message producer tries to push a message to a full queue, then it should block the thread until there is space in the queue again.
-If the server thread tries to pop a message, and the queue is empty, then it should be blocked until there is a message in the queue.
+
+- If a message producer tries to push a message to a full queue, then it should block the thread until there is space in the queue again.
+- If the server thread tries to pop a message, and the queue is empty, then it should be blocked until there is a message in the queue.
+
 // NOTE husk at initalisere queue med queuecapacity
+
 To achieve this we use a mutex and 2 condition variables
 
 ```cpp
-  std::mutex mtx;
-  std::condition_variable cv_not_empty;
-  std::condition_variable cv_not_full;
+  void push(message::Message<T> &&msg) {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv_not_full.wait(lock, [this] { return queue.size() < maxSize; });
+    queue.push(std::move(msg));
+    cv_not_empty.notify_one();
+  }
 ```
+
+The push method on the queue, first aquires locks, then it waits on the condition variable
+
+- if the current queue size is less than the max size, then the thread procceds and pushes the msg, since there is space in the queue.
+- else the thread will go to sleep, and when the server thread pops from the queue, it will signal the condition variable cv_not_full, because the queue is not full anymore, the thread wakes up and checks the condition and then procceds to push the msg to the queue.
+
+Finally the cv_not_empty condition variable is notified, so if the server thread is sleeping because the queue is empty then it will wake up and check if the queue is not empty
 
 ## Server
 
+The server is a template and accepts a type T which should be a asset type.
 The server is multi-threaded, it operates 2 threads:
 
 #### Simulator thread
 
-This thread regurlary iterates through assets, and generates a new price, within a percentage range of the current, and adds it to the assets unit price vector.
+This thread regurlary iterates through assets, for each asset then generates a new price, within a percentage range of the current, and adds it to the assets unit price vector. Finally it triggers the assets signal, because the price changed.
 
 #### Message proccesor thread
 
-## Account
+Below is the thread function.
 
-The account
+```cpp
+  void startMessageProccesor() {
+    while (run_) {
+      auto msg = msgQueue_.pop();
+      std::visit(MessageVisitor<T>{*this}, msg);
+    }
+  }
+```
 
-## Calculator/analyzer
+The thread pops from the message queue, and then we use visitation with the functor **MessageVisitor**, which has a function operator overload for each type in the variant.  
 
-When the server receives request to calculate trends it calls free functions defined in Calculator.h
-These functions are template and takes a asset type,
-Here we make use of alghoritm selection using tagging, depending on the amount of data that needs to proccesed we choose either a parallel or sequential calculation. The idea is that if the amount of data isnt very large then the overhead of spawning threads with std::async too large and doing it sequentially is faster.
+The functor is also templated, and requires a asset type, this is because of 2 reasons:
+
+1. The crypto type, has an additional message(MineEvent), to handle this we defined a full specilization for the crypto type, this specilization has a operator overload for the MineEvent message
+
+2. The opeartor overloads needs to access asset type traits to handle messages, below is the InfoRequest operator overload(simplified). Based on the type of the asset, then the amount of data points to include for the trend calculation differs. To get the exact amount of datapoints to include in a trend calculation we use the LookBackPeriod() value trait.
+
+The idea with lookBackPeriod is that crypto currencies move alot faster than stocks, in terms of datapoints, and therefore a trend calculation for cryptocurrencies requires a shorter lookback so it does not include too old datapoints, so that the trend calculation is useful in the curent moment. On the other hand a stock requires a longer lookBackPeriod since they move slower.
+
+```cpp
+  void operator()(InfoRequest &i) {
+    std::map<std::string, double> trends;
+    int lookBackPeriod = Trend<T>::LookBackPeriod();
+    std::lock_guard<std::mutex> lock(serv.mtx_);
+
+    if (i.assetSymbols.size() * lookBackPeriod < 1000) {
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
+    } else {
+      trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
+    }
+    ...
+```
+
+Additionally we use **alghoritm selection using tagging**.
+
+- If the number of assets in the request multiplied with lookBackPeriod is a certain data load, then its faster to do a parallel trend calculation.
+- If its less, then the overhead of spawning threads is not worth it and a sequential execution is faster.
+
+Here is a snippet of the parallel implementation of **CalculateTrends**
+
+```cpp
+  std::vector<std::future<double>> futures;
+  for (const auto &[symbol, asset] : assets) {
+    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
+    if (it != ownedAssets.end()) {
+      futures.push_back(std::async(std::launch::async, [&asset]() {
+        return calculateTrendForIndividualAsset<T>(asset);
+      }));
+    }
+  }
+```
+
+We spawn a thread for each trend caclulation, using std::async, and store futures in a vector. The implementation does not query the cpu cores on the machine and distribute calculations among these, which would have been an improvement. If a request has a 50 elements, then spawning 50 threads is definitely not optimal in terms of speed.
+
+```cpp
+template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
+  typedef typename Precision<T>::PrecisionT PrecisionT;
+  const auto &vec = asset.unitPriceOverTime_;
+  if (vec.size() == 1) {
+    return 0;
+  }
+  PrecisionT sumX = 0;
+  PrecisionT sumY = 0;
+  PrecisionT sumXY = 0;
+  PrecisionT sumX2 = 0;
+  if (trait::Trend<T>::LookBackPeriod() > vec.size()) {
+    for (int i = 0; i < vec.size(); i++) {
+      currency::DKK price = vec[i];
+      sumX += i;
+      sumY += price.value();
+      sumXY += (i * price.value());
+      sumX2 += (i * i);
+    }
+  ...
+```
+
+The **calculateTrendForIndividualAsset** is the function doing the actual calculation, here we use the PrecisionT fixed trait. The idea is that crypto requires larger decimal precision compared to stocks. Maybe a crypto has 18 decimals, while stock can have maximal 10. This also means that a crypto can have a money value which has alot of decimals, and therefore requires high precision when calculating the trend.
 
 ## Logger
 

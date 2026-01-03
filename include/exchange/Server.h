@@ -79,9 +79,10 @@ private:
         (*asset.sig_)(newPrice);
       }
       if (d(gen)) {
-        logger_.log("system health", util::observability::level::INFO,
-                    util::observability::field("bytes", ms_->getbytesalloc()),
-                    util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
+        logger_.log(
+            "system health", util::observability::level::INFO,
+            util::observability::field("bytes", ms_->getbytesalloc()),
+            util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
       }
     }
   }
@@ -113,7 +114,7 @@ template <typename T> struct MessageVisitor {
     serv.recorder_.incrementMetric("order-requests", 1,
                                    field{"order-type", o.getTypeStr()});
     serv.logger_.log("Received order request", level::INFO,
-                     field{trait::Print<asset::Crypto>::Header(), o.assetName},
+                     field{trait::Print<T>::Header(), o.assetName},
                      field{"Order-type", o.getTypeStr()});
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
@@ -129,12 +130,14 @@ template <typename T> struct MessageVisitor {
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
       serv.recorder_.incrementMetric(
           "sequential-calculations", 1,
-          util::observability::field{"asset-symbols-size", i.assetSymbols.size()});
+          util::observability::field{"asset-symbols-size",
+                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
       serv.recorder_.incrementMetric(
           "parallel-calculations", 1,
-          util::observability::field{"asset-symbols-size", i.assetSymbols.size()});
+          util::observability::field{"asset-symbols-size",
+                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
 
@@ -170,12 +173,14 @@ template <> struct MessageVisitor<asset::Crypto> {
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
       serv.recorder_.incrementMetric(
           "sequential-calculations", 1,
-          util::observability::field{"asset-symbols-size", i.assetSymbols.size()});
+          util::observability::field{"asset-symbols-size",
+                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
       serv.recorder_.incrementMetric(
           "parallel-calculations", 1,
-          util::observability::field{"asset-symbols-size", i.assetSymbols.size()});
+          util::observability::field{"asset-symbols-size",
+                                     i.assetSymbols.size()});
       trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
     }
 
@@ -188,9 +193,9 @@ template <> struct MessageVisitor<asset::Crypto> {
     i.prom.set_value(resp);
   }
   void operator()(message::MineEvent &m) {
-    serv.recorder_.incrementMetric("mine-event", 1,
-                                   util::observability::field{"miner-id", m.MinerId},
-                                   util::observability::field{"quantity", m.qty});
+    serv.recorder_.incrementMetric(
+        "mine-event", 1, util::observability::field{"miner-id", m.MinerId},
+        util::observability::field{"quantity", m.qty});
     std::lock_guard<std::mutex> lock(serv.mtx_);
     auto &crypto = serv.assets_.at(m.cryptoName);
     crypto.totalCoinsOnMarket += m.qty;

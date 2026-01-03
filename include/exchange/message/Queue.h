@@ -10,12 +10,9 @@ template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
 template <typename T> class Queue {
 public:
   Queue(unsigned long maxSize) : maxSize(maxSize) {}
-
   void push(message::Message<T> &&msg) {
     std::unique_lock<std::mutex> lock(mtx);
-
     cv_not_full.wait(lock, [this] { return queue.size() < maxSize; });
-
     queue.push(std::move(msg));
     cv_not_empty.notify_one();
   }
