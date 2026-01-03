@@ -7,7 +7,6 @@
 namespace exchange::tx {
 struct Withdraw {
   currency::DKK total;
-  std::pmr::memory_resource *memRes_;
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
   std::chrono::system_clock::time_point getCreatedAt() const {

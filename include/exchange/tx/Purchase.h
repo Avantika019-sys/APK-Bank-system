@@ -12,7 +12,6 @@ struct Purchase {
   std::string qty_;
   currency::DKK pricePerAsset_;
   currency::DKK total;
-  std::pmr::memory_resource *memRes_;
   std::chrono::system_clock::time_point createdAt_ =
       std::chrono::system_clock::now();
   std::string toString() const {
