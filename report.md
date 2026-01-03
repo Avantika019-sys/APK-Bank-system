@@ -287,9 +287,7 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
 
 The **calculateTrendForIndividualAsset** is the function doing the actual calculation, here we use the PrecisionT fixed trait. The idea is that crypto requires larger decimal precision compared to stocks. Maybe a crypto has 18 decimals, while stock can have maximal 10. This also means that a crypto can have a money value which has alot of decimals, and therefore requires high precision when calculating the trend.
 
-## observability
-
-### Logger
+## Logger
 
 We made a custom logger for the server. This logger writes to a file.
 The logger makes use of variadics, to accept a variable amount of arguments of type field.
