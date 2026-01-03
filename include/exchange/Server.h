@@ -45,10 +45,9 @@ public:
     assets_.try_emplace(std::move(symbol), std::move(asset));
   }
 
-  boost::signals2::connection subscribeToPriceUpdates(
-      std::string assetSymbol,
-      std::function<void(std::string assetName, currency::DKK UpdatedPrice)>
-          cb) {
+  boost::signals2::connection
+  subscribeToPriceUpdates(std::string assetSymbol,
+                          std::function<void(currency::DKK UpdatedPrice)> cb) {
     return assets_.at(assetSymbol).sig_->connect(cb);
   }
 
@@ -77,10 +76,10 @@ private:
         currency::DKK newPrice{asset.unitPriceOverTime_.back().value() *
                                (1 + percentChange)};
         asset.unitPriceOverTime_.push_back(newPrice);
-        (*asset.sig_)(symbol, newPrice);
+        (*asset.sig_)(newPrice);
       }
       if (d(gen)) {
-        logger_->log("memory usage", util::level::INFO,
+        logger_->log("system health", util::level::INFO,
                      util::field("bytes", ms_->getbytesalloc()));
       }
     }

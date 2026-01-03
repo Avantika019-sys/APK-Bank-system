@@ -6,7 +6,7 @@
 #ifndef EXCHANGE_UTIL_DASHBOARD_H
 #define EXCHANGE_UTIL_DASHBOARD_H
 namespace exchange::util {
-inline void printDatapoint(std::string symbol, currency::DKK amnt) {
+inline void printDatapoint(currency::DKK amnt) {
   std::cout << "Price change: " << amnt << std::endl;
 }
 } // namespace exchange::util

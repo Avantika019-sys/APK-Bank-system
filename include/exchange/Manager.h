@@ -16,6 +16,7 @@
 
 #ifndef EXCHANGE_ASSETMANAGER_H
 #define EXCHANGE_ASSETMANAGER_H
+using namespace std::placeholders;
 using namespace std::chrono_literals;
 namespace exchange {
 template <typename T> struct ownedAsset {
@@ -168,8 +169,7 @@ public:
     if (!portfolio_.contains(symbol)) {
       throw std::invalid_argument("U dont own this asset");
     };
-    auto handler = std::bind(&Manager<T>::onAssetUpdate, this,
-                             std::placeholders::_1, std::placeholders::_2);
+    auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
     auto conn = serv_.subscribeToPriceUpdates(symbol, handler);
     portfolio_[symbol].stopLossRule.emplace(limit);
     portfolio_[symbol].conn = conn;

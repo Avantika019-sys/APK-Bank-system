@@ -6,9 +6,7 @@
 #ifndef EXCHANGE_ASSET_CRYPTO_H
 #define EXCHANGE_ASSET_CRYPTO_H
 namespace exchange::asset {
-typedef boost::signals2::signal<void(std::string assetName,
-                                     currency::DKK UpdatedPrice)>
-    UpdateSignal;
+typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 class Crypto {
 public:
   Crypto(std::string name, util::MonitorResource *s);
