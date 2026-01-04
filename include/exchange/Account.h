@@ -1,5 +1,6 @@
 #include "exchange/currency/DKK.h"
 #include "tx.hpp"
+#include <limits>
 #include <sys/types.h>
 #include <variant>
 #include <vector>

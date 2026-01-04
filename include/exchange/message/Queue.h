@@ -31,6 +31,7 @@ public:
     std::unique_lock<std::mutex> lock(mtx);
     return queue.size();
   }
+  bool empty() { return queue.size(); }
 
 private:
   std::queue<message::Message<T>> queue;

@@ -8,6 +8,7 @@
 #include "exchange/util/Literals.h"
 #include "exchange/util/dashboard.h"
 #include "message.hpp"
+#include <algorithm>
 #include <boost/smart_ptr/make_shared_array.hpp>
 #include <iostream>
 #include <stdexcept>
@@ -69,4 +70,9 @@ int main() {
   acc->printTransactionHistory();
   cryptoMgr.printPortfolioStats();
   stockMgr.printPortfolioStats();
+
+  // auto orders = stockServ->getOrderHistoryForAsset("APPL");
+  // std::for_each(
+  //     orders.orders_, orders.orders_ + orders.currentOrders_,
+  //     [](const auto &order) { std::cout << order.toString() << std::endl; });
 }

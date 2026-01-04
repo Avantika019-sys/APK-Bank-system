@@ -7,6 +7,7 @@
 #include "exchange/util/observability/Logger.h"
 #include "message.hpp"
 #include "trait.hpp"
+#include <algorithm>
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/smart_ptr/make_shared_array.hpp>
@@ -14,6 +15,7 @@
 #include <exception>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <stdexcept>
 #include <thread>
@@ -70,6 +72,15 @@ public:
     if (messageProccessorThread.joinable())
       messageProccessorThread.join();
   }
+  OrderArray getOrderHistoryForAsset(std::string symbol) {
+    std::lock_guard<std::mutex> lock(snapshotMtx_);
+    OrderArray res(ordersSnapshot_.size_);
+    std::remove_copy_if(
+        ordersSnapshot_.orders_,
+        ordersSnapshot_.orders_ + ordersSnapshot_.currentOrders_, res.orders_,
+        [&symbol](const Order &o) { return o.assetSymbol != symbol; });
+    return res;
+  }
 
 private:
   void startSimulatingAssetPriceUpdates() {
@@ -94,6 +105,8 @@ private:
             "system health", util::observability::level::INFO,
             util::observability::field("bytes", ms_->getbytesalloc()),
             util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
+
+        std::lock_guard<std::mutex> lock(snapshotMtx_);
         try {
           ordersSnapshot_ = orders_;
         } catch (...) {
@@ -113,6 +126,7 @@ private:
   message::Queue<T> msgQueue_;
   std::map<std::string, T> assets_;
   std::mutex mtx_;
+  std::mutex snapshotMtx_;
   std::atomic<bool> run_{true};
   Logger logger_;
   const MonitorResource *ms_;
@@ -131,7 +145,7 @@ template <typename T> struct MessageVisitor {
   void operator()(message::OrderRequest &o) {
     serv.logger_.log("Received order request", level::INFO,
                      field{trait::Print<T>::Header(), o.order.assetSymbol},
-                     field{"Order-type", o.getTypeStr()});
+                     field{"order", o.order});
     serv.orders_.addOrder(o.order);
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
@@ -141,10 +155,19 @@ template <typename T> struct MessageVisitor {
     std::map<std::string, double> trends;
     int lookBackPeriod = trait::Trend<T>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
+    std::vector<const T *> filteredAssets;
+
+    for (const auto &symbol : i.assetSymbols) {
+      auto it = serv.assets_.find(symbol);
+      if (it != serv.assets_.end()) {
+        filteredAssets.push_back(&it->second);
+      }
+    }
+
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
-      trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
+      trends = CalculateTrends(filteredAssets, sequential{});
     } else {
-      trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
+      trends = CalculateTrends(filteredAssets, parallel{});
     }
 
     message::InfoResponse resp;
@@ -164,7 +187,7 @@ template <> struct MessageVisitor<asset::Crypto> {
     serv.logger_.log(
         "Received order request", level::INFO,
         field{trait::Print<asset::Crypto>::Header(), o.order.assetSymbol},
-        field{"Order-type", o.getTypeStr()});
+        field{"Order", o.order});
     serv.orders_.addOrder(o.order);
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
@@ -173,10 +196,19 @@ template <> struct MessageVisitor<asset::Crypto> {
     std::map<std::string, double> trends;
     int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
+    std::vector<const asset::Crypto *> filteredAssets;
+
+    for (const auto &symbol : i.assetSymbols) {
+      auto it = serv.assets_.find(symbol);
+      if (it != serv.assets_.end()) {
+        filteredAssets.push_back(&it->second);
+      }
+    }
+
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
-      trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
+      trends = CalculateTrends(filteredAssets, sequential{});
     } else {
-      trends = CalculateTrends(serv.assets_, i.assetSymbols, parallel{});
+      trends = CalculateTrends(filteredAssets, parallel{});
     }
 
     message::InfoResponse resp;

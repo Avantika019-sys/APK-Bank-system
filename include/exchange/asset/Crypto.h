@@ -18,6 +18,7 @@ public:
   ~Crypto();
 
   std::string name_;
+  std::string symbol;
   std::pmr::vector<currency::DKK> unitPriceOverTime_;
   double totalCoinsOnMarket;
   UpdateSignal *sig_;

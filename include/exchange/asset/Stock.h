@@ -19,6 +19,7 @@ public:
   ~Stock();
 
   std::string name_;
+  std::string symbol;
   std::pmr::vector<currency::DKK> unitPriceOverTime_;
   UpdateSignal *sig_;
 };

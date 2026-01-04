@@ -19,6 +19,21 @@ public:
       orders_[i] = other.orders_[i];
     }
   }
+  OrderArray(OrderArray &&other) noexcept
+      : orders_(nullptr), size_(0), currentOrders_(0) {
+    Swap(other);
+  }
+  OrderArray &operator=(OrderArray &&other) {
+    if (this != &other) {
+      delete orders_;
+      orders_ = nullptr;
+      size_ = 0;
+      currentOrders_ = 0;
+      Swap(other);
+    }
+    return *this;
+  }
+
   void addOrder(const Order &order) {
     if (currentOrders_ == size_) {
       Order *newOrders = new Order[size_ + 10];

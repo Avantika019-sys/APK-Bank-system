@@ -1,13 +1,18 @@
+#include "exchange/message.hpp"
 #include "trait.hpp"
+#include <execution>
 #include <future>
+#include <queue>
+#include <stack>
+#include <thread>
 #include <unordered_set>
 #include <vector>
 #ifndef EXCHANGE_CALCULATOR_H
 #define EXCHANGE_CALCULATOR_H
 namespace exchange {
-template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
+template <typename T> double calculateTrendForIndividualAsset(const T *asset) {
   typedef typename trait::Precision<T>::PrecisionT PrecisionT;
-  const auto &vec = asset.unitPriceOverTime_;
+  const auto &vec = asset->unitPriceOverTime_;
   if (vec.size() == 1) {
     return 0;
   }
@@ -43,37 +48,42 @@ template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
 struct parallel {};
 struct sequential {};
 template <typename T>
-std::map<std::string, double>
-CalculateTrends(const std::map<std::string, T> &assets,
-                const std::vector<std::string> &ownedAssets, parallel) {
-  std::map<std::string, double> trends;
-  std::vector<std::future<double>> futures;
-  for (const auto &[symbol, asset] : assets) {
-    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
-    if (it != ownedAssets.end()) {
-      futures.push_back(std::async(std::launch::async, [&asset]() {
-        return calculateTrendForIndividualAsset<T>(asset);
-      }));
+std::map<std::string, double> CalculateTrends(std::vector<const T *> assets,
+                                              parallel) {
+  std::vector<double> res(assets.size());
+  auto cores = std::thread::hardware_concurrency();
+
+  auto func = [&](int i) {
+    while (i < assets.size()) {
+      double trend = calculateTrendForIndividualAsset(assets[i]);
+      res[i] = trend;
+      i += cores;
     }
+  };
+  std::vector<std::thread> threads;
+  for (int i = 0; i < cores; i++) {
+    threads.push_back(std::thread(func, i));
   }
-  for (int i = 0; i < futures.size(); i++) {
-    double trend = futures[i].get();
-    trends[ownedAssets[i]] = trend;
+  for (auto &thread : threads) {
+    thread.join();
+  }
+
+  std::map<std::string, double> trends;
+  for (int i = 0; i < res.size(); i++) {
+    trends.emplace(assets[i]->symbol, res[i]);
   }
   return trends;
 }
 template <typename T>
-std::map<std::string, double>
-CalculateTrends(const std::map<std::string, T> &assets,
-                const std::vector<std::string> &ownedAssets, sequential) {
+std::map<std::string, double> CalculateTrends(std::vector<const T *> Assets,
+                                              sequential) {
   std::map<std::string, double> trends;
-  for (const auto &[symbol, asset] : assets) {
-    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
-    if (it != ownedAssets.end()) {
-      double trend = calculateTrendForIndividualAsset<T>(asset);
-      trends[symbol] = trend;
-    }
-  }
+  std::transform(Assets.begin(), Assets.end(),
+                 std::inserter(trends, trends.end()),
+                 [&trends](const T *asset) {
+                   double trend = calculateTrendForIndividualAsset(asset);
+                   return std::make_pair(asset->symbol, trend);
+                 });
   return trends;
 }
 } // namespace exchange

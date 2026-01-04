@@ -13,6 +13,14 @@ struct Order {
   std::string managerId;
   currency::DKK qty;
   OrderType type;
+  std::string toString() const {
+    std::string typeStr = "BUY";
+    if (type == OrderType::SELL) {
+      typeStr = "SELL";
+    }
+    return "Asset Name: " + assetSymbol + " Manager Id:" + managerId +
+           " Quantity:" + qty.toString() + " Type:" + typeStr;
+  }
 };
 struct OrderResponse {
   bool isSucceded;
@@ -20,18 +28,6 @@ struct OrderResponse {
 struct OrderRequest {
   Order order;
   std::promise<OrderResponse> prom;
-  std::string toString() {
-    return "Asset Name: " + order.assetSymbol +
-           " Manager Id:" + order.managerId +
-           " Quantity:" + order.qty.toString() + " Type:" + getTypeStr();
-  }
-  std::string getTypeStr() {
-    std::string typeStr = "BUY";
-    if (order.type == OrderType::SELL) {
-      typeStr = "SELL";
-    }
-    return typeStr;
-  }
 };
 } // namespace exchange::message
 #endif // EXCHANGE_MESSAGE_ORDER_H

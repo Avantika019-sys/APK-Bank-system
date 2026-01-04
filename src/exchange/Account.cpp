@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <utility>
 #include <variant>
+#include <vector>
 namespace exchange {
 
 Account::Account() : balance_(0) {}
