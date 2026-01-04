@@ -2,6 +2,7 @@
 #include "trait.hpp"
 #include <execution>
 #include <future>
+#include <iostream>
 #include <queue>
 #include <stack>
 #include <thread>
@@ -79,8 +80,7 @@ std::map<std::string, double> CalculateTrends(std::vector<const T *> Assets,
                                               sequential) {
   std::map<std::string, double> trends;
   std::transform(Assets.begin(), Assets.end(),
-                 std::inserter(trends, trends.end()),
-                 [&trends](const T *asset) {
+                 std::inserter(trends, trends.end()), [](const T *asset) {
                    double trend = calculateTrendForIndividualAsset(asset);
                    return std::make_pair(asset->symbol, trend);
                  });

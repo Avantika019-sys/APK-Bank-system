@@ -4,7 +4,6 @@
 #include "exchange/currency/DKK.h"
 #include "exchange/message/Info.h"
 #include "exchange/util/observability.hpp"
-#include "exchange/util/observability/Logger.h"
 #include "message.hpp"
 #include "trait.hpp"
 #include <algorithm>
@@ -15,9 +14,7 @@
 #include <exception>
 #include <functional>
 #include <iostream>
-#include <limits>
 #include <random>
-#include <stdexcept>
 #include <thread>
 #include <type_traits>
 #include <utility>

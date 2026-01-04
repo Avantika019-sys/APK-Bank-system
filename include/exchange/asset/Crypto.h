@@ -9,7 +9,8 @@ namespace exchange::asset {
 typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 class Crypto {
 public:
-  Crypto(std::string name, util::observability::MonitorResource *s);
+  Crypto(std::string name, std::string symbol,
+         util::observability::MonitorResource *s);
   Crypto(const Crypto &other) = delete;
   Crypto &operator=(const Crypto &other) = delete;
 

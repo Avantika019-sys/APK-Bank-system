@@ -7,6 +7,7 @@
 #define EXCHANGE_MESSAGE_QUEUE_H
 namespace exchange::message {
 template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
+
 template <typename T> class Queue {
 public:
   Queue(unsigned long maxSize) : maxSize(maxSize) {}

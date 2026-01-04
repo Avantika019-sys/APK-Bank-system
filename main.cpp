@@ -23,8 +23,8 @@ using namespace std::placeholders;
 
 int main() {
   MonitorResource cryptoMs;
-  Crypto c1("Bitcoin", &cryptoMs);
-  Crypto c2("Etherium", &cryptoMs);
+  Crypto c1("Bitcoin", "BTC", &cryptoMs);
+  Crypto c2("Etherium", "ETH", &cryptoMs);
   c1.unitPriceOverTime_.emplace_back(0.531_Mil);
   c1.unitPriceOverTime_.emplace_back(1.25_K);
   c2.unitPriceOverTime_.emplace_back(10.2_K);
@@ -36,8 +36,8 @@ int main() {
   Miner miner("BTC", cryptoServ);
 
   MonitorResource stockMs;
-  Stock s1("Apple", &stockMs);
-  Stock s2("Tesla motor technologies", &stockMs);
+  Stock s1("Apple", "APPL", &stockMs);
+  Stock s2("Tesla motor technologies", "TSLA", &stockMs);
   s1.unitPriceOverTime_.emplace_back(1.23_K);
   s1.unitPriceOverTime_.emplace_back(1.25_K);
   s2.unitPriceOverTime_.emplace_back(10.2_K);
@@ -71,8 +71,8 @@ int main() {
   cryptoMgr.printPortfolioStats();
   stockMgr.printPortfolioStats();
 
-  // auto orders = stockServ->getOrderHistoryForAsset("APPL");
-  // std::for_each(
-  //     orders.orders_, orders.orders_ + orders.currentOrders_,
-  //     [](const auto &order) { std::cout << order.toString() << std::endl; });
+  auto orders = stockServ->getOrderHistoryForAsset("APPL");
+  std::for_each(
+      orders.orders_, orders.orders_ + orders.currentOrders_,
+      [](const auto &order) { std::cout << order.toString() << std::endl; });
 }

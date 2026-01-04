@@ -9,7 +9,8 @@ namespace exchange::asset {
 typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 class Stock {
 public:
-  Stock(std::string name, util::observability::MonitorResource *s);
+  Stock(std::string name, std::string symbol,
+        util::observability::MonitorResource *s);
 
   Stock(const Stock &other) = delete;
   Stock &operator=(const Stock &other) = delete;

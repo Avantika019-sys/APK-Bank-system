@@ -7,6 +7,12 @@
 
 ## SWAPK
 
+To compile the application in the golden image
+
+```bash
+g++ -std=c++23 -I./include -I./include/exchange main.cpp src/exchange/*.cpp src/exchange/asset/*.cpp -lpthread -o exchange
+```
+
 ## Introduction
 
 The asset exchange system is a trading platform, allowing a user to buy and sell assets of different type. The goal of this project is to incoporate as many concepts learned in the course in a way that utilizeses each concepts strengths.
@@ -308,6 +314,8 @@ We made a custom memory resource, called MonitorResource, this is used by the se
             util::observability::field("bytes", ms_->getbytesalloc()),
             util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
 ```
+
+Its a man in the middle, and does not alter how allocation and deallocation is done for the unit price vectors.
 
 ## Meta Programming
 
