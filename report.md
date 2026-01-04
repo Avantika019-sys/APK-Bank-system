@@ -9,9 +9,7 @@
 
 # Introduction
 
-This report describes our chosen project, the asset exchange system for SWAPK which is implemented using the C++ concepts learned throughout the course. The system functions as a multi-threaded trading platform, simulating asset prices, processing asynchronous buy and sell, managing user portfolios and maintaing detailed transaction history.
-
-The primary goal of the project is to demonstrate how the C++ concepts taught in SWAPK can be used.
+The asset exchange system is a trading platform, allowing a user to buy and sell assets of different type. The goal of this project is to incoporate as many concepts learned in the course in a way that utilizeses each concepts strengths.
 
 # Requirements
 
@@ -25,7 +23,7 @@ User perspective requirements:
 System perspective requirements:
 
 - One server-node per asset type
-- Server observability in the form of logs and metrics
+- Server observability in the form of logs
 - Simulating asset price changes
 - The crypto server should handle events from crypto miners when they mine crypto
 
@@ -50,7 +48,7 @@ package "System" {
 ' Define relationships
 Manager --> Server : Purchase/Sell
 Manager"0..*" --> "1"Account : Creates transactions
-Server --> Asset : Manages 1-N
+Server"1" -->"1..*" Asset : Manages 
 User "1" -->"1" Account  : Deposit & withdraw
 User "1"--> "0..*"Manager : Authorize Purchase/Sell
 Miner --> Server : Mine event
@@ -69,35 +67,21 @@ Each server-node has a message queue, where it can receive the following types o
 
 A manager can request information about a collection of assets, this is used for displaying portfolio stats and to display information about an asset to the user before the user authorizes the purchase or sale.
 
-**Parameters**:
+**Parameters**: Collection of asset symbols(e.g. BTC)
 
-- Collection of asset symbols(e.g. BTC)
-
-**Response**:
-
-- Trend and current price for each asset
+**Response**: Trend and current price for each asset
 
 #### OrderRequest
 
 If authorized by the user, then a manager places an order, which the server needs to confirm
 
-**Parameters**:
+**Parameters**: asset symbol, type(either sale or purchase) and quantity in DKK
 
-- One asset symbol
-- Type(either sale or purchase)
-- Quantity in DKK
-
-**Response**:
-
-- Confirmation of order
+**Response**: Confirmation of order
 
 #### MineEvent
 
 Miners mine for crypto currencies, and when they succesfully mine a quantity of a crypto, then they emit events, which the server uses to adjust the total quantity of a crypto, for example there is around 19 million bitcoins, and if someone mines 100 bitcoins, then the server needs to know so it can update the total quantity and adjust the unit price.
-
-**Parameters**:
-
-**Response**:
 
 #### Stop
 
@@ -118,21 +102,11 @@ Manager --> Account: Add transaction & update balance
 @enduml
 ```
 
-The account class stores a collection of transactions, a transaction can have one of the following types:
-
-- withdraw
-- deposit
-- asset purchase
-- asset sale
-
 # Implementation
 
 ## Asset classes
 
-The asset classes consist of 2 classes:
-
-- Stock
-- Crypto
+The asset classes are the Stock and Crypto class
 
 These classes store a vector of unit prices over time, the back of the vector is the latest price.
 Additionally the Asset classes uses boost signals2, whenever a new price is added by the server, then the signal is triggered.
@@ -143,8 +117,7 @@ typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
 
 ## Message Queue
 
-The Message Queue class is the primary interface to the server, its a template class which requires a Asset class as template type.
-For the message queue we define the types of messages it can accept based on the template type
+The Message Queue class is the primary interface to the server, its a template class which requires a Asset class as template type. For the message queue we define the types of messages it can accept based on the template type
 
 ```cpp
 template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
@@ -159,7 +132,6 @@ template <> struct MessageQueue<asset::Stock> {
   using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
   static int QueueCapacity() { return 100; }
 };
-
 template <> struct MessageQueue<asset::Crypto> {
   using Variant = std::variant<OrderRequest, InfoRequest, Stop, MineEvent>;
   static int QueueCapacity() { return 80; }
@@ -334,10 +306,7 @@ The Logger uses FILE pointer to write the logs to a file, this is a special reso
 
 ## Manager
 
-The manager communicates with the server through the message queue, it does not have its own message queue, but it still needs a response from the server for these message types:
-
-- InfoRequest
-- OrderRequest
+The manager communicates with the server through the message queue, it does not have its own message queue, but it still needs a response from the server for InfoRequest and OrderRequest.
 For this we use std::promise, both of the messages have a promise field, which the manager gets a future for before pushing the message to the server message queue. Then we wait for a response, while also showing a terminal spinner to keep the UI active.
 
 ```cpp

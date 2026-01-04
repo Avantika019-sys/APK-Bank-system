@@ -119,7 +119,7 @@ template <typename T> struct MessageVisitor {
 
   void operator()(message::InfoRequest &i) {
     std::map<std::string, double> trends;
-    int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
+    int lookBackPeriod = trait::Trend<T>::LookBackPeriod();
     std::lock_guard<std::mutex> lock(serv.mtx_);
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
