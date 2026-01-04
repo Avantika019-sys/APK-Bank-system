@@ -8,22 +8,26 @@ enum class OrderType {
   BUY,
   SELL,
 };
+struct Order {
+  std::string assetSymbol;
+  std::string managerId;
+  currency::DKK qty;
+  OrderType type;
+};
 struct OrderResponse {
   bool isSucceded;
 };
 struct OrderRequest {
-  std::string assetName;
-  std::string managerId;
-  currency::DKK qty;
-  OrderType type;
+  Order order;
   std::promise<OrderResponse> prom;
   std::string toString() {
-    return "Asset Name: " + assetName + " Manager Id:" + managerId +
-           " Quantity:" + qty.toString() + " Type:" + getTypeStr();
+    return "Asset Name: " + order.assetSymbol +
+           " Manager Id:" + order.managerId +
+           " Quantity:" + order.qty.toString() + " Type:" + getTypeStr();
   }
   std::string getTypeStr() {
     std::string typeStr = "BUY";
-    if (type == OrderType::SELL) {
+    if (order.type == OrderType::SELL) {
       typeStr = "SELL";
     }
     return typeStr;

@@ -6,6 +6,7 @@
 #include <concepts>
 #include <format>
 #include <sstream>
+#include <stdexcept>
 #include <stdio.h>
 #include <string>
 #include <type_traits>
@@ -24,10 +25,11 @@ enum class level {
 };
 class Logger {
 public:
+  Logger() = default;
   Logger(std::string fileName) {
     fptrLogs_ = std::fopen(fileName.c_str(), "w");
     if (fptrLogs_ == NULL) {
-      throw std::invalid_argument("Could not open log file");
+      throw std::runtime_error("Could not open log file");
     }
   }
   void log(std::string msg, level l) {

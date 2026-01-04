@@ -1,16 +1,21 @@
 #include "Calculator.h"
+#include "OrderArray.h"
 #include "asset.hpp"
 #include "exchange/currency/DKK.h"
 #include "exchange/message/Info.h"
 #include "exchange/util/observability.hpp"
+#include "exchange/util/observability/Logger.h"
 #include "message.hpp"
 #include "trait.hpp"
 #include <boost/signals2/connection.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/smart_ptr/make_shared_array.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <exception>
 #include <functional>
+#include <iostream>
 #include <random>
+#include <stdexcept>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -31,15 +36,21 @@ template <typename T> struct MessageVisitor;
 
 template <typename T> class Server {
 public:
-  Server(Logger logger, const MonitorResource *ms)
-      : msgQueue_(trait::MessageQueue<T>::QueueCapacity()),
-        logger_(std::move(logger)), ms_(ms) {
+  Server(std::string logfile, const MonitorResource *ms) try
+      : msgQueue_(trait::MessageQueue<T>::QueueCapacity()), ms_(ms),
+        orders_(10), ordersSnapshot_(10), logger_(logfile) {
+  } catch (std::exception &e) {
+    std::cout << "Error creating " << trait::Print<T>::Header()
+              << " Server:" << e.what() << std::endl;
+    throw;
+  }
+
+  void start() {
     simulatorThread =
         std::thread([this]() { startSimulatingAssetPriceUpdates(); });
     messageProccessorThread =
         std::thread([this]() { startMessageProccesor(); });
   }
-
   void addAsset(std::string &&symbol, T &&asset) {
     std::lock_guard<std::mutex> lock(mtx_);
     assets_.try_emplace(std::move(symbol), std::move(asset));
@@ -83,6 +94,12 @@ private:
             "system health", util::observability::level::INFO,
             util::observability::field("bytes", ms_->getbytesalloc()),
             util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
+        try {
+          ordersSnapshot_ = orders_;
+        } catch (...) {
+          logger_.log("failed to update snapshot",
+                      util::observability::level::ERROR);
+        }
       }
     }
   }
@@ -99,6 +116,8 @@ private:
   std::atomic<bool> run_{true};
   Logger logger_;
   const MonitorResource *ms_;
+  OrderArray orders_;
+  OrderArray ordersSnapshot_;
   std::thread simulatorThread;
   std::thread messageProccessorThread;
 };
@@ -111,8 +130,9 @@ template <typename T> struct MessageVisitor {
   Server<T> &serv;
   void operator()(message::OrderRequest &o) {
     serv.logger_.log("Received order request", level::INFO,
-                     field{trait::Print<T>::Header(), o.assetName},
+                     field{trait::Print<T>::Header(), o.order.assetSymbol},
                      field{"Order-type", o.getTypeStr()});
+    serv.orders_.addOrder(o.order);
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
   }
@@ -141,9 +161,11 @@ template <typename T> struct MessageVisitor {
 template <> struct MessageVisitor<asset::Crypto> {
   Server<asset::Crypto> &serv;
   void operator()(message::OrderRequest &o) {
-    serv.logger_.log("Received order request", level::INFO,
-                     field{trait::Print<asset::Crypto>::Header(), o.assetName},
-                     field{"Order-type", o.getTypeStr()});
+    serv.logger_.log(
+        "Received order request", level::INFO,
+        field{trait::Print<asset::Crypto>::Header(), o.order.assetSymbol},
+        field{"Order-type", o.getTypeStr()});
+    serv.orders_.addOrder(o.order);
     message::OrderResponse resp(true);
     o.prom.set_value(resp);
   }
@@ -175,6 +197,7 @@ template <> struct MessageVisitor<asset::Crypto> {
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };
+
 } // namespace exchange
 
 #endif // EXCHANGE_SERVER_H

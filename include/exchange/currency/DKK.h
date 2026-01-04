@@ -9,6 +9,7 @@
 namespace exchange::currency {
 struct DKK {
 public:
+  DKK() : amount_(0) {}
   DKK(double amount) : amount_(amount) {}
   double value() const { return amount_; }
   std::string toString() const { return std::format("{:.2f} DKK", amount_); }

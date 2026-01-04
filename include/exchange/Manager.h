@@ -190,8 +190,8 @@ private:
     }
     auto limit = it->second.stopLossRule.value();
     if (updatedPrice.value() <= limit.value()) {
-      message::OrderRequest o(symbol, managerId_, it->second.qty,
-                              message::OrderType::SELL);
+      message::OrderRequest o(
+          {symbol, managerId_, it->second.qty, message::OrderType::SELL});
       auto orderFut = o.prom.get_future();
       serv_->pushMsg(message::Message<T>(std::move(o)));
 
