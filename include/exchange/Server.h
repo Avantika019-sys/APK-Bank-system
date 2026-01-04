@@ -124,7 +124,7 @@ private:
   }
   friend struct MessageVisitor<T>;
   message::Queue<T> msgQueue_;
-  std::map<std::string, T> assets_;
+  std::unordered_map<std::string, T> assets_;
   std::mutex mtx_;
   std::mutex snapshotMtx_;
   std::atomic<bool> run_{true};

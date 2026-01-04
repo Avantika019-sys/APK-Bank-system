@@ -7,87 +7,67 @@
 
 ## SWAPK
 
-# Introduction
+## Introduction
 
 The asset exchange system is a trading platform, allowing a user to buy and sell assets of different type. The goal of this project is to incoporate as many concepts learned in the course in a way that utilizeses each concepts strengths.
 
-# Requirements
+## Requirements
 
 User perspective requirements:
 
-- Withdrawing and depositting money in DKK currency, viewing transaction history and current balance
+- Withdrawing and depositting money, viewing transaction history and current balance
 - Purchasing and selling assets of different types ( stock and crypto )
-- Viewing portfolio stats, such as the portolfio value and trend
+- Viewing portfolio stats
 - Configuring stop loss limit rules, which allows the user to setup rules to automatically sell an asset if it goes below a certain price.
 
 System perspective requirements:
 
 - One server-node per asset type
-- Server observability in the form of logs
+- Server observability
 - Simulating asset price changes
 - The crypto server should handle events from crypto miners when they mine crypto
 
-# Architecture
+## Architecture
 
-A user is the person using the application. A user can have one manager for each asset type. So one Crypto Manager and one Stock Manager per user. Managers are associated with an account, which is where they will get money to purchase, and put money after a sale.
-A stock manager and crypto manager can use the same account.
-The server is the source of truth for asset prices, managers does not store asset prices.
+Managers are associated with an account, so they can get money to purchase, and put money after a sale.
+Multiple manager can use the same account.
+The server is the source of truth for asset prices.
 
 ```plantuml
 @startuml
-actor User
 ' Define components
-package "System" {
     [Manager] 
     [Account]
     [Server]
     [Miner]
     [Asset]
-}
 
 ' Define relationships
 Manager --> Server : Purchase/Sell
 Manager"0..*" --> "1"Account : Creates transactions
 Server"1" -->"1..*" Asset : Manages 
-User "1" -->"1" Account  : Deposit & withdraw
-User "1"--> "0..*"Manager : Authorize Purchase/Sell
 Miner --> Server : Mine event
 
 @enduml
 ```
 
-# Design
+## Design
 
 Managers and Miners can communicate with the server-nodes.
 Each server-node has a message queue, where it can receive the following types of messages:
 
 ### Messages
 
-#### InfoRequest
+| Message | Parameters | Response |
+| ------------- | -------------- | -------------- |
+|InfoRequest | asset symbols(e.g. BTC) | Trend and current price for each asset |
+|OrderRequest| asset symbol, type(sale/purchase), quantity in money|Confirmation of order
+| MineEvent| crypto, quantity, miner id |None
+| Stop(graceful shutdown)| None| None
 
-A manager can request information about a collection of assets, this is used for displaying portfolio stats and to display information about an asset to the user before the user authorizes the purchase or sale.
+Miners mine for crypto currencies, and when they succesfully mine a quantity of a crypto, then they emit events, which the server uses to adjust the total quantity of a crypto, and adjust the unit price.
 
-**Parameters**: Collection of asset symbols(e.g. BTC)
-
-**Response**: Trend and current price for each asset
-
-#### OrderRequest
-
-If authorized by the user, then a manager places an order, which the server needs to confirm
-
-**Parameters**: asset symbol, type(either sale or purchase) and quantity in DKK
-
-**Response**: Confirmation of order
-
-#### MineEvent
-
-Miners mine for crypto currencies, and when they succesfully mine a quantity of a crypto, then they emit events, which the server uses to adjust the total quantity of a crypto, for example there is around 19 million bitcoins, and if someone mines 100 bitcoins, then the server needs to know so it can update the total quantity and adjust the unit price.
-
-#### Stop
-
-The server can receive a stop message, which triggers graceful shutdown, allowing it to finish any ongoing requests.
-
-### Request flow for placing an order
+#### Request flow for placing an order
 
 ```plantuml
 @startuml
@@ -104,51 +84,35 @@ Manager --> Account: Add transaction & update balance
 
 # Implementation
 
-## Asset classes
+### Asset classes (Stock & Crypto)
 
-The asset classes are the Stock and Crypto class
-
-These classes store a vector of unit prices over time, the back of the vector is the latest price.
+Many classes throughout the system is template and accepts a Asset class as template. These classes store a vector of unit prices over time.
 Additionally the Asset classes uses boost signals2, whenever a new price is added by the server, then the signal is triggered.
 
-```cpp
-typedef boost::signals2::signal<void(currency::DKK UpdatedPrice)> UpdateSignal;
-```
+### Message Queue
 
-## Message Queue
-
-The Message Queue class is the primary interface to the server, its a template class which requires a Asset class as template type. For the message queue we define the types of messages it can accept based on the template type
+The Message Queue class is the primary interface to the server, its a template class which requires an Asset class as template type. For the message queue we define the types of messages it can accept based on the template type
 
 ```cpp
-template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
+template <typename T> using Message = trait::MessageQueue<T>::Variant;
 ```
 
 With the use of traits we can define which messages are possible based on the asset type, this is a fixed trait
 
 ```cpp
 template <typename T> class MessageQueue;
-
 template <> struct MessageQueue<asset::Stock> {
   using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
   static int QueueCapacity() { return 100; }
 };
-template <> struct MessageQueue<asset::Crypto> {
-  using Variant = std::variant<OrderRequest, InfoRequest, Stop, MineEvent>;
-  static int QueueCapacity() { return 80; }
-};
 ```
 
 We use std::variant to be able to define a set of types, this allows the queue to store the variant as queue elements, and based on the template asset type the set of messages can change. Overall this makes the queue very flexible.
-Here we can see that the Crypto type has the additional MineEvent message type.
-
-Additionally there is a value trait, the QueueCapacity() adds value information, based on the type of asset the server has different traffic, and requires the queue to have a certain capacity.
-
+Additionally there is a value trait, the QueueCapacity(), based on asset type different capacity is required.
 The queue is essentially the interface between a server thread and client threads. Therefore protection and synchronization mechanisms is important.
 
-- If a message producer tries to push a message to a full queue, then it should block the thread until there is space in the queue again.
-- If the server thread tries to pop a message, and the queue is empty, then it should be blocked until there is a message in the queue.
-
-// NOTE husk at initalisere queue med queuecapacity
+- If a thread pushes to a full queue, then it should block until there is space again.
+- If a thread tries to pop a message, and the queue is empty, then it should be blocked until there is a message in the queue.
 
 To achieve this we use a mutex and 2 condition variables
 
@@ -171,7 +135,7 @@ Finally the cv_not_empty condition variable is notified, so if the server thread
 ## Server
 
 The server is a template and accepts a type T which should be a asset type.
-The server is multi-threaded, it operates 2 threads:
+The server operates 2 threads:
 
 #### Simulator thread
 
@@ -198,14 +162,11 @@ The functor is also templated, and requires a asset type, this is because of 2 r
 
 2. The opeartor overloads needs to access asset type traits to handle messages, below is the InfoRequest operator overload(simplified). Based on the type of the asset, then the amount of data points to include for the trend calculation differs. To get the exact amount of datapoints to include in a trend calculation we use the LookBackPeriod() value trait.
 
-The idea with lookBackPeriod is that crypto currencies move alot faster than stocks, in terms of datapoints, and therefore a trend calculation for cryptocurrencies requires a shorter lookback so it does not include too old datapoints, so that the trend calculation is useful in the curent moment. On the other hand a stock requires a longer lookBackPeriod since they move slower.
-
 ```cpp
   void operator()(InfoRequest &i) {
-    std::map<std::string, double> trends;
+    ...
     int lookBackPeriod = Trend<T>::LookBackPeriod();
-    std::lock_guard<std::mutex> lock(serv.mtx_);
-
+    ...
     if (i.assetSymbols.size() * lookBackPeriod < 1000) {
       trends = CalculateTrends(serv.assets_, i.assetSymbols, sequential{});
     } else {
@@ -216,53 +177,43 @@ The idea with lookBackPeriod is that crypto currencies move alot faster than sto
 
 Additionally we use **alghoritm selection using tagging**.
 
-- If the number of assets in the request multiplied with lookBackPeriod is a certain data load, then its faster to do a parallel trend calculation.
-- If its less, then the overhead of spawning threads is not worth it and a sequential execution is faster.
+- If the data for trend calculation has a certain size, then its faster to do a parallel trend calculation, but too little and the thread overhead is not worth it.
 
-Here is a snippet of the parallel implementation of **CalculateTrends**
+Here is a snippet of the sequential implementation of **CalculateTrends**, which uses transform to apply the function to the Asset elements, and store the result in a map.
 
 ```cpp
-  std::vector<std::future<double>> futures;
-  for (const auto &[symbol, asset] : assets) {
-    auto it = std::find(ownedAssets.begin(), ownedAssets.end(), symbol);
-    if (it != ownedAssets.end()) {
-      futures.push_back(std::async(std::launch::async, [&asset]() {
-        return calculateTrendForIndividualAsset<T>(asset);
-      }));
-    }
+  std::map<std::string, double> trends;
+  std::transform(Assets.begin(), Assets.end(),
+                 std::inserter(trends, trends.end()),
+                 [&trends](const T *asset) {
+                   double trend = calculateTrendForIndividualAsset(asset);
+                   return std::make_pair(asset->symbol, trend);
+                 });
+  return trends;
+```
+
+The server uses a custom OrderArray class to store orders in
+
+```cpp
+  OrderArray orders_;
+  OrderArray ordersSnapshot_;
+```
+
+The simulator thread regurlary updates the snapshots, which can then be queryed without blocking the message proccesor thread. In the OrderArray class we implemented strong exception safety using the copy constructor and swap function.
+
+```cpp
+  OrderArray &operator=(const OrderArray &other) {
+    OrderArray temp(other);
+    Swap(temp);
+    return *this;
   }
 ```
 
-We spawn a thread for each trend caclulation, using std::async, and store futures in a vector. The implementation does not query the cpu cores on the machine and distribute calculations among these, which would have been an improvement. If a request has a 50 elements, then spawning 50 threads is definitely not optimal in terms of speed.
-
-```cpp
-template <typename T> double calculateTrendForIndividualAsset(const T &asset) {
-  typedef typename Precision<T>::PrecisionT PrecisionT;
-  const auto &vec = asset.unitPriceOverTime_;
-  if (vec.size() == 1) {
-    return 0;
-  }
-  PrecisionT sumX = 0;
-  PrecisionT sumY = 0;
-  PrecisionT sumXY = 0;
-  PrecisionT sumX2 = 0;
-  if (trait::Trend<T>::LookBackPeriod() > vec.size()) {
-    for (int i = 0; i < vec.size(); i++) {
-      currency::DKK price = vec[i];
-      sumX += i;
-      sumY += price.value();
-      sumXY += (i * price.value());
-      sumX2 += (i * i);
-    }
-  ...
-```
-
-The **calculateTrendForIndividualAsset** is the function doing the actual calculation, here we use the PrecisionT fixed trait. The idea is that crypto requires larger decimal precision compared to stocks. Maybe a crypto has 18 decimals, while stock can have maximal 10. This also means that a crypto can have a money value which has alot of decimals, and therefore requires high precision when calculating the trend.
+This ensures that in the case of an exception during copy assignment, then the existing snapshots will not be lost.
 
 ## Logger
 
-We made a custom logger for the server. This logger writes to a file.
-The logger makes use of variadics, to accept a variable amount of arguments of type field.
+We made a custom logger for the server, which makes use of variadics, to accept a variable amount of arguments of type field.
 
 ```cpp
   template <typename T> struct field {
@@ -272,7 +223,7 @@ The logger makes use of variadics, to accept a variable amount of arguments of t
 ```
 
 This allows the including metadata when logging.
-Not every type is loggable, so we defined concepts, this will improve the error messages if someone passes a type which is not loggable.
+Not every type is loggable, so we defined concepts, this will improve the error messages.
 
 ```cpp
   template <typename T>
@@ -283,8 +234,6 @@ Not every type is loggable, so we defined concepts, this will improve the error 
   template <typename T>
   concept isLoggable = (std::formattable<T, char> || toStringable<T>);
 ```
-
-Either a type needs to have a toString method or should be formattable.
 
 ```cpp
   template <typename T, typename... Args>
@@ -306,8 +255,7 @@ The Logger uses FILE pointer to write the logs to a file, this is a special reso
 
 ## Manager
 
-The manager communicates with the server through the message queue, it does not have its own message queue, but it still needs a response from the server for InfoRequest and OrderRequest.
-For this we use std::promise, both of the messages have a promise field, which the manager gets a future for before pushing the message to the server message queue. Then we wait for a response, while also showing a terminal spinner to keep the UI active.
+The manager communicates with the server through the message queue, it does not have its own message queue, instead it uses std::promise, some messages have a promise field, which the manager gets a future for before pushing the message to the server message queue. Then the manager waits for a response while also showing a terminal spinner to keep the UI active.
 
 ```cpp
     OrderRequest o{...};
@@ -321,18 +269,7 @@ For this we use std::promise, both of the messages have a promise field, which t
 
 The use of promise allows the server thread to transfer the response data to the manager thread(main thread)
 
-Another feature was the user being able to configure stop loss rules for a owned asset automatically, meaning if a asset goes below a certain price, then it should automatically sell all of the asset to prevent further loss. For this we need the signals which was defined in the asset classes. The server provides a subscribe function that does not expose the signal to a client, this prevents a evil client for falsely triggering the signal.
-
-```cpp
-  // Server function
-  boost::signals2::connection
-  subscribeToPriceUpdates(std::string assetSymbol,
-                          std::function<void(currency::DKK UpdatedPrice)> cb) {
-    return assets_.at(assetSymbol).sig_->connect(cb);
-  }
-```
-
-Here it accepts the asset symbol that a subscriber is interested in, and the callback to call when price updates. We use std::function for increased flexibility, now it can accept a functor, free function or member function callback.
+To implement stop loss rules we used boost signals.
 
 The manager defines a slot as a member function, with the following signature:
 
@@ -347,7 +284,7 @@ But it does not match the signal signature which is the following:
 boost::signals2::signal<void(currency::DKK UpdatedPrice)>
 ```
 
-The signal does not adapt to the managers handler signature, because it expects that a subscriber already knows which signal they are subscribing to, and not that they need to be reminded every price update. But the manager can configure a price update for each of the owned assets it manages, so it needs to know which asset is having a price update and compare against the stop loss limit, which is why is needs a parameter to tell it which asset symbol the price update is for. To handle this mismatch in signature we use std::bind
+The symbol is not included when the signal is called. But the manager can configure a price update for each of the owned assets it manages, and uses the same member function for all rules, therefore it needs a symbol param to distinguish. To handle this mismatch in signature we use std::bind
 
 ```cpp
   // Manager function
@@ -359,9 +296,18 @@ The signal does not adapt to the managers handler signature, because it expects 
   }
 ```
 
-When adding a stop loss limit for an asset, then we can pass the symbol as the first parameter of onAssetUpdate, and then the argument the signal is called with is given as the second argument for the onAssetUpdate handler, which allows the handler to know which asset the price update is for.
+When adding a stop loss limit for an asset, then we can pass the symbol as the first parameter of onAssetUpdate, and then the argument the signal is called with is given as the second argument.
 
 ## PMR
+
+We made a custom memory resource, called MonitorResource, this is used by the server and assets, and its used to monitor memory usage of the unit price vectors, specifically the bytes allocated as part of system health logs
+
+```cpp
+        logger_.log(
+            "system health", util::observability::level::INFO,
+            util::observability::field("bytes", ms_->getbytesalloc()),
+            util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
+```
 
 ## Meta Programming
 
