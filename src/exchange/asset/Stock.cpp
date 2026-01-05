@@ -11,6 +11,24 @@ Stock::Stock(Stock &&other) noexcept
       sig_(other.sig_) {
   other.sig_ = nullptr;
 }
+
+currency::DKK Stock::getLatestPrice() {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> distribInt(0, 23);
+  std::uniform_real_distribution<double> distribDouble(-0.005, 0.005);
+
+  int randomHour = distribInt(gen);
+
+  if (randomHour < closeHour && randomHour > openHour) {
+    double percentChange = distribDouble(gen);
+    unitPriceOverTime_.emplace_back(unitPriceOverTime_.back().value() *
+                                    (1 + percentChange));
+  } else {
+    unitPriceOverTime_.push_back(unitPriceOverTime_.back());
+  }
+  return unitPriceOverTime_.back();
+}
 Stock &Stock::operator=(Stock &&other) noexcept {
   if (this != &other) {
     delete sig_;

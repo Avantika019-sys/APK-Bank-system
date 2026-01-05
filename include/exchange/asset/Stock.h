@@ -2,6 +2,7 @@
 #include "exchange/currency/DKK.h"
 #include "exchange/util/observability/MonitorResource.h"
 #include <boost/signals2/signal.hpp>
+#include <random>
 #include <string>
 #ifndef EXCHANGE_ASSET_STOCK_H
 #define EXCHANGE_ASSET_STOCK_H
@@ -20,6 +21,10 @@ public:
   Stock &operator=(Stock &&other) noexcept;
   ~Stock();
 
+  currency::DKK getLatestPrice();
+
+  int openHour;
+  int closeHour;
   std::string name_;
   std::string symbol;
   std::pmr::vector<currency::DKK> unitPriceOverTime_;

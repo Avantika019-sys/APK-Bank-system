@@ -13,12 +13,10 @@ namespace exchange::trait {
 template <typename T> class MessageQueue;
 
 template <> struct MessageQueue<asset::Stock> {
-  using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
   static int QueueCapacity() { return 100; }
 };
 
 template <> struct MessageQueue<asset::Crypto> {
-  using Variant = std::variant<OrderRequest, InfoRequest, Stop, MineEvent>;
   static int QueueCapacity() { return 80; }
 };
 } // namespace exchange::trait

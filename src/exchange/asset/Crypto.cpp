@@ -1,4 +1,5 @@
 #include "exchange/asset/Crypto.h"
+#include <random>
 namespace exchange::asset {
 Crypto::Crypto(std::string name, std::string symbol,
                util::observability::MonitorResource &s)
@@ -11,6 +12,17 @@ Crypto::Crypto(Crypto &&other) noexcept
       totalCoinsOnMarket(std::move(other.totalCoinsOnMarket)),
       symbol(std::move(other.symbol)), sig_(other.sig_) {
   other.sig_ = nullptr;
+}
+currency::DKK Crypto::getLatestPrice() {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<int> distribInt(0, 23);
+  std::uniform_real_distribution<double> distribDouble(-0.005, 0.005);
+
+  double percentChange = distribDouble(gen);
+  unitPriceOverTime_.emplace_back(unitPriceOverTime_.back().value() *
+                                  (1 + percentChange));
+  return unitPriceOverTime_.back();
 }
 Crypto &Crypto::operator=(Crypto &&other) noexcept {
   if (this != &other) {

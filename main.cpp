@@ -1,4 +1,3 @@
-#include "Miner.h"
 #include "Server.h"
 #include "asset/Crypto.h"
 #include "exchange/Manager.h"
@@ -31,7 +30,6 @@ int main() {
   cryptoServ->addAsset("BTC", std::move(c1));
   cryptoServ->addAsset("ETH", std::move(c2));
   cryptoServ->start();
-  Miner miner("BTC", cryptoServ);
 
   MonitorResource stockMr;
   Stock s1("Apple", "APPL", stockMr);

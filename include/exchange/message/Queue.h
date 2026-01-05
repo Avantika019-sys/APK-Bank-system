@@ -6,7 +6,8 @@
 #ifndef EXCHANGE_MESSAGE_QUEUE_H
 #define EXCHANGE_MESSAGE_QUEUE_H
 namespace exchange::message {
-template <typename T> using Message = exchange::trait::MessageQueue<T>::Variant;
+template <typename T>
+using Message = std::variant<OrderRequest, InfoRequest, Stop>;
 
 template <typename T> class Queue {
 public:

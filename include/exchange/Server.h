@@ -11,6 +11,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/smart_ptr/make_shared_array.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
+#include <concepts>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -24,12 +25,10 @@ using namespace std::chrono_literals;
 using namespace exchange::util::observability;
 namespace exchange {
 
-template <typename T, typename = void>
-struct hasPriceOverTime : std::false_type {};
 template <typename T>
-struct hasPriceOverTime<
-    T, std::void_t<decltype(std::declval<T>().unitPriceOverTime_)>>
-    : std::true_type {};
+concept hasGetLatestPrice = requires(T asset) {
+  { asset.getLatestPrice() } -> std::same_as<currency::DKK>;
+};
 
 template <typename T> struct MessageVisitor;
 
@@ -84,17 +83,14 @@ private:
   void startSimulatingAssetPriceUpdates() {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distrib(-0.005, 0.005);
     std::bernoulli_distribution d(0.1);
-    static_assert(hasPriceOverTime<T>::value);
+    static_assert(hasGetLatestPrice<T>);
     while (run_) {
       std::this_thread::sleep_for(
           std::chrono::seconds(trait::Server<T>::UpdateRate()));
       std::lock_guard<std::mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
-        double percentChange = distrib(gen);
-        currency::DKK newPrice{asset.unitPriceOverTime_.back().value() *
-                               (1 + percentChange)};
+        auto newPrice = asset.getLatestPrice();
         asset.unitPriceOverTime_.push_back(newPrice);
         (*asset.sig_)(newPrice);
       }
@@ -175,55 +171,6 @@ template <typename T> struct MessageVisitor {
           trends[symbol]);
     }
     i.prom.set_value(resp);
-  }
-  void operator()(message::Stop &s) { serv.run_ = false; }
-};
-
-template <> struct MessageVisitor<asset::Crypto> {
-  Server<asset::Crypto> &serv;
-  void operator()(message::OrderRequest &o) {
-    serv.logger_.log(
-        "Received order request", level::INFO,
-        field{trait::Print<asset::Crypto>::Header(), o.order.assetSymbol},
-        field{"Order", o.order});
-    serv.orders_.addOrder(o.order);
-    message::OrderResponse resp(true);
-    o.prom.set_value(resp);
-  }
-  void operator()(message::InfoRequest &i) {
-    std::map<std::string, double> trends;
-    int lookBackPeriod = trait::Trend<asset::Crypto>::LookBackPeriod();
-    std::lock_guard<std::mutex> lock(serv.mtx_);
-    std::vector<const asset::Crypto *> filteredAssets;
-
-    for (const auto &symbol : i.assetSymbols) {
-      auto it = serv.assets_.find(symbol);
-      if (it != serv.assets_.end()) {
-        filteredAssets.push_back(&it->second);
-      }
-    }
-
-    if (i.assetSymbols.size() * lookBackPeriod < 1000) {
-      trends = CalculateTrends(filteredAssets, sequential{});
-    } else {
-      trends = CalculateTrends(filteredAssets, parallel{});
-    }
-
-    message::InfoResponse resp;
-    for (auto symbol : i.assetSymbols) {
-      resp.assetInfos.emplace_back(
-          symbol, serv.assets_.at(symbol).unitPriceOverTime_.back(),
-          trends[symbol]);
-    }
-    i.prom.set_value(resp);
-  }
-  void operator()(message::MineEvent &m) {
-    std::lock_guard<std::mutex> lock(serv.mtx_);
-    auto &crypto = serv.assets_.at(m.cryptoName);
-    crypto.totalCoinsOnMarket += m.qty;
-    double priceAffect = crypto.unitPriceOverTime_.back().value() * m.qty;
-    crypto.unitPriceOverTime_.push_back(
-        crypto.unitPriceOverTime_.back().value() - priceAffect);
   }
   void operator()(message::Stop &s) { serv.run_ = false; }
 };

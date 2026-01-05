@@ -18,6 +18,8 @@ public:
   Crypto &operator=(Crypto &&other) noexcept;
   ~Crypto();
 
+  currency::DKK getLatestPrice();
+
   std::string name_;
   std::string symbol;
   std::pmr::vector<currency::DKK> unitPriceOverTime_;
