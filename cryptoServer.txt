@@ -1,2 +1,1 @@
-[INFO][2026-01-04 21:07:14.134431359] system health, (bytes:128), (queue-load:0)
-[INFO][2026-01-04 21:07:15.134580877] system health, (bytes:128), (queue-load:0)
+[INFO][2026-01-04 21:44:20.348908076] Received order request, (Crypto:ETH), (Order:Asset Name: ETH Manager Id:456 Quantity:1000.00 DKK Type:BUY)

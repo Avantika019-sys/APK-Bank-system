@@ -170,7 +170,7 @@ public:
     portfolio_[symbol].stopLossRule.emplace(limit);
     portfolio_[symbol].conn = conn;
   }
-  void removeStopLossRule(std::string name, int limit) {
+  void removeStopLossRule(std::string name) {
     portfolio_[name].conn.disconnect();
   }
   Manager(const Manager &) = delete;
@@ -178,7 +178,6 @@ public:
   Manager(Manager &&other) = delete;
   Manager &operator=(Manager &&other) = delete;
 
-private:
   void onAssetUpdate(std::string symbol, currency::DKK updatedPrice) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(symbol);
@@ -195,27 +194,22 @@ private:
       auto orderFut = o.prom.get_future();
       serv_->pushMsg(message::Message<T>(std::move(o)));
 
-      orderFut.wait();
-      if (!orderFut.get().isSucceded) {
-        throw std::invalid_argument("server failed to process sale");
-      }
       currency::DKK total(it->second.qty * updatedPrice.value());
       int precision = trait::Precision<T>::PrecisionFormat();
       acc->addTransaction(
           tx::Sale{symbol, trait::Print<T>::Header(),
                    std::format("{:.{}f}", it->second.qty, precision),
                    updatedPrice, total});
+    portfolio_.erase(it);
     }
   }
+
+private:
   std::map<std::string, ownedAsset<T>> portfolio_;
   std::mutex mtx_;
   boost::shared_ptr<Server<T>> serv_;
   boost::shared_ptr<Account> acc;
   std::string managerId_;
 };
-// template <typename T, typename... Args>
-// std::unique_ptr<Manager<T>> createManager(Args &&...args) {
-//   return std::make_unique<Manager<T>>(std::forward<Args>(args)...);
-// }
 } // namespace exchange
 #endif // EXCHANGE_ASSETACCOUNT_H

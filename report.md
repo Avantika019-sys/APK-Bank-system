@@ -220,9 +220,9 @@ The simulator thread regurlary updates the snapshots, which can then be queryed 
   }
 ```
 
-This ensures that in the case of an exception during copy assignment, then the existing snapshots will not be lost.
+This ensures that in the case of an exception during copy assignment, then the existing snapshots will not be corrupted.
 
-## Logger
+## observability
 
 We made a custom logger for the server, which makes use of variadics, to accept a variable amount of arguments of type field.
 
@@ -234,7 +234,7 @@ We made a custom logger for the server, which makes use of variadics, to accept 
 ```
 
 This allows the including metadata when logging.
-Not every type is loggable, so we defined concepts, this will improve the error messages.
+Not every type is loggable, so we defined concepts, this will improve the error messages during compilation if given a type not fulfilling the concept.
 
 ```cpp
   template <typename T>
@@ -263,6 +263,17 @@ Not every type is loggable, so we defined concepts, this will improve the error 
 Each recursive call handles one field, and appends it to the msg, and then makes a recursive call. The end marker then takes this final message and prepends the log level and a timestamp to it, and writes to a file. We also use compile-time-if, this allows the compiler to evaluate the condition at compile time and remove the not taken path.
 
 The Logger uses FILE pointer to write the logs to a file, this is a special resource that cant be copied, therefore we deleted the copy constructor and copy assignment operator, if copied then it could lead to double freeing the FILE pointer which can crash the program. This triggers the **RULE OF 5** so we also implemented move semantics, which allows ownership change of FILE pointer.
+
+We made a custom memory resource, called MonitorResource, this is used by the server and assets, and its used to monitor memory usage of the unit price vectors, specifically the bytes allocated as part of system health logs
+
+```cpp
+        logger_.log(
+            "system health", util::observability::level::INFO,
+            util::observability::field("bytes", ms_->getbytesalloc()),
+            util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
+```
+
+Its a man in the middle, and does not alter how allocation and deallocation is done for the unit price vectors.
 
 ## Manager
 
@@ -298,7 +309,6 @@ boost::signals2::signal<void(currency::DKK UpdatedPrice)>
 The symbol is not included when the signal is called. But the manager can configure a price update for each of the owned assets it manages, and uses the same member function for all rules, therefore it needs a symbol param to distinguish. To handle this mismatch in signature we use std::bind
 
 ```cpp
-  // Manager function
   void addStopLossRule(std::string symbol, DKK limit) {
     ...
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
@@ -308,21 +318,6 @@ The symbol is not included when the signal is called. But the manager can config
 ```
 
 When adding a stop loss limit for an asset, then we can pass the symbol as the first parameter of onAssetUpdate, and then the argument the signal is called with is given as the second argument.
-
-## PMR
-
-We made a custom memory resource, called MonitorResource, this is used by the server and assets, and its used to monitor memory usage of the unit price vectors, specifically the bytes allocated as part of system health logs
-
-```cpp
-        logger_.log(
-            "system health", util::observability::level::INFO,
-            util::observability::field("bytes", ms_->getbytesalloc()),
-            util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
-```
-
-Its a man in the middle, and does not alter how allocation and deallocation is done for the unit price vectors.
-
-## Meta Programming
 
 # Conclusion
 

@@ -1,0 +1,2 @@
+[INFO][2026-01-04 21:44:10.926789473] system health, (bytes:64), (queue-load:0)
+[INFO][2026-01-04 21:44:28.876178783] Received order request, (Stock:APPL), (order:Asset Name: APPL Manager Id:123 Quantity:500.00 DKK Type:BUY)

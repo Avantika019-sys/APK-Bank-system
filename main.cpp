@@ -57,22 +57,13 @@ int main() {
   conn.disconnect();
 
   acc->deposit(50.0_K);
-  try {
-    cryptoMgr.purchaseAsset("ETH", DKK(1.0_K));
-    stockMgr.purchaseAsset("APPL", DKK(0.5_K));
+  cryptoMgr.purchaseAsset("ETH", DKK(1.0_K));
+  stockMgr.purchaseAsset("APPL", DKK(0.5_K));
 
-    cryptoMgr.addStopLossRule("ETH", DKK(0.10_K));
-    stockMgr.sellAsset("APPL", DKK(273));
-  } catch (std::invalid_argument e) {
-    std::cout << "Error: " << e.what() << std::endl;
-  }
+  stockMgr.addStopLossRule("APPL", DKK(1.0_K));
+  stockMgr.sellAsset("APPL", DKK(273));
   acc->printBalance();
   acc->printTransactionHistory();
   cryptoMgr.printPortfolioStats();
   stockMgr.printPortfolioStats();
-
-  auto orders = stockServ->getOrderHistoryForAsset("APPL");
-  std::for_each(
-      orders.orders_, orders.orders_ + orders.currentOrders_,
-      [](const auto &order) { std::cout << order.toString() << std::endl; });
 }
