@@ -1,9 +1,10 @@
 #include "exchange/asset/Stock.h"
 namespace exchange::asset {
 Stock::Stock(std::string name, std::string symbol,
-             util::observability::MonitorResource &s)
+             util::observability::MonitorResource &s, int openHour,
+             int closeHour)
     : name_(name), symbol(symbol), unitPriceOverTime_(&s),
-      sig_(new UpdateSignal()) {}
+      sig_(new UpdateSignal()), openHour(openHour), closeHour(closeHour) {}
 
 Stock::Stock(Stock &&other) noexcept
     : name_(std::move(other.name_)), symbol(other.symbol),

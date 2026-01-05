@@ -12,7 +12,7 @@ typedef boost::signals2::signal<void(currency::DKK UpdatedUnitPrice)>
 class Stock {
 public:
   Stock(std::string name, std::string symbol,
-        util::observability::MonitorResource &s);
+        util::observability::MonitorResource &s, int openHour, int closeHour);
 
   Stock(const Stock &other) = delete;
   Stock &operator=(const Stock &other) = delete;

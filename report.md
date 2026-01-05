@@ -31,7 +31,6 @@ System perspective requirements:
 - One server-node per asset type
 - Server observability
 - Simulating asset price changes
-- The crypto server should handle events from crypto miners when they mine crypto
 
 ## Architecture
 
@@ -46,14 +45,12 @@ actor User
     [Manager] 
     [Account]
     [Server]
-    [Miner]
     [Asset]
 
 ' Define relationships
 Manager --> Server : Purchase/Sell
 Manager"0..*" --> "1"Account : Creates transactions
 Server"1" -->"1..*" Asset : Manages 
-Miner --> Server : Mine event
 User --> Account : Withdraw/Deposit
 User --> Manager : Authorize Purchase/Sale
 
@@ -62,7 +59,7 @@ User --> Manager : Authorize Purchase/Sale
 
 ## Design
 
-Managers and Miners can communicate with the server-nodes.
+Managers communicate with the server-nodes.
 Each server-node has a message queue, where it can receive the following types of messages:
 
 ### Messages
@@ -71,10 +68,7 @@ Each server-node has a message queue, where it can receive the following types o
 | ------------- | -------------- | -------------- |
 |InfoRequest | asset symbols(e.g. BTC) | Trend and current price for each asset |
 |OrderRequest| asset symbol, type(sale/purchase), quantity in money|Confirmation of order
-| MineEvent| crypto, quantity, miner id |None
 | Stop(graceful shutdown)| None| None
-
-Miners mine for crypto currencies, and when they succesfully mine a quantity of a crypto, then they emit events, which the server uses to adjust the total quantity of a crypto, and adjust the unit price.
 
 #### Request flow for placing an order
 
@@ -95,29 +89,28 @@ Manager --> Account: Add transaction & update balance
 
 ### Asset classes (Stock & Crypto)
 
-Many classes throughout the system is template and accepts a Asset class as template. These classes store a vector of unit prices over time.
+Many classes throughout the system is template and accepts a Asset class as template. These classes store a vector of unit prices over time, and have their own logic for getting the latest price.
 Additionally the Asset classes uses boost signals2, whenever a new price is added by the server, then the signal is triggered.
 
 ### Message Queue
 
-The Message Queue class is the primary interface to the server, its a template class which requires an Asset class as template type. For the message queue we define the types of messages it can accept based on the template type
+The Message Queue class is the primary interface to the server.
 
-```cpp
-template <typename T> using Message = trait::MessageQueue<T>::Variant;
-```
-
-With the use of traits we can define which messages are possible based on the asset type, this is a fixed trait
+There is a value trait, the QueueCapacity(), based on asset type different capacity is required.
 
 ```cpp
 template <typename T> class MessageQueue;
 template <> struct MessageQueue<asset::Stock> {
-  using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
   static int QueueCapacity() { return 100; }
 };
 ```
 
+```cpp
+  using Variant = std::variant<OrderRequest, InfoRequest, Stop>;
+```
+
 We use std::variant to be able to define a set of types, this allows the queue to store the variant as queue elements, and based on the template asset type the set of messages can change. Overall this makes the queue very flexible.
-Additionally there is a value trait, the QueueCapacity(), based on asset type different capacity is required.
+Additionally
 The queue is essentially the interface between a server thread and client threads. Therefore protection and synchronization mechanisms is important.
 
 - If a thread pushes to a full queue, then it should block until there is space again.
@@ -165,11 +158,7 @@ Below is the thread function.
 
 The thread pops from the message queue, and then we use visitation with the functor **MessageVisitor**, which has a function operator overload for each type in the variant.  
 
-The functor is also templated, and requires a asset type, this is because of 2 reasons:
-
-1. The crypto type, has an additional message(MineEvent), to handle this we defined a full specilization for the crypto type, this specilization has a operator overload for the MineEvent message
-
-2. The opeartor overloads needs to access asset type traits to handle messages, below is the InfoRequest operator overload(simplified). Based on the type of the asset, then the amount of data points to include for the trend calculation differs. To get the exact amount of datapoints to include in a trend calculation we use the LookBackPeriod() value trait.
+The functor is also templated, and requires a asset type because the opeartor overloads needs to access asset type traits to handle messages, below is the InfoRequest operator overload(simplified). Based on the type of the asset, then the amount of data points to include for the trend calculation differs. To get the exact amount of datapoints to include in a trend calculation we use the LookBackPeriod() value trait.
 
 ```cpp
   void operator()(InfoRequest &i) {

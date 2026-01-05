@@ -32,8 +32,8 @@ int main() {
   cryptoServ->start();
 
   MonitorResource stockMr;
-  Stock s1("Apple", "APPL", stockMr);
-  Stock s2("Tesla motor technologies", "TSLA", stockMr);
+  Stock s1("Apple", "APPL", stockMr, 9, 17);
+  Stock s2("Tesla motor technologies", "TSLA", stockMr, 7, 15);
   s1.unitPriceOverTime_.emplace_back(1.23_K);
   s2.unitPriceOverTime_.emplace_back(10.2_K);
   auto stockServ = createServer<Stock>("stockServer.txt", stockMr);

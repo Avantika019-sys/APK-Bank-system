@@ -30,6 +30,7 @@ concept hasGetLatestPrice = requires(T asset) {
   { asset.getLatestPrice() } -> std::same_as<currency::DKK>;
 };
 
+using Message = std::variant<OrderRequest, InfoRequest, Stop>;
 template <typename T> struct MessageVisitor;
 
 template <typename T> class Server {
@@ -61,7 +62,7 @@ public:
     return assets_.at(assetSymbol).sig_->connect(cb);
   }
 
-  void pushMsg(message::Message<T> &&msg) { msgQueue_.push(std::move(msg)); }
+  void pushMsg(message::Message &&msg) { msgQueue_.push(std::move(msg)); }
   ~Server() {
     pushMsg(message::Stop());
     if (simulatorThread.joinable())
@@ -91,7 +92,6 @@ private:
       std::lock_guard<std::mutex> lock(mtx_);
       for (auto &[symbol, asset] : assets_) {
         auto newPrice = asset.getLatestPrice();
-        asset.unitPriceOverTime_.push_back(newPrice);
         (*asset.sig_)(newPrice);
       }
       if (d(gen)) {
@@ -117,7 +117,7 @@ private:
     }
   }
   friend struct MessageVisitor<T>;
-  message::Queue<T> msgQueue_;
+  message::Queue msgQueue_;
   std::unordered_map<std::string, T> assets_;
   std::mutex mtx_;
   std::mutex snapshotMtx_;

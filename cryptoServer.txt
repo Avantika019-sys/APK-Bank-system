@@ -1,1 +1,0 @@
-[INFO][2026-01-05 07:48:55.877252122] Received order request, (Crypto:ETH), (Order:Asset Name: ETH Manager Id:456 Quantity:1000.00 DKK Type:BUY)

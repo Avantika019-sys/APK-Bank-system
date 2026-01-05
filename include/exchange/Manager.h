@@ -35,7 +35,7 @@ public:
   message::InfoResponse getInfo(std::vector<std::string> symbol) const {
     message::InfoRequest i{{symbol}};
     auto infoF = i.prom.get_future();
-    serv_->pushMsg(message::Message<T>(std::move(i)));
+    serv_->pushMsg(message::Message(std::move(i)));
 
     while (infoF.wait_for(100ms) != std::future_status::ready) {
       util::spin("Getting info");
@@ -74,7 +74,7 @@ public:
     message::OrderRequest o{symbol, managerId_, amountInDKK,
                             message::OrderType::BUY};
     auto orderF = o.prom.get_future();
-    serv_->pushMsg(message::Message<T>(std::move(o)));
+    serv_->pushMsg(message::Message(std::move(o)));
 
     while (orderF.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process purchase order");
@@ -131,7 +131,7 @@ public:
     message::OrderRequest o{symbol, managerId_, amountInDKK,
                             message::OrderType::SELL};
     auto orderFut = o.prom.get_future();
-    serv_->pushMsg(message::Message<T>(std::move(o)));
+    serv_->pushMsg(message::Message(std::move(o)));
 
     while (orderFut.wait_for(100ms) != std::future_status::ready) {
       util::spin("waiting for server to process sale order");
@@ -214,7 +214,7 @@ private:
     if (updatedUnitPrice.value() <= unitPricelimit.value()) {
       message::OrderRequest o(
           {symbol, managerId_, it->second.qty, message::OrderType::SELL});
-      serv_->pushMsg(message::Message<T>(std::move(o)));
+      serv_->pushMsg(message::Message(std::move(o)));
       currency::DKK total(it->second.qty * updatedUnitPrice.value());
       acc->addSale(tx::Sale{symbol, trait::Print<T>::Header(),
                             std::format("{}", it->second.qty), updatedUnitPrice,
