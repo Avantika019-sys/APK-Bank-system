@@ -41,6 +41,7 @@ The server is the source of truth for asset prices.
 
 ```plantuml
 @startuml
+actor User
 ' Define components
     [Manager] 
     [Account]
@@ -53,6 +54,8 @@ Manager --> Server : Purchase/Sell
 Manager"0..*" --> "1"Account : Creates transactions
 Server"1" -->"1..*" Asset : Manages 
 Miner --> Server : Mine event
+User --> Account : Withdraw/Deposit
+User --> Manager : Authorize Purchase/Sale
 
 @enduml
 ```
@@ -183,7 +186,7 @@ The functor is also templated, and requires a asset type, this is because of 2 r
 
 Additionally we use **alghoritm selection using tagging**.
 
-- If the data for trend calculation has a certain size, then its faster to do a parallel trend calculation, but too little and the thread overhead is not worth it.
+- If the data for trend calculation has a certain size, then its faster to do a parallel trend calculation, but too little and the thread overhead is not worth it.(this is not something we have timed)
 
 Here is a snippet of the sequential implementation of **CalculateTrends**, which uses transform to apply the function to the Asset elements, and store the result in a map.
 
@@ -192,7 +195,7 @@ Here is a snippet of the sequential implementation of **CalculateTrends**, which
   std::transform(Assets.begin(), Assets.end(),
                  std::inserter(trends, trends.end()),
                  [&trends](const T *asset) {
-                   double trend = calculateTrendForIndividualAsset(asset);
+                   double trend = CalculateTrends(asset);
                    return std::make_pair(asset->symbol, trend);
                  });
   return trends;
@@ -217,7 +220,18 @@ The simulator thread regurlary updates the snapshots, which can then be queryed 
 
 This ensures that in the case of an exception during copy assignment, then the existing snapshots will not be corrupted.
 
-## observability
+We use perfect forwarding for a factory function that constructs a Server
+
+```cpp
+template <typename T, typename... Args>
+boost::shared_ptr<Server<T>> createServer(Args &&...args) {
+  return boost::make_shared<Server<T>>(std::forward<Args>(args)...);
+}
+```
+
+This will apply reference collapsing on prvalue, lvalue and xvalue.
+
+## Observability
 
 We made a custom logger for the server, which makes use of variadics, to accept a variable amount of arguments of type field.
 
@@ -232,12 +246,8 @@ This allows the including metadata when logging.
 Not every type is loggable, so we defined concepts, this will improve the error messages during compilation if given a type not fulfilling the concept.
 
 ```cpp
-  template <typename T>
-  concept toStringable = requires(T t) {
-    { t.toString() } -> std::same_as<std::string>;
-  };
-
-  template <typename T>
+                                                  //custom concept   
+  template <typename T>                                   ↓
   concept isLoggable = (std::formattable<T, char> || toStringable<T>);
 ```
 
@@ -292,7 +302,6 @@ The manager defines a slot as a member function, with the following signature:
 
 ```cpp
   void onAssetUpdate(std::string symbol, currency::DKK updatedPrice) 
-
 ```
 
 But it does not match the signal signature which is the following:
@@ -301,7 +310,7 @@ But it does not match the signal signature which is the following:
 boost::signals2::signal<void(currency::DKK UpdatedPrice)>
 ```
 
-The symbol is not included when the signal is called. But the manager can configure a price update for each of the owned assets it manages, and uses the same member function for all rules, therefore it needs a symbol param to distinguish. To handle this mismatch in signature we use std::bind
+The symbol is not included when the signal is called, the signal does not want to include the symbol everytime its called, a subscriber should know the symbol they subscribed to. But the manager can configure a price update for each of the owned assets it manages, and uses the same member function for all rules, therefore it needs a symbol param to distinguish. To handle this mismatch in signature we use std::bind
 
 ```cpp
   void addStopLossRule(std::string symbol, DKK limit) {

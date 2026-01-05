@@ -54,14 +54,15 @@ public:
     auto assetInfo = infoResp.assetInfos[0];
     typedef typename trait::Precision<T>::PrecisionT PrecisionT;
     PrecisionT qtyPurchaseable =
-        (PrecisionT)amountInDKK.value() / assetInfo.currentPrice.value();
+        (PrecisionT)amountInDKK.value() / assetInfo.currentUnitPrice.value();
     auto balance = acc->getBalance();
     std::cout << "Quantity you can get for " << amountInDKK.value() << " DKK: "
               << std::setprecision(
                      std::numeric_limits<PrecisionT>::max_digits10)
               << qtyPurchaseable << "\n"
               << std::setprecision(2) << "Current trend: " << assetInfo.trend
-              << "%"
+              << "%\n"
+              << "Unit price: " << assetInfo.currentUnitPrice
               << "\nPlease confirm purchase by pressing y: ";
     char inp;
     std::cin >> inp;
@@ -85,11 +86,11 @@ public:
       throw std::invalid_argument(
           "server failed to process purchase please try later");
     }
-    acc->addTransaction(tx::Purchase{
+    acc->addPurchase(tx::Purchase{
         symbol,
         trait::Print<T>::Header(),
         std::format("{}", qtyPurchaseable),
-        assetInfo.currentPrice,
+        assetInfo.currentUnitPrice,
         currency::DKK(-amountInDKK.value()),
     });
     std::lock_guard<std::mutex> lock(mtx_);
@@ -98,17 +99,20 @@ public:
   void sellAsset(std::string symbol, currency::DKK amountInDKK) {
     std::cout << "-----------------------------------" << std::endl;
     std::cout << "Started sale of " << symbol << std::endl;
-    std::lock_guard<std::mutex> lock(mtx_);
-    auto it = portfolio_.find(symbol);
-    if (it == portfolio_.end()) {
-      throw std::invalid_argument("you do not own this asset");
+    typename std::map<std::string, ownedAsset<T>>::iterator it;
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      it = portfolio_.find(symbol);
+      if (it == portfolio_.end()) {
+        throw std::invalid_argument("you do not own this asset");
+      }
     }
     auto infoResp = getInfo({symbol});
     auto assetInfo = infoResp.assetInfos[0];
     typedef typename trait::Precision<T>::PrecisionT PrecisionT;
     PrecisionT qtyToSell =
         static_cast<PrecisionT>(amountInDKK.value()) /
-        static_cast<PrecisionT>(assetInfo.currentPrice.value());
+        static_cast<PrecisionT>(assetInfo.currentUnitPrice.value());
     if (it->second.qty < qtyToSell) {
       throw std::invalid_argument(
           "you do not own enough of this asset too sell" +
@@ -135,16 +139,21 @@ public:
     std::cout << std::endl;
     orderFut.wait();
     if (orderFut.get().isSucceded) {
-      currency::DKK total(qtyToSell * assetInfo.currentPrice.value());
-      acc->addTransaction(tx::Sale{symbol, trait::Print<T>::Header(),
-                                   std::to_string(qtyToSell),
-                                   assetInfo.currentPrice, total});
+      currency::DKK total(qtyToSell * assetInfo.currentUnitPrice.value());
+      acc->addSale(tx::Sale{symbol, trait::Print<T>::Header(),
+                            std::to_string(qtyToSell),
+                            assetInfo.currentUnitPrice, total});
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     portfolio_[symbol].qty -= qtyToSell;
   }
   void printPortfolioStats() const {
     std::cout << "-----------------------------------" << std::endl;
     std::cout << trait::Print<T>::Header() + " PORTFOLIO stats:\n" << std::endl;
+    if (portfolio_.empty()) {
+      std::cout << "EMPTY" << std::endl;
+      return;
+    }
     std::vector<std::string> AssetSymbols;
     for (auto &[symbol, _] : portfolio_) {
       AssetSymbols.push_back(symbol);
@@ -172,16 +181,18 @@ public:
     std::cout << "Portfolio Value: " << valueSum << " DKK" << std::endl;
   }
 
-  void addStopLossRule(std::string symbol, currency::DKK limit) {
+  void addStopLossRule(std::string symbol, currency::DKK unitPriceLimit) {
+    std::lock_guard<std::mutex> lock(mtx_);
     if (!portfolio_.contains(symbol)) {
       throw std::invalid_argument("U dont own this asset");
     };
     auto handler = std::bind(&Manager<T>::onAssetUpdate, this, symbol, _1);
     auto conn = serv_->subscribeToPriceUpdates(symbol, handler);
-    portfolio_[symbol].stopLossRule.emplace(limit);
+    portfolio_[symbol].stopLossRule.emplace(unitPriceLimit);
     portfolio_[symbol].conn = conn;
   }
   void removeStopLossRule(std::string name) {
+    std::lock_guard<std::mutex> lock(mtx_);
     portfolio_[name].conn.disconnect();
   }
   Manager(const Manager &) = delete;
@@ -190,7 +201,7 @@ public:
   Manager &operator=(Manager &&other) = delete;
 
 private:
-  void onAssetUpdate(std::string symbol, currency::DKK updatedPrice) {
+  void onAssetUpdate(std::string symbol, currency::DKK updatedUnitPrice) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = portfolio_.find(symbol);
     if (it == portfolio_.end()) {
@@ -199,17 +210,17 @@ private:
     if (!it->second.stopLossRule.has_value()) {
       return;
     }
-    auto limit = it->second.stopLossRule.value();
-    if (updatedPrice.value() <= limit.value()) {
+    auto unitPricelimit = it->second.stopLossRule.value();
+    if (updatedUnitPrice.value() <= unitPricelimit.value()) {
       message::OrderRequest o(
           {symbol, managerId_, it->second.qty, message::OrderType::SELL});
-      auto orderFut = o.prom.get_future();
       serv_->pushMsg(message::Message<T>(std::move(o)));
-      currency::DKK total(it->second.qty * updatedPrice.value());
-      acc->addTransaction(tx::Sale{symbol, trait::Print<T>::Header(),
-                                   std::format("{}", it->second.qty),
-                                   updatedPrice, total});
+      currency::DKK total(it->second.qty * updatedUnitPrice.value());
+      acc->addSale(tx::Sale{symbol, trait::Print<T>::Header(),
+                            std::format("{}", it->second.qty), updatedUnitPrice,
+                            total});
       portfolio_.erase(it);
+      std::cout << "SIZE" << portfolio_.size();
     }
   }
 

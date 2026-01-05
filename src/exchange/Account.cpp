@@ -15,7 +15,7 @@ namespace exchange {
 Account::Account() : balance_(0) {}
 void Account::deposit(currency::DKK amount) {
   std::lock_guard<std::mutex> lock(mtx_);
-  balance_ = amount;
+  balance_ += amount;
   txs_.emplace_back(tx::Deposit{amount});
 }
 
@@ -45,12 +45,19 @@ currency::DKK Account::getBalance() const {
 }
 void Account::printBalance() const {
   std::cout << "---------------------------" << std::endl;
+  std::lock_guard<std::mutex> lock(mtx_);
   std::cout << "Current balance: " << balance_ << std::endl;
 }
-void Account::addTransaction(txVariant &&txV) {
+void Account::addPurchase(tx::Purchase tx) {
   std::lock_guard<std::mutex> lock(mtx_);
-  txs_.push_back(std::move(txV));
-  auto total = std::visit([](const auto &tx) { return tx.total; }, txV);
+  txs_.push_back(std::move(tx));
+  auto total = tx.total;
+  balance_ -= total;
+}
+void Account::addSale(tx::Sale tx) {
+  std::lock_guard<std::mutex> lock(mtx_);
+  txs_.push_back(std::move(tx));
+  auto total = tx.total;
   balance_ += total;
 }
 } // namespace exchange

@@ -23,12 +23,10 @@ using namespace std::placeholders;
 
 int main() {
   MonitorResource cryptoMr;
-  Crypto c1("Bitcoin", "BTC", &cryptoMr);
-  Crypto c2("Etherium", "ETH", &cryptoMr);
+  Crypto c1("Bitcoin", "BTC", cryptoMr);
+  Crypto c2("Etherium", "ETH", cryptoMr);
   c1.unitPriceOverTime_.emplace_back(0.531_Mil);
-  c1.unitPriceOverTime_.emplace_back(1.25_K);
   c2.unitPriceOverTime_.emplace_back(10.2_K);
-  c2.unitPriceOverTime_.emplace_back(13.2_K);
   auto cryptoServ = createServer<Crypto>("cryptoServer.txt", &cryptoMr);
   cryptoServ->addAsset("BTC", std::move(c1));
   cryptoServ->addAsset("ETH", std::move(c2));
@@ -36,13 +34,11 @@ int main() {
   Miner miner("BTC", cryptoServ);
 
   MonitorResource stockMr;
-  Stock s1("Apple", "APPL", &stockMr);
-  Stock s2("Tesla motor technologies", "TSLA", &stockMr);
+  Stock s1("Apple", "APPL", stockMr);
+  Stock s2("Tesla motor technologies", "TSLA", stockMr);
   s1.unitPriceOverTime_.emplace_back(1.23_K);
-  s1.unitPriceOverTime_.emplace_back(1.25_K);
   s2.unitPriceOverTime_.emplace_back(10.2_K);
-  s2.unitPriceOverTime_.emplace_back(13.2_K);
-  auto stockServ = createServer<Stock>("stockServer.txt", &stockMr);
+  auto stockServ = createServer<Stock>("stockServer.txt", stockMr);
   stockServ->addAsset("APPL", std::move(s1));
   stockServ->addAsset("TSLA", std::move(s2));
   stockServ->start();

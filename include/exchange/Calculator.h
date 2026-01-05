@@ -43,16 +43,26 @@ struct sequential {};
 template <typename T>
 std::map<std::string, double> CalculateTrends(std::vector<const T *> assets,
                                               parallel) {
-  std::map<std::string, double> trends;
-  std::vector<std::future<double>> futures;
-  for (const auto &asset : assets) {
-    futures.push_back(std::async(std::launch::async,
-                                 calculateAssetTrend<T>, asset));
-  };
+  std::vector<double> res(assets.size());
+  auto cores = std::thread::hardware_concurrency();
 
-  for (int i = 0; i < futures.size(); i++) {
-    double trend = futures[i].get();
-    trends[assets[i]->symbol] = trend;
+  auto func = [&](int i) {
+    while (i < assets.size()) {
+      double trend = calculateAssetTrend(assets[i]);
+      res[i] = trend;
+      i += cores;
+    }
+  };
+  std::vector<std::thread> threads;
+  for (int i = 0; i < cores; i++) {
+    threads.push_back(std::thread(func, i));
+  }
+  for (auto &thread : threads) {
+    thread.join();
+  }
+  std::map<std::string, double> trends;
+  for (int i = 0; i < res.size(); i++) {
+    trends.emplace(assets[i]->symbol, res[i]);
   }
   return trends;
 }

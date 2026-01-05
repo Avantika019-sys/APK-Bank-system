@@ -7,7 +7,7 @@
 namespace exchange::message {
 struct assetInfo {
   std::string symbol;
-  currency::DKK currentPrice;
+  currency::DKK currentUnitPrice;
   double trend;
 };
 struct InfoResponse {

@@ -35,7 +35,7 @@ template <typename T> struct MessageVisitor;
 
 template <typename T> class Server {
 public:
-  Server(std::string logfile, const MonitorResource *ms) try
+  Server(std::string logfile, const MonitorResource &ms) try
       : msgQueue_(trait::MessageQueue<T>::QueueCapacity()), ms_(ms),
         orders_(10), ordersSnapshot_(10), logger_(logfile) {
   } catch (std::exception &e) {
@@ -50,7 +50,7 @@ public:
     messageProccessorThread =
         std::thread([this]() { startMessageProccesor(); });
   }
-  void addAsset(std::string &&symbol, T &&asset) {
+  void addAsset(std::string symbol, T asset) {
     std::lock_guard<std::mutex> lock(mtx_);
     assets_.try_emplace(std::move(symbol), std::move(asset));
   }
@@ -58,6 +58,7 @@ public:
   boost::signals2::connection
   subscribeToPriceUpdates(std::string assetSymbol,
                           std::function<void(currency::DKK UpdatedPrice)> cb) {
+    std::lock_guard<std::mutex> lock(mtx_);
     return assets_.at(assetSymbol).sig_->connect(cb);
   }
 
@@ -100,7 +101,7 @@ private:
       if (d(gen)) {
         logger_.log(
             "system health", util::observability::level::INFO,
-            util::observability::field("bytes", ms_->getbytesalloc()),
+            util::observability::field("bytes", ms_.getbytesalloc()),
             util::observability::field{"queue-load", msgQueue_.getQueueLoad()});
 
         std::lock_guard<std::mutex> lock(snapshotMtx_);
@@ -126,7 +127,7 @@ private:
   std::mutex snapshotMtx_;
   std::atomic<bool> run_{true};
   Logger logger_;
-  const MonitorResource *ms_;
+  const MonitorResource &ms_;
   OrderArray orders_;
   OrderArray ordersSnapshot_;
   std::thread simulatorThread;

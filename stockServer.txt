@@ -1,2 +1,3 @@
-[INFO][2026-01-05 07:48:56.617964868] Received order request, (Stock:APPL), (order:Asset Name: APPL Manager Id:123 Quantity:500.00 DKK Type:BUY)
-[INFO][2026-01-05 07:48:57.341856274] Received order request, (Stock:APPL), (order:Asset Name: APPL Manager Id:123 Quantity:273.00 DKK Type:SELL)
+[INFO][2026-01-05 09:45:54.673862654] Received order request, (Stock:APPL), (order:Asset Name: APPL Manager Id:123 Quantity:500.00 DKK Type:BUY)
+[INFO][2026-01-05 09:46:01.700016527] Received order request, (Stock:APPL), (order:Asset Name: APPL Manager Id:123 Quantity:0.41 DKK Type:SELL)
+[INFO][2026-01-05 09:48:51.112195687] system health, (bytes:64), (queue-load:0)

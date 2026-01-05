@@ -20,7 +20,8 @@ public:
 
   currency::DKK getBalance() const;
   void printBalance() const;
-  void addTransaction(txVariant &&tx);
+  void addPurchase(tx::Purchase tx);
+  void addSale(tx::Sale tx);
 
   Account(Account &&other) = delete;
   Account &operator=(Account &&other) = delete;
