@@ -12,12 +12,7 @@ To compile the application in the golden image
 ```bash
 g++ -std=c++23 -I./include -I./include/exchange main.cpp src/exchange/*.cpp src/exchange/asset/*.cpp -lpthread -o exchange
 ```
-Or, if wanted to compile with cmake:
-```bash
-sudo snap install cmake --classic
-cmake -S . -B build
-cmake --build build --config Release --target Bank
-```
+
 ## Introduction
 
 The asset exchange system is a trading platform, allowing a user to buy and sell assets of different type. The goal of this project is to incoporate as many concepts learned in the course in a way that utilizeses each concepts strengths.
